@@ -11,3 +11,5 @@ android/capacitor-cordova-android-plugins/build/
 android/local.properties
 *.iml
 .idea/
+SUBIR_A_GITHUB.bat
+
