@@ -1,0 +1,83 @@
+name: Build Kineo Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Compilar APK Instalable (Kineo v1.4)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NPM dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build Kineo v1.4 Web App & Sync Capacitor Android
+        run: |
+          npm run build
+          npx cap sync android
+
+      - name: Grant execute permission for Gradlew
+        working-directory: ./android
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        working-directory: ./android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK to Kineo-v1.4.apk
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk Kineo-v1.4.apk
+          ls -lh Kineo-v1.4.apk
+
+      - name: Upload Kineo-v1.4.apk Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kineo-v1.4-APK
+          path: Kineo-v1.4.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish APK to GitHub Releases (Direct Download)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.4.0
+          name: "Kineo v1.4 — Android APK Instalable"
+          body: |
+            ### 📱 Kineo v1.4 — Smart Duo Gym Tracker (APK Android)
+            - **Base de datos limpia (0 datos de ejemplo)** lista para uso real desde el Día 1.
+            - **Nuevo Orden del Mesociclo:**
+              - **Sesión A:** Tren Inferior (Cuádriceps, Glúteo & Core)
+              - **Sesión B:** Empuje (Pecho, Hombros & Tríceps)
+              - **Sesión C:** Cadena Posterior (Femoral, Glúteo & Pierna Unilateral)
+              - **Sesión D:** Tirón (Espalda, Postura & Bíceps)
+              - **Sesión E (Opcional Día 5):** Full Body Metabólico & Puntos Débiles
+            - Descarga el archivo **`Kineo-v1.4.apk`** aquí abajo e instálalo directamente en tus teléfonos Android.
+          files: Kineo-v1.4.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
