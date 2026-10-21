@@ -43,12 +43,65 @@ export function parseInputToKg(inputValue: number, unit: WeightUnit): number {
 
 export function calculateSafe1RM(weightKg: number, performedReps: number, rir: number): number {
   if (weightKg <= 0 || performedReps <= 0) return 0
-  const effectiveReps = Math.min(20, performedReps + Math.max(0, rir))
+  const effectiveReps = Math.min(35, performedReps + Math.max(0, rir))
   if (effectiveReps === 1) return weightKg
   const epley = weightKg * (1 + effectiveReps / 30)
-  const brzycki = weightKg * (36 / (37 - effectiveReps))
+  const brzycki =
+    effectiveReps < 36 ? weightKg * (36 / (37 - effectiveReps)) : epley
   const avg = (epley + brzycki) / 2
   return Math.round(avg * 2) / 2
+}
+
+/**
+ * Devuelve una guía directa y sin ambigüedad sobre cómo cargar el peso en el gimnasio:
+ * - En Barra (Hip Thrust, Press Banca, Peso Muerto Barra): indica cuánto poner de cada lado.
+ * - En Prensa 45° / Sentadilla Hack: indica cuánto poner en discos de cada lado.
+ * - En Mancuernas: aclara que el peso indicado es por CADA mancuerna (en cada mano).
+ * - En Poleas / Placas: indica que es el pin directo en la placa.
+ */
+export function getLoadInstruction(
+  weightKg: number,
+  equipment: string,
+  exerciseName: string,
+  unit: WeightUnit
+): string {
+  if (weightKg <= 0) return ''
+  const shownTotal = displayWeightValue(weightKg, unit)
+  const halfShown = Math.round((shownTotal / 2) * 10) / 10
+  const nameLower = exerciseName.toLowerCase()
+
+  if (equipment === 'Mancuernas') {
+    if (nameLower.includes('goblet') || nameLower.includes('copa') || nameLower.includes('puente')) {
+      return `1 mancuerna de ${shownTotal} ${unit}`
+    }
+    return `${shownTotal} ${unit} en CADA mano`
+  }
+
+  if (equipment === 'Barra') {
+    const barWeight = unit === 'kg' ? 20 : 45
+    if (shownTotal > barWeight) {
+      const perSideWithBar = Math.round(((shownTotal - barWeight) / 2) * 10) / 10
+      return `Pon ${halfShown} ${unit}/lado (o ${perSideWithBar} ${unit}/lado + barra ${barWeight}${unit})`
+    }
+    return `Pon ${halfShown} ${unit} de cada lado`
+  }
+
+  if (
+    equipment === 'Máquina' &&
+    (nameLower.includes('prensa') || nameLower.includes('hack'))
+  ) {
+    return `Discos: ${halfShown} ${unit} de cada lado (Total ${shownTotal} ${unit})`
+  }
+
+  if (equipment === 'Polea' || equipment === 'Máquina') {
+    return `Pin directo: ${shownTotal} ${unit}`
+  }
+
+  if (equipment === 'Kettlebell') {
+    return `1 Pesa Rusa de ${shownTotal} ${unit}`
+  }
+
+  return `${shownTotal} ${unit}`
 }
 
 export interface IdealWeightZones {

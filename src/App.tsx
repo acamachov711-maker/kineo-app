@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Dumbbell,
   BarChart3,
   Settings,
-  Users,
   User,
   Scale,
   CheckCircle2,
@@ -14,7 +13,8 @@ import {
   Play,
   Moon,
   Clock,
-  Unlock
+  Unlock,
+  Wifi
 } from 'lucide-react'
 import {
   CompletedExerciseRecord,
@@ -44,6 +44,10 @@ import {
   saveActiveSessionId
 } from './services/storageService'
 import {
+  liveSyncManager,
+  SlotLiveState
+} from './services/syncService'
+import {
   buildPyramidSets,
   generateDropSubSets,
   getIdealWeightZones,
@@ -61,14 +65,7 @@ import { StreakBanner } from './components/StreakBanner'
 // Strictly 3 Bottom Tabs: 'workout' | 'progress' | 'settings'
 type ActiveTab = 'workout' | 'progress' | 'settings'
 
-type SessionSlotsState = Record<
-  string,
-  {
-    syncMode: SyncMode
-    techniqueByProfile: Record<'user_1' | 'user_2', SetTechnique>
-    setsByProfile: Record<'user_1' | 'user_2', SetEntry[]>
-  }
->
+type SessionSlotsState = Record<string, SlotLiveState>
 
 function buildInitialSetsForSlot(
   slot: ExerciseSlot,
@@ -110,8 +107,11 @@ export function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('workout')
   const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>('profiles')
 
-  // Controls whether the user is in the Pre-Workout Lobby (Streak + Start button) or Active Session
+  // Controls whether the user is in the Pre-Workout Lobby or Active Session
   const [isWorkoutStarted, setIsWorkoutStarted] = useState<boolean>(false)
+
+  // Exclusive Accordion State: null = all exercises collapsed; string = only that slotId expanded
+  const [expandedSlotId, setExpandedSlotId] = useState<string | null>(null)
 
   const [profiles, setProfiles] = useState<Record<'user_1' | 'user_2', UserProfile>>(() =>
     loadProfiles()
@@ -121,12 +121,15 @@ export function App() {
   const [weightUnit, setWeightUnit] = useState<WeightUnit>(() => loadWeightUnit())
   const [activeSessionId, setActiveSessionId] = useState<string>(() => loadActiveSessionId())
 
-  const [coupleViewMode, setCoupleViewMode] = useState<'both' | 'single'>(
-    deviceConfig.coupleModeEnabled ? 'both' : 'single'
-  )
   const [activeProfileId, setActiveProfileId] = useState<'user_1' | 'user_2'>(
     deviceConfig.primaryProfileId
   )
+
+  const [syncStatus, setSyncStatus] = useState<'disconnected' | 'connecting' | 'connected'>(
+    'disconnected'
+  )
+  const isApplyingRemoteRef = useRef<boolean>(false)
+  const lastRemoteTimestampRef = useRef<number>(0)
 
   const [restSecondsLeft, setRestSecondsLeft] = useState<number>(0)
   const [restTotalSeconds, setRestTotalSeconds] = useState<number>(0)
@@ -183,8 +186,17 @@ export function App() {
     buildSessionState(currentSession.slots, profiles)
   )
 
+  // Keep activeProfileId synced when switching to Solo Mode
   useEffect(() => {
+    if (!deviceConfig.coupleModeEnabled) {
+      setActiveProfileId(deviceConfig.primaryProfileId)
+    }
+  }, [deviceConfig.coupleModeEnabled, deviceConfig.primaryProfileId])
+
+  useEffect(() => {
+    if (isApplyingRemoteRef.current) return
     setSlotsState(buildSessionState(currentSession.slots, profiles))
+    setExpandedSlotId(null)
   }, [activeSessionId, currentSession.slots, buildSessionState])
 
   useEffect(() => {
@@ -210,6 +222,112 @@ export function App() {
   useEffect(() => {
     saveActiveSessionId(activeSessionId)
   }, [activeSessionId])
+
+  // LIVE REAL-TIME SYNC SUBSCRIPTION (Option 1)
+  useEffect(() => {
+    if (!deviceConfig.coupleModeEnabled || !deviceConfig.syncRoomCode) {
+      liveSyncManager.disconnect()
+      return
+    }
+
+    liveSyncManager.connectRoom(
+      deviceConfig.syncRoomCode,
+      (remotePayload) => {
+        if (remotePayload.updatedAt <= lastRemoteTimestampRef.current) return
+        lastRemoteTimestampRef.current = remotePayload.updatedAt
+        isApplyingRemoteRef.current = true
+
+        if (remotePayload.activeSessionId) {
+          setActiveSessionId(remotePayload.activeSessionId)
+        }
+        setIsWorkoutStarted(Boolean(remotePayload.isWorkoutStarted))
+
+        if (remotePayload.slotsState && Object.keys(remotePayload.slotsState).length > 0) {
+          setSlotsState(remotePayload.slotsState)
+        }
+
+        if (remotePayload.profiles) {
+          setProfiles((prev) => ({
+            user_1: {
+              ...prev.user_1,
+              ...remotePayload.profiles.user_1,
+              isDeviceOwner: prev.user_1.isDeviceOwner
+            },
+            user_2: {
+              ...prev.user_2,
+              ...remotePayload.profiles.user_2,
+              isDeviceOwner: prev.user_2.isDeviceOwner
+            }
+          }))
+        }
+
+        if (Array.isArray(remotePayload.history)) {
+          setHistory((prev) => {
+            const byId = new Map<string, WorkoutHistoryEntry>()
+            prev.forEach((h) => byId.set(h.id, h))
+            remotePayload.history.forEach((h) => byId.set(h.id, h))
+            return Array.from(byId.values())
+          })
+        }
+
+        if (remotePayload.lastCompletedWorkoutDate) {
+          setDeviceConfig((prev) => ({
+            ...prev,
+            lastCompletedWorkoutDate: remotePayload.lastCompletedWorkoutDate,
+            lastCompletedSessionCode: remotePayload.lastCompletedSessionCode
+          }))
+        }
+
+        setTimeout(() => {
+          isApplyingRemoteRef.current = false
+        }, 120)
+      },
+      (status) => {
+        setSyncStatus(status)
+      }
+    )
+
+    return () => {
+      liveSyncManager.disconnect()
+    }
+  }, [deviceConfig.coupleModeEnabled, deviceConfig.syncRoomCode])
+
+  // Broadcast local changes to partner phone in real time
+  useEffect(() => {
+    if (
+      isApplyingRemoteRef.current ||
+      !deviceConfig.coupleModeEnabled ||
+      !deviceConfig.syncRoomCode ||
+      syncStatus !== 'connected'
+    ) {
+      return
+    }
+
+    const timer = setTimeout(() => {
+      liveSyncManager.broadcastState({
+        activeSessionId,
+        isWorkoutStarted,
+        lastCompletedWorkoutDate: deviceConfig.lastCompletedWorkoutDate,
+        lastCompletedSessionCode: deviceConfig.lastCompletedSessionCode,
+        slotsState,
+        profiles,
+        history
+      })
+    }, 150)
+
+    return () => clearTimeout(timer)
+  }, [
+    activeSessionId,
+    isWorkoutStarted,
+    deviceConfig.lastCompletedWorkoutDate,
+    deviceConfig.lastCompletedSessionCode,
+    deviceConfig.coupleModeEnabled,
+    deviceConfig.syncRoomCode,
+    syncStatus,
+    slotsState,
+    profiles,
+    history
+  ])
 
   useEffect(() => {
     if (!restIsRunning || restSecondsLeft <= 0) return
@@ -454,8 +572,11 @@ export function App() {
 
   const handleFinishWorkoutSession = () => {
     const newEntries: WorkoutHistoryEntry[] = []
+    const profilesToSave: ('user_1' | 'user_2')[] = deviceConfig.coupleModeEnabled
+      ? ['user_1', 'user_2']
+      : [deviceConfig.primaryProfileId]
 
-    ;(['user_1', 'user_2'] as const).forEach((pid) => {
+    profilesToSave.forEach((pid) => {
       let totalVolKg = 0
       let completedCount = 0
       const completedExercises: CompletedExerciseRecord[] = []
@@ -533,7 +654,7 @@ export function App() {
     })
 
     if (newEntries.length === 0) {
-      setFinishBanner('Marca al menos 1 serie completada (✓) antes de finalizar la sesión.')
+      setFinishBanner('Marca al menos 1 serie completada (✓) antes de finalizar.')
       setTimeout(() => setFinishBanner(null), 3500)
       return
     }
@@ -552,6 +673,7 @@ export function App() {
     }))
     setActiveSessionId(nextSessionId)
     setIsWorkoutStarted(false)
+    setExpandedSlotId(null)
   }
 
   if (!deviceConfig.onboardingCompleted) {
@@ -564,9 +686,9 @@ export function App() {
           setDeviceConfig(updatedConfig)
           setWeightUnit(chosenUnit)
           setActiveProfileId(updatedConfig.primaryProfileId)
-          setCoupleViewMode(updatedConfig.coupleModeEnabled ? 'both' : 'single')
           setSlotsState(buildSessionState(currentSession.slots, updatedProfiles))
           setIsWorkoutStarted(false)
+          setExpandedSlotId(null)
         }}
       />
     )
@@ -600,76 +722,76 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col">
-      {/* Clean Top Bar */}
-      <header className="sticky top-0 z-30 bg-[#090D16]/90 backdrop-blur-md border-b border-slate-800/80 px-3 sm:px-6 py-3">
+      {/* Clean Top Bar (Collaborative 'Pareja' button removed — only direct user switch) */}
+      <header className="sticky top-0 z-30 bg-[#090D16]/90 backdrop-blur-md border-b border-slate-800/80 px-3 sm:px-6 py-2.5">
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-pink-500 p-[1.5px]">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-black text-base tracking-tighter text-white">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-pink-500 p-[1.5px]">
+              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-black text-sm tracking-tighter text-white">
                 K
               </div>
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-black tracking-tight text-white">
-                  KINEO <span className="text-emerald-400 text-xs font-bold">v1.4</span>
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-sm sm:text-base font-black tracking-tight text-white">
+                  KINEO <span className="text-emerald-400 text-xs font-bold">v1.5</span>
                 </h1>
                 <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
                   Sem {mesocycle.currentWeek}/{mesocycle.durationWeeks}
                 </span>
                 <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
                   <Flame className="w-3 h-3 text-amber-400 fill-amber-400" />
-                  {streakPrimary.weeklySessionsDone}/3 sem
+                  {streakPrimary.weeklySessionsDone}/3
                 </span>
+                {deviceConfig.coupleModeEnabled && deviceConfig.syncRoomCode && (
+                  <button
+                    onClick={() => {
+                      setSettingsSubTab('profiles')
+                      setActiveTab('settings')
+                    }}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${
+                      syncStatus === 'connected'
+                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                    }`}
+                    title={`Sala en vivo: ${deviceConfig.syncRoomCode}`}
+                  >
+                    <Wifi className="w-2.5 h-2.5" />
+                    <span className="hidden xs:inline">{deviceConfig.syncRoomCode}</span>
+                  </button>
+                )}
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
-                Titular: {profiles[primaryPid].name} • Pareja: {profiles[secondaryPid].name}
-              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-0.5">
-              <button
-                onClick={() => setCoupleViewMode('both')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                  coupleViewMode === 'both'
-                    ? 'bg-gradient-to-r from-emerald-500/25 to-pink-500/25 text-white border border-white/20'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Users className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="hidden xs:inline">Pareja</span>
-              </button>
-              <button
-                onClick={() => {
-                  setCoupleViewMode('single')
-                  setActiveProfileId(primaryPid)
-                }}
-                className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                  coupleViewMode === 'single' && activeProfileId === primaryPid
-                    ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <User className="w-3 h-3" />
-                {profiles[primaryPid].name.split(' ')[0]}
-              </button>
-              <button
-                onClick={() => {
-                  setCoupleViewMode('single')
-                  setActiveProfileId(secondaryPid)
-                }}
-                className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                  coupleViewMode === 'single' && activeProfileId === secondaryPid
-                    ? 'bg-pink-500/25 text-pink-300 border border-pink-500/40'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <User className="w-3 h-3" />
-                {profiles[secondaryPid].name.split(' ')[0]}
-              </button>
-            </div>
+            {/* Direct 2-user switch (Only rendered when Couple Mode is enabled) */}
+            {deviceConfig.coupleModeEnabled && (
+              <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-0.5">
+                <button
+                  onClick={() => setActiveProfileId(primaryPid)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
+                    activeProfileId === primaryPid
+                      ? 'bg-emerald-500 text-slate-950 font-extrabold shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <User className="w-3 h-3" />
+                  {profiles[primaryPid].name.split(' ')[0]}
+                </button>
+                <button
+                  onClick={() => setActiveProfileId(secondaryPid)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
+                    activeProfileId === secondaryPid
+                      ? 'bg-pink-500 text-slate-950 font-extrabold shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <User className="w-3 h-3" />
+                  {profiles[secondaryPid].name.split(' ')[0]}
+                </button>
+              </div>
+            )}
 
             <button
               onClick={() => setWeightUnit((u) => (u === 'kg' ? 'lb' : 'kg'))}
@@ -682,218 +804,225 @@ export function App() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 pt-4">
-        {/* TAB 1: ENTRENAR (Segmented into 3 Clean States) */}
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 pt-3">
+        {/* TAB 1: ENTRENAR */}
         {activeTab === 'workout' && (
-          <div className="space-y-5 pb-28">
+          <div className="space-y-4 pb-28">
             {/* STATE A: COMPLETED TODAY -> WAIT UNTIL TOMORROW */}
             {isCompletedToday && !isWorkoutStarted ? (
-              <div className="space-y-5">
+              <div className="space-y-4">
                 <StreakBanner
                   profiles={profiles}
                   primaryProfileId={primaryPid}
                   history={history}
                 />
 
-                <div className="rounded-3xl bg-gradient-to-br from-emerald-950/50 via-slate-900 to-indigo-950/40 border border-emerald-500/40 p-6 sm:p-8 text-center space-y-4 shadow-2xl">
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 mx-auto">
-                    <Moon className="w-8 h-8" />
+                <div className="rounded-3xl bg-gradient-to-br from-emerald-950/50 via-slate-900 to-indigo-950/40 border border-emerald-500/40 p-6 text-center space-y-4 shadow-2xl">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 mx-auto">
+                    <Moon className="w-7 h-7" />
                   </div>
-                  <div className="space-y-1.5 max-w-lg mx-auto">
+                  <div className="space-y-1 max-w-lg mx-auto">
                     <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-400">
-                      ¡Entrenamiento de Hoy Completado! (Sesión{' '}
-                      {deviceConfig.lastCompletedSessionCode || 'Lista'})
+                      ¡Sesión {deviceConfig.lastCompletedSessionCode || ''} Completada!
                     </span>
-                    <h2 className="text-xl sm:text-2xl font-black text-white">
-                      Descanso y Recuperación Muscular hasta Mañana
+                    <h2 className="text-xl font-black text-white">
+                      Descanso Muscular hasta Mañana
                     </h2>
-                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                      El músculo crece y se tonifica mientras descansa. Su racha ya sumó el día de
-                      hoy; mañana se activará automáticamente su siguiente sesión (
-                      <strong>{currentSession.title}</strong>).
+                    <p className="text-xs text-slate-300">
+                      Mañana toca: <strong>{currentSession.title}</strong>.
                     </p>
                   </div>
 
-                  <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                  <div className="pt-1 flex flex-wrap items-center justify-center gap-2.5">
                     <button
                       onClick={() => setActiveTab('progress')}
-                      className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center gap-2"
+                      className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center gap-2"
                     >
                       <BarChart3 className="w-4 h-4" />
-                      Ver Estadísticas por Ejercicio
+                      Ver Progreso
                     </button>
                     <button
                       onClick={() => setIsWorkoutStarted(true)}
                       className="px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1.5"
                     >
                       <Unlock className="w-3.5 h-3.5" />
-                      Desbloquear sesión hoy de todos modos
+                      Desbloquear hoy
                     </button>
                   </div>
                 </div>
               </div>
             ) : !isWorkoutStarted ? (
-              /* STATE B: CLEAN LOBBY (STREAK SYSTEM + START WORKOUT SESSION CTA) */
-              <div className="space-y-5">
+              /* STATE B: CLEAN LOBBY */
+              <div className="space-y-4">
                 <StreakBanner
                   profiles={profiles}
                   primaryProfileId={primaryPid}
                   history={history}
                 />
 
-                <div className="rounded-3xl bg-slate-900/95 border border-slate-800 p-5 sm:p-7 space-y-5 shadow-xl">
+                <div className="rounded-3xl bg-slate-900/95 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4" />
-                        Sesión Lista para Hoy • {mesocycle.name}
+                        <Calendar className="w-3.5 h-3.5" />
+                        Sesión Lista para Hoy
                       </span>
-                      <h2 className="text-lg sm:text-2xl font-black text-white mt-1">
+                      <h2 className="text-lg sm:text-xl font-black text-white mt-0.5">
                         {currentSession.title}
                       </h2>
-                      <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-                        {currentSession.subtitle}
-                      </p>
+                      <p className="text-xs text-slate-400">{currentSession.subtitle}</p>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs text-slate-300 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
-                      <Clock className="w-4 h-4 text-emerald-400" />~
-                      {currentSession.estimatedMinutes} min • {currentSession.slots.length}{' '}
-                      ejercicios
+                    <div className="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                      <Clock className="w-3.5 h-3.5 text-emerald-400" />~
+                      {currentSession.estimatedMinutes} min • {currentSession.slots.length} ejerc.
                     </div>
                   </div>
 
                   {/* Session Queue Selector */}
-                  <div>
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-                      Elegir sesión de la cola flexible (3 a 5 días):
-                    </label>
-                    <div className="grid grid-cols-5 gap-2">
-                      {mesocycle.sessions.map((sess) => {
-                        const isSelected = sess.id === currentSession.id
-                        return (
-                          <button
-                            key={sess.id}
-                            onClick={() => setActiveSessionId(sess.id)}
-                            className={`p-2.5 rounded-xl border text-center transition-all ${
-                              isSelected
-                                ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-extrabold shadow-lg shadow-emerald-500/20'
-                                : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {mesocycle.sessions.map((sess) => {
+                      const isSelected = sess.id === currentSession.id
+                      return (
+                        <button
+                          key={sess.id}
+                          onClick={() => setActiveSessionId(sess.id)}
+                          className={`p-2 rounded-xl border text-center transition-all ${
+                            isSelected
+                              ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-extrabold shadow-lg shadow-emerald-500/20'
+                              : 'bg-slate-950/70 border-slate-800 text-slate-300'
+                          }`}
+                        >
+                          <span className="text-xs font-black block">Sesión {sess.code}</span>
+                          <span
+                            className={`text-[10px] block truncate ${
+                              isSelected ? 'text-slate-900 font-semibold' : 'text-slate-400'
                             }`}
                           >
-                            <span className="text-xs sm:text-sm font-black block">
-                              Sesión {sess.code}
-                            </span>
-                            <span
-                              className={`text-[10px] block truncate ${
-                                isSelected ? 'text-slate-900 font-semibold' : 'text-slate-400'
-                              }`}
-                            >
-                              {sess.isOptional5thDay ? 'Día 5 Opc.' : `${sess.slots.length} ejerc.`}
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
+                            {sess.isOptional5thDay ? 'Opc.' : `${sess.slots.length} ej.`}
+                          </span>
+                        </button>
+                      )
+                    })}
                   </div>
 
-                  {/* Preview of exercises in this session */}
-                  <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/90 space-y-2">
-                    <span className="text-xs font-bold text-slate-300 block">
-                      Resumen de bloques en esta sesión:
-                    </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {currentSession.slots.map((slot) => (
-                        <div
-                          key={slot.slotId}
-                          className="flex items-center gap-2 text-xs text-slate-300 bg-slate-900/70 px-3 py-2 rounded-xl border border-slate-800/80"
-                        >
-                          <span className="w-5 h-5 rounded bg-slate-800 text-emerald-400 font-bold text-[11px] flex items-center justify-center shrink-0">
-                            {slot.order}
-                          </span>
-                          <span className="truncate font-medium">
-                            {slot.primaryExercise.name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                  {/* Preview of exercises */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {currentSession.slots.map((slot) => (
+                      <div
+                        key={slot.slotId}
+                        className="flex items-center gap-2 text-xs text-slate-300 bg-slate-950/80 px-3 py-2 rounded-xl border border-slate-800/80"
+                      >
+                        <span className="w-5 h-5 rounded bg-slate-800 text-emerald-400 font-bold text-[11px] flex items-center justify-center shrink-0">
+                          {slot.order}
+                        </span>
+                        <span className="truncate font-medium">{slot.primaryExercise.name}</span>
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Big Start Workout CTA */}
                   <button
-                    onClick={() => setIsWorkoutStarted(true)}
-                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-base sm:text-lg shadow-xl shadow-emerald-500/25 transition-all flex items-center justify-center gap-2.5"
+                    onClick={() => {
+                      setIsWorkoutStarted(true)
+                      setExpandedSlotId(null)
+                    }}
+                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-base shadow-xl shadow-emerald-500/25 transition-all flex items-center justify-center gap-2"
                   >
                     <Play className="w-5 h-5 fill-slate-950" />
-                    Comenzar Sesión de Entrenamiento ({currentSession.code})
+                    Comenzar Sesión {currentSession.code}
                   </button>
                 </div>
               </div>
             ) : (
-              /* STATE C: ACTIVE WORKOUT SESSION (EXERCISES VIEW) */
-              <div className="space-y-4">
-                <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+              /* STATE C: ACTIVE WORKOUT SESSION (EXCLUSIVE ACCORDION VIEW) */
+              <div className="space-y-3">
+                <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
                     <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
-                        Sesión Activa en Curso
-                      </span>
-                      <h2 className="text-base sm:text-lg font-extrabold text-white">
+                      <h2 className="text-sm sm:text-base font-extrabold text-white">
                         {currentSession.title}
                       </h2>
+                      <p className="text-[11px] text-slate-400">
+                        Toca un ejercicio para abrirlo (se mostrará uno a la vez).
+                      </p>
                     </div>
                     <button
                       onClick={() => setIsWorkoutStarted(false)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700"
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 shrink-0"
                     >
-                      ← Volver a Portada de Racha
+                      ← Portada
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="px-3 py-2 rounded-xl bg-slate-950/80 border border-emerald-500/25 flex items-center justify-between text-xs">
+                  <div
+                    className={`grid gap-2 ${
+                      deviceConfig.coupleModeEnabled ? 'grid-cols-2' : 'grid-cols-1'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setActiveProfileId(primaryPid)}
+                      className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs transition-all ${
+                        activeProfileId === primaryPid
+                          ? 'bg-emerald-950/30 border-emerald-500/50 text-white'
+                          : 'bg-slate-950/70 border-slate-800 text-slate-400'
+                      }`}
+                    >
                       <span
-                        className="font-bold"
+                        className="font-bold truncate"
                         style={{ color: profiles[primaryPid].accentColor }}
                       >
-                        ★ {profiles[primaryPid].name}:
+                        ★ {profiles[primaryPid].name}
                       </span>
-                      <span className="text-slate-300">
-                        <strong>
-                          {statsPrimary.completed}/{statsPrimary.total}
-                        </strong>{' '}
-                        series • {formatDualWeight(statsPrimary.volumeKg, weightUnit)}
+                      <span className="font-semibold">
+                        {statsPrimary.completed}/{statsPrimary.total} series
                       </span>
-                    </div>
-                    <div className="px-3 py-2 rounded-xl bg-slate-950/80 border border-pink-500/25 flex items-center justify-between text-xs">
-                      <span
-                        className="font-bold"
-                        style={{ color: profiles[secondaryPid].accentColor }}
+                    </button>
+
+                    {deviceConfig.coupleModeEnabled && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveProfileId(secondaryPid)}
+                        className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs transition-all ${
+                          activeProfileId === secondaryPid
+                            ? 'bg-pink-950/30 border-pink-500/50 text-white'
+                            : 'bg-slate-950/70 border-slate-800 text-slate-400'
+                        }`}
                       >
-                        {profiles[secondaryPid].name}:
-                      </span>
-                      <span className="text-slate-300">
-                        <strong>
-                          {statsSecondary.completed}/{statsSecondary.total}
-                        </strong>{' '}
-                        series • {formatDualWeight(statsSecondary.volumeKg, weightUnit)}
-                      </span>
-                    </div>
+                        <span
+                          className="font-bold truncate"
+                          style={{ color: profiles[secondaryPid].accentColor }}
+                        >
+                          {profiles[secondaryPid].name}
+                        </span>
+                        <span className="font-semibold">
+                          {statsSecondary.completed}/{statsSecondary.total} series
+                        </span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                {/* EXCLUSIVE ACCORDION EXERCISE LIST */}
+                <div className="space-y-2.5">
                   {currentSession.slots.map((slot) => {
                     const st = slotsState[slot.slotId]
                     if (!st) return null
+                    const isExpanded = expandedSlotId === slot.slotId
                     return (
                       <ExerciseSlotCard
                         key={slot.slotId}
                         slot={slot}
+                        isExpanded={isExpanded}
+                        onToggleExpand={() =>
+                          setExpandedSlotId((prev) =>
+                            prev === slot.slotId ? null : slot.slotId
+                          )
+                        }
                         profiles={profiles}
                         primaryProfileId={primaryPid}
                         activeProfileId={activeProfileId}
-                        coupleViewMode={coupleViewMode}
+                        coupleModeEnabled={deviceConfig.coupleModeEnabled}
                         weightUnit={weightUnit}
                         history={history}
                         syncMode={st.syncMode}
@@ -920,29 +1049,28 @@ export function App() {
                   })}
                 </div>
 
-                <div className="rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-pink-950/60 border border-emerald-500/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-pink-950/60 border border-emerald-500/30 p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                    <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-emerald-400" />
-                      ¿Terminaron la sesión de hoy?
+                      ¿Terminaron la sesión {currentSession.code}?
                     </h3>
-                    <p className="text-xs text-slate-300">
-                      Guarda sus pesos en las gráficas de cada ejercicio y activa el descanso hasta
-                      mañana.
+                    <p className="text-[11px] text-slate-300">
+                      Guarda el progreso de hoy y suma día a la racha.
                     </p>
                   </div>
                   <button
                     onClick={handleFinishWorkoutSession}
-                    className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-emerald-500/20"
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-emerald-500/20"
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    Finalizar Sesión de Hoy ({currentSession.code})
+                    Finalizar y Guardar ({currentSession.code})
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
 
                 {finishBanner && (
-                  <div className="p-3.5 rounded-xl bg-amber-500/20 border border-amber-400 text-amber-200 text-xs font-bold text-center">
+                  <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-400 text-amber-200 text-xs font-bold text-center">
                     {finishBanner}
                   </div>
                 )}
@@ -961,13 +1089,14 @@ export function App() {
           />
         )}
 
-        {/* TAB 3: AJUSTES (Includes Perfiles, Peso Ideal, Guía Gym) */}
+        {/* TAB 3: AJUSTES */}
         {activeTab === 'settings' && (
           <SettingsAndMesocycle
             profiles={profiles}
             deviceConfig={deviceConfig}
             mesocycle={mesocycle}
             weightUnit={weightUnit}
+            syncStatus={syncStatus}
             initialSubTab={settingsSubTab}
             calculatorPreselect={calculatorPreselect}
             highlightedGlossaryId={highlightedGlossaryId}
@@ -1010,7 +1139,7 @@ export function App() {
         }}
       />
 
-      {/* Strictly 3 Bottom Navigation Tabs: Entrenar, Progreso, Ajustes */}
+      {/* Strictly 3 Bottom Navigation Tabs */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#090D16]/95 backdrop-blur-md border-t border-slate-800 px-3 py-1.5">
         <div className="max-w-md mx-auto grid grid-cols-3 gap-2">
           {(

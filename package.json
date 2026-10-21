@@ -1,7 +1,7 @@
 {
-  "name": "kineo-gym-tracker-v1.4",
+  "name": "kineo-gym-tracker-v1.5",
   "private": true,
-  "version": "1.4.0",
+  "version": "1.5.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,7 @@
     "@capacitor/android": "^8.5.3",
     "@capacitor/core": "^8.5.3",
     "lucide-react": "^0.468.0",
+    "mqtt": "^5.16.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.15.0"

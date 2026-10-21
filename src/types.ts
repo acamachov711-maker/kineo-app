@@ -101,6 +101,15 @@ export interface DeviceConfig {
   primaryProfileId: 'user_1' | 'user_2'
   coupleModeEnabled: boolean
   /**
+   * Código de Sala en Tiempo Real para sincronizar los 2 teléfonos en vivo (ej. KINEO-4829)
+   */
+  syncRoomCode?: string
+  /**
+   * Configuración opcional de servidor Supabase propio para escalado masivo
+   */
+  customSupabaseUrl?: string
+  customSupabaseAnonKey?: string
+  /**
    * ISO date (YYYY-MM-DD) when the user finished today's session.
    * If lastCompletedWorkoutDate === today, the Workout tab locks into "Rest until tomorrow" mode.
    */
