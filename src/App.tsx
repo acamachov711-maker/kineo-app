@@ -696,6 +696,15 @@ export function App() {
 
   const primaryPid = deviceConfig.primaryProfileId
   const secondaryPid: 'user_1' | 'user_2' = primaryPid === 'user_1' ? 'user_2' : 'user_1'
+  const themeProfile: 'primary' | 'partner' = activeProfileId === primaryPid ? 'primary' : 'partner'
+
+  // Tema dinámico: Titular = Solar (#FF5500), Pareja = Violet (#8B5CF6)
+  useEffect(() => {
+    document.documentElement.setAttribute(
+      'data-profile',
+      themeProfile === 'partner' ? 'partner' : 'primary'
+    )
+  }, [themeProfile])
 
   const getLiveStats = (pid: 'user_1' | 'user_2') => {
     let completed = 0
@@ -721,83 +730,49 @@ export function App() {
   const hasSampleData = history.some((h) => h.isSampleData)
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col">
-      {/* Clean Top Bar (Collaborative 'Pareja' button removed — only direct user switch) */}
-      <header className="sticky top-0 z-30 bg-[#090D16]/90 backdrop-blur-md border-b border-slate-800/80 px-3 sm:px-6 py-2.5">
-        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-pink-500 p-[1.5px]">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-black text-sm tracking-tighter text-white">
-                K
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-sm sm:text-base font-black tracking-tight text-white">
-                  KINEO <span className="text-emerald-400 text-xs font-bold">v1.5</span>
-                </h1>
-                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                  Sem {mesocycle.currentWeek}/{mesocycle.durationWeeks}
-                </span>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
-                  <Flame className="w-3 h-3 text-amber-400 fill-amber-400" />
-                  {streakPrimary.weeklySessionsDone}/3
-                </span>
-                {deviceConfig.coupleModeEnabled && deviceConfig.syncRoomCode && (
-                  <button
-                    onClick={() => {
-                      setSettingsSubTab('profiles')
-                      setActiveTab('settings')
-                    }}
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${
-                      syncStatus === 'connected'
-                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
-                        : 'bg-slate-800 text-slate-400 border-slate-700'
-                    }`}
-                    title={`Sala en vivo: ${deviceConfig.syncRoomCode}`}
-                  >
-                    <Wifi className="w-2.5 h-2.5" />
-                    <span className="hidden xs:inline">{deviceConfig.syncRoomCode}</span>
-                  </button>
-                )}
-              </div>
-            </div>
+    <div className="min-h-screen bg-[#0B090E] text-white flex flex-col">
+      {/* Clean Header: logo, profile switch (Titular / Pareja), unit. No counters, no room code. */}
+      <header className="sticky top-0 z-30 bg-[#0B090E]/95 backdrop-blur-md border-b border-[#2A2533] px-3 sm:px-6 py-2.5">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <svg viewBox="0 0 256 256" className="w-7 h-7" aria-hidden="true">
+              <defs>
+                <linearGradient id="ascent-energy" gradientUnits="userSpaceOnUse" x1="66" y1="190" x2="190" y2="60">
+                  <stop stopColor="#FF5500" />
+                  <stop offset="1" stopColor="#8B5CF6" />
+                </linearGradient>
+              </defs>
+              <path fill="url(#ascent-energy)" d="M73 80H106L102 125 148 85 140 101 151 93 162 77H144L202 56 186 112 181 97 133 137 183 200H145L100 147 94 200H60Z" />
+            </svg>
+            <span className="font-display text-2xl leading-none">KINEO</span>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Direct 2-user switch (Only rendered when Couple Mode is enabled) */}
             {deviceConfig.coupleModeEnabled && (
-              <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-0.5">
+              <div className="flex items-center bg-[#14111A] border border-[#2A2533] rounded-lg p-0.5">
                 <button
                   onClick={() => setActiveProfileId(primaryPid)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                    activeProfileId === primaryPid
-                      ? 'bg-emerald-500 text-slate-950 font-extrabold shadow'
-                      : 'text-slate-400 hover:text-white'
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase font-mono transition-all ${
+                    activeProfileId === primaryPid ? 'theme-bg' : 'text-[#A09BA8]'
                   }`}
                 >
-                  <User className="w-3 h-3" />
-                  {profiles[primaryPid].name.split(' ')[0]}
+                  {profiles[primaryPid].name.trim() || 'Titular'}
                 </button>
                 <button
                   onClick={() => setActiveProfileId(secondaryPid)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                    activeProfileId === secondaryPid
-                      ? 'bg-pink-500 text-slate-950 font-extrabold shadow'
-                      : 'text-slate-400 hover:text-white'
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase font-mono transition-all ${
+                    activeProfileId === secondaryPid ? 'theme-bg' : 'text-[#A09BA8]'
                   }`}
                 >
-                  <User className="w-3 h-3" />
-                  {profiles[secondaryPid].name.split(' ')[0]}
+                  {profiles[secondaryPid].name.trim() || 'Pareja'}
                 </button>
               </div>
             )}
 
             <button
               onClick={() => setWeightUnit((u) => (u === 'kg' ? 'lb' : 'kg'))}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-extrabold text-amber-300 flex items-center gap-1"
+              className="px-2 py-1.5 rounded-lg bg-[#14111A] border border-[#2A2533] text-[11px] font-bold font-mono text-white"
             >
-              <Scale className="w-3.5 h-3.5" />
               {weightUnit.toUpperCase()} ⇄
             </button>
           </div>
@@ -889,7 +864,7 @@ export function App() {
                           onClick={() => setActiveSessionId(sess.id)}
                           className={`p-2 rounded-xl border text-center transition-all ${
                             isSelected
-                              ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-extrabold shadow-lg shadow-emerald-500/20'
+                              ? 'theme-bg theme-border font-extrabold'
                               : 'bg-slate-950/70 border-slate-800 text-slate-300'
                           }`}
                         >
@@ -926,7 +901,7 @@ export function App() {
                       setIsWorkoutStarted(true)
                       setExpandedSlotId(null)
                     }}
-                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-base shadow-xl shadow-emerald-500/25 transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3.5 rounded-2xl theme-bg hover:opacity-90 font-black text-base shadow-xl shadow-emerald-500/25 transition-all flex items-center justify-center gap-2"
                   >
                     <Play className="w-5 h-5 fill-slate-950" />
                     Comenzar Sesión {currentSession.code}
@@ -1061,7 +1036,7 @@ export function App() {
                   </div>
                   <button
                     onClick={handleFinishWorkoutSession}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-emerald-500/20"
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl theme-bg hover:opacity-90 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-emerald-500/20"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     Finalizar y Guardar ({currentSession.code})
@@ -1157,7 +1132,7 @@ export function App() {
                 onClick={() => setActiveTab(item.id)}
                 className={`flex flex-col items-center justify-center py-2 rounded-xl transition-all ${
                   active
-                    ? 'text-emerald-400 bg-emerald-500/15 font-extrabold border border-emerald-500/30'
+                    ? 'theme-text theme-soft-bg font-extrabold border theme-border'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >

@@ -25,7 +25,7 @@ export const INITIAL_DEVICE_CONFIG: DeviceConfig = {
 export const INITIAL_PROFILES: Record<'user_1' | 'user_2', UserProfile> = {
   user_1: {
     id: 'user_1',
-    name: 'Adolfo',
+    name: '',
     gender: 'male',
     isDeviceOwner: true,
     goal: 'Recomposición Corporal & Definición',
@@ -37,7 +37,7 @@ export const INITIAL_PROFILES: Record<'user_1' | 'user_2', UserProfile> = {
   },
   user_2: {
     id: 'user_2',
-    name: 'Dani',
+    name: '',
     gender: 'female',
     isDeviceOwner: false,
     goal: 'Tonificación, Glúteo/Pierna & Ritmo Metabólico',

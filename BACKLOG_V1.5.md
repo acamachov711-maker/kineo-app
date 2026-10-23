@@ -98,7 +98,22 @@
 
 ---
 
-## 🗺️ Plan de Acción Paso a Paso (Para cuando autorices construir la v1.5)
+## 🎨 BLOQUE 5: Identidad de Marca Oficial "Kineo Ascent" y Niveles del Producto (Roadmap v1.6+)
+
+1. **Identidad Visual Oficial (`Kineo Ascent`):**
+   - **Emblema Oficial:** `"The Ascent K"` (`assets/kineo-ascent-mark.svg` y `kineo-ascent-app-icon.svg`).
+   - **Paleta Estricta:**
+     - **Deep Onyx (`#0B090E`):** Fondo principal.
+     - **Solar Orange (`#FF5500`):** Acciones primarias, carga actual y perfil titular.
+     - **Hyper Violet (`#8B5CF6`):** Perfil pareja (`1 Partner`), superseries y comparativas.
+     - **Emerald (`#10B981`):** Estados guardados y series completadas (`✓`).
+   - **Tipografía:** `Kineo Industrial` (Barlow Condensed ExtraBold Italic) en encabezados y `ui-monospace` en datos numéricos.
+   - **Preview Interactivo HTML generado en:** `kineo-ascent-app-preview.html`.
+
+2. **Modelo de Producto en 2 Niveles (Free vs. Suscripción):**
+   - **Nivel Gratis (Actual):** Registro completo de ejercicios y sesiones colaborativas en vivo con **1 Partner** (o modo Individual).
+   - **Nivel Suscripción (Futuro — Kineo Pro):** **Entrenador IA personalizado** + **Salas colaborativas de hasta 6 Partners** simultáneos.
+
 
 1. **Fase 1 (Base & Persistencia):** Crear carpeta `./gym-tracker-v1.5` (conservando intacta `./gym-tracker-v1.4`), manteniendo las claves de `localStorage` compatibles y añadiendo el módulo de Exportar/Importar Respaldo JSON + Keystore fijo de Android.
 2. **Fase 2 (UI Limpia, Acordeón y Corrección de Inputs):**
