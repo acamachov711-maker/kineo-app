@@ -101,27 +101,27 @@ const TECHNIQUE_LABELS: Record<SetTechnique, { label: string; badge: string; glo
   {
     normal: {
       label: 'Normal',
-      badge: 'bg-slate-800 text-slate-200 border-slate-600',
+      badge: 'theme-bg theme-border',
       glossaryId: 'rir-fallo'
     },
     pyramid_asc: {
       label: '🔺 Pirámide Asc.',
-      badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+      badge: 'theme-bg theme-border',
       glossaryId: 'piramidal'
     },
     pyramid_desc: {
       label: '🔻 Pirámide Inv.',
-      badge: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+      badge: 'theme-bg theme-border',
       glossaryId: 'piramidal'
     },
     dropset: {
       label: '📉 Dropset',
-      badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+      badge: 'theme-bg theme-border',
       glossaryId: 'dropset'
     },
     failure: {
       label: '🔥 Al Fallo',
-      badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+      badge: 'theme-bg theme-border',
       glossaryId: 'rir-fallo'
     }
   }
@@ -235,12 +235,12 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
 
   return (
     <div
-      className={`rounded-2xl border transition-all ${
-        allSetsDone
-          ? 'bg-emerald-950/15 border-emerald-500/40'
-          : isExpanded
-          ? 'bg-slate-900/95 border-slate-700 shadow-xl'
-          : 'bg-slate-900/75 border-slate-800/90 hover:border-slate-700'
+      className={`rounded-[10px] border transition-all ${
+        isExpanded
+          ? 'bg-[#181420] border-[#FF5500] shadow-xl'
+          : allSetsDone
+          ? 'bg-[#14111A] border-[#10B981]/50'
+          : 'bg-[#14111A] border-[#2A2533] hover:border-[#3A3345]'
       }`}
     >
       {/* ACCORDION HEADER (Always visible — tap to expand/collapse) */}
@@ -251,10 +251,10 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
       >
         <div className="flex items-center gap-3 min-w-0">
           <span
-            className={`w-8 h-8 rounded-xl text-xs font-black flex items-center justify-center shrink-0 border ${
+            className={`w-7 h-7 rounded-md font-mono text-[11px] font-bold flex items-center justify-center shrink-0 border ${
               allSetsDone
-                ? 'bg-emerald-500 text-slate-950 border-emerald-400'
-                : 'bg-slate-800 text-emerald-400 border-slate-700'
+                ? 'bg-[#10B981] text-[#0B090E] border-[#10B981]'
+                : 'bg-[#0B090E] theme-text border-[#2A2533]'
             }`}
           >
             {allSetsDone ? <Check className="w-4 h-4 stroke-[3]" /> : `#${slot.order}`}
@@ -262,19 +262,17 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
-              <h3 className="text-sm sm:text-base font-extrabold text-white truncate">
-                {activeVariant.name}
-              </h3>
+              <h3 className="text-sm font-bold text-white truncate">{activeVariant.name}</h3>
               {slot.supersetGroup && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                <span className="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-[#0B090E] text-[#C4B5FD] border border-[#8B5CF6]/50">
                   {slot.supersetGroup}
                 </span>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-2 mt-0.5 text-[11px] text-slate-400">
-              <span className="text-slate-300 font-semibold">{activeVariant.equipment}</span>
+            <div className="flex flex-wrap items-center gap-2 mt-0.5 font-mono text-[10px] uppercase tracking-[0.04em] text-[#A09BA8]">
+              <span className="text-[#E2DFEA] font-semibold">{activeVariant.equipment}</span>
               <span>• {activeVariant.muscleGroup}</span>
-              <span>• ⏱ {slot.restSeconds}s</span>
+              <span>• {slot.restSeconds}s</span>
             </div>
           </div>
         </div>
@@ -282,39 +280,36 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
         <div className="flex items-center gap-2 shrink-0">
           <div className="text-right">
             <span
-              className={`text-xs font-extrabold px-2.5 py-1 rounded-lg border block ${
+              className={`font-mono text-[11px] font-bold px-2 py-1 rounded border block ${
                 allSetsDone
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                  : 'bg-slate-950 text-slate-200 border-slate-800'
+                  ? 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/40'
+                  : 'bg-[#0B090E] text-white border-[#2A2533]'
               }`}
             >
-              {completedCount}/{sets.length} series
+              {completedCount}/{sets.length} listas
             </span>
             {coupleModeEnabled && (
-              <span className="text-[10px] text-slate-400 block mt-0.5">
+              <span className="font-mono text-[10px] text-[#A09BA8] block mt-0.5">
                 {profiles[partnerId].name}: {partnerDoneCount}/{partnerSets.length}
               </span>
             )}
           </div>
-          <div className="p-1.5 rounded-xl bg-slate-800/90 text-slate-300 border border-slate-700">
+          <div className="p-1.5 rounded-md bg-[#0B090E] text-[#A09BA8] border border-[#2A2533]">
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
         </div>
       </button>
-
       {/* EXPANDED CONTENT (Only rendered for the 1 active open exercise) */}
       {isExpanded && (
-        <div className="px-3.5 sm:px-4 pb-4 pt-1 border-t border-slate-800/80 space-y-3">
+        <div className="px-3.5 sm:px-4 pb-4 pt-1 border-t border-[#2A2533] space-y-3">
           {/* Action Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-1.5 pt-2">
             <div className="flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setShowAnimation(!showAnimation)}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold border flex items-center gap-1 transition-all ${
-                  showAnimation
-                    ? 'bg-emerald-500 text-slate-950 border-emerald-400'
-                    : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                className={`px-2.5 py-1.5 rounded-md font-mono text-[10px] font-bold uppercase tracking-[0.04em] border flex items-center gap-1 transition-all ${
+                  showAnimation ? 'theme-bg theme-border' : 'bg-[#0B090E] text-[#C7C3D1] border-[#2A2533]'
                 }`}
               >
                 <PlayCircle className="w-3.5 h-3.5" />
@@ -324,10 +319,8 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
               <button
                 type="button"
                 onClick={() => setShowAlternativesModal(!showAlternativesModal)}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold border flex items-center gap-1 transition-all ${
-                  showAlternativesModal
-                    ? 'bg-amber-500 text-slate-950 border-amber-400'
-                    : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                className={`px-2.5 py-1.5 rounded-md font-mono text-[10px] font-bold uppercase tracking-[0.04em] border flex items-center gap-1 transition-all ${
+                  showAlternativesModal ? 'theme-bg theme-border' : 'bg-[#0B090E] text-[#C7C3D1] border-[#2A2533]'
                 }`}
               >
                 <Shuffle className="w-3.5 h-3.5" />
@@ -337,10 +330,8 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
               <button
                 type="button"
                 onClick={() => setShowWeightChart(!showWeightChart)}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold border flex items-center gap-1 transition-all ${
-                  showWeightChart
-                    ? 'bg-indigo-500 text-white border-indigo-400'
-                    : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+                className={`px-2.5 py-1.5 rounded-md font-mono text-[10px] font-bold uppercase tracking-[0.04em] border flex items-center gap-1 transition-all ${
+                  showWeightChart ? 'theme-bg theme-border' : 'bg-[#0B090E] text-[#C7C3D1] border-[#2A2533]'
                 }`}
               >
                 <LineChartIcon className="w-3.5 h-3.5" />
@@ -353,11 +344,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                 <button
                   type="button"
                   onClick={() => onToggleSyncMode(slot.slotId)}
-                  className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold border flex items-center gap-1 ${
-                    syncMode === 'shared'
-                      ? 'bg-slate-800 text-emerald-300 border-slate-700'
-                      : 'bg-pink-500/15 text-pink-300 border-pink-500/30'
-                  }`}
+                  className="px-2.5 py-1.5 rounded-md font-mono text-[10px] font-bold uppercase tracking-[0.04em] border flex items-center gap-1 bg-[#0B090E] text-[#C7C3D1] border-[#2A2533]"
                 >
                   {syncMode === 'shared' ? (
                     <>
@@ -376,7 +363,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenCalculatorForVariant(pid, activeVariant, slot.slotId)}
-                className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700 flex items-center gap-1"
+                className="px-2.5 py-1.5 rounded-md font-mono text-[10px] font-bold uppercase tracking-[0.04em] bg-[#0B090E] theme-text border border-[#2A2533] flex items-center gap-1"
               >
                 <Target className="w-3.5 h-3.5" />
                 Calibrar
@@ -384,28 +371,32 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
             </div>
           </div>
 
-          {/* ALWAYS ACTIVE COACH NOTE & TECHNIQUE CUES (Concise & Direct) */}
-          <div className="p-2.5 rounded-xl bg-indigo-950/25 border border-indigo-500/30 text-xs space-y-1">
-            <p className="text-indigo-200 leading-snug">
-              <strong className="text-indigo-300">📌 Entrenador:</strong> {slot.notes}
+          {/* ALWAYS ACTIVE COACH NOTE & TECHNIQUE CUES (T1.5 / T5-03) */}
+          <div className="p-2.5 rounded-md bg-[#0B090E] border border-[#2A2533] border-l-[3px] theme-border text-xs space-y-1">
+            <p className="text-[#E2DFEA] leading-snug">
+              <strong className="font-mono text-[10px] uppercase tracking-[0.06em] theme-text block mb-0.5">
+                Nota del entrenador
+              </strong>
+              {slot.notes}
             </p>
-            <p className="text-slate-300 leading-snug">
-              <strong className="text-emerald-300">💡 Técnica:</strong> {activeVariant.cues}
+            <p className="text-[#C7C3D1] leading-snug">
+              <strong className="font-mono text-[10px] uppercase tracking-[0.06em] theme-text">Técnica: </strong>
+              {activeVariant.cues}
             </p>
           </div>
 
           {/* INLINE EXERCISE WEIGHT HISTORY CHART */}
           {showWeightChart && (
-            <div className="p-3 rounded-2xl bg-slate-950/95 border border-indigo-500/40 space-y-2">
+            <div className="p-3 rounded-[10px] bg-[#0B090E] border border-[#2A2533] space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-indigo-300 flex items-center gap-1.5">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-wider theme-text flex items-center gap-1.5">
                   <LineChartIcon className="w-4 h-4" />
                   Evolución en {activeVariant.name} ({weightUnit.toUpperCase()})
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowWeightChart(false)}
-                  className="text-xs text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-900"
+                  className="font-mono text-[10px] text-[#A09BA8] hover:text-white px-2 py-0.5 rounded bg-[#14111A] border border-[#2A2533]"
                 >
                   Cerrar ✕
                 </button>
@@ -415,13 +406,13 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                 <div className="h-40 w-full pt-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={weightChartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                      <XAxis dataKey="date" stroke="#94A3B8" fontSize={11} />
-                      <YAxis stroke="#94A3B8" fontSize={11} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2A2533" />
+                      <XAxis dataKey="date" stroke="#A09BA8" fontSize={11} />
+                      <YAxis stroke="#A09BA8" fontSize={11} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#0F172A',
-                          borderColor: '#334155',
+                          backgroundColor: '#14111A',
+                          borderColor: '#2A2533',
                           borderRadius: '10px',
                           fontSize: '11px'
                         }}
@@ -448,7 +439,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="text-xs text-slate-400 py-3 text-center">
+                <p className="font-mono text-[11px] text-[#A09BA8] py-3 text-center">
                   Sin registros previos aún. Al guardar hoy verás tu gráfica.
                 </p>
               )}
@@ -464,16 +455,16 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
           )}
 
           {showAlternativesModal && (
-            <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-500/40 space-y-2">
+            <div className="p-3 rounded-[10px] bg-[#0B090E] border border-[#FF5500] space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-wider theme-text flex items-center gap-1.5">
                   <Shuffle className="w-3.5 h-3.5" />
                   Alternativas para {activeVariant.name}:
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowAlternativesModal(false)}
-                  className="text-xs text-slate-400 hover:text-white"
+                  className="font-mono text-[10px] text-[#A09BA8] hover:text-white"
                 >
                   Cerrar ✕
                 </button>
@@ -491,15 +482,15 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                       }}
                       className={`text-left p-2.5 rounded-xl border transition-all ${
                         isSelected
-                          ? 'bg-amber-500/20 border-amber-400 text-white'
-                          : 'bg-slate-900/90 border-slate-800 text-slate-300'
+                          ? 'theme-soft-bg theme-border text-white'
+                          : 'bg-[#0B090E] border-[#2A2533] text-[#C7C3D1]'
                       }`}
                     >
                       <div className="flex items-center justify-between text-[10px] mb-0.5">
-                        <span className="font-semibold text-amber-300">
+                        <span className="font-semibold theme-text">
                           {idx === 0 ? '⭐ Principal' : `Alternativa ${idx}`}
                         </span>
-                        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
+                        <span className="px-1.5 py-0.5 rounded bg-[#14111A] border border-[#2A2533] font-mono text-[10px] text-[#C7C3D1]">
                           {option.equipment}
                         </span>
                       </div>
@@ -513,15 +504,15 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
 
           {/* QUICK FIRST-TIME STRENGTH TEST (Supports 21+ reps, free backspace, and bilateral per-side toggle) */}
           {isFirstTimeExercise && (
-            <div className="p-3 rounded-xl bg-gradient-to-r from-amber-950/40 via-slate-950 to-emerald-950/30 border border-amber-500/40 space-y-2.5">
+            <div className="p-3 rounded-[10px] bg-[#0B090E] border border-[#FF5500] space-y-2.5">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                  <Sparkles className="w-4 h-4 theme-text shrink-0" />
                   <div>
-                    <p className="text-xs font-bold text-amber-200">
+                    <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white">
                       Calibrar peso de {profile.name}
                     </p>
-                    <p className="text-[11px] text-slate-300">
+                    <p className="text-[11px] text-[#A09BA8]">
                       Haz 1 serie de prueba y anota cuántas repeticiones lograste.
                     </p>
                   </div>
@@ -534,17 +525,17 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                       [pid]: !prev[pid]
                     }))
                   }
-                  className="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shrink-0"
+                  className="solar-btn theme-bg px-2.5 py-1.5 rounded-md text-sm shrink-0"
                 >
                   {inlineTestOpen ? 'Cerrar' : '⚡ Hacer Prueba'}
                 </button>
               </div>
 
               {inlineTestOpen && (
-                <div className="pt-2 border-t border-amber-500/30 space-y-2.5">
+                <div className="pt-2 border-t border-[#2A2533] space-y-2.5">
                   {isBilateralPlates && (
-                    <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-900/90 p-2 rounded-lg border border-slate-800">
-                      <span className="text-[11px] text-amber-200 font-semibold">
+                    <div className="flex flex-wrap items-center justify-between gap-2 bg-[#14111A] p-2 rounded-md border border-[#2A2533]">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.04em] text-[#A09BA8]">
                         ⚖️ ¿Anotarás el peso total o el de 1 solo lado?
                       </span>
                       <div className="flex items-center gap-1">
@@ -555,8 +546,8 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                           }
                           className={`px-2 py-1 rounded text-[11px] font-bold ${
                             quickWeightMode[pid] === 'total'
-                              ? 'bg-amber-500 text-slate-950'
-                              : 'bg-slate-800 text-slate-300'
+                              ? 'theme-bg'
+                              : 'bg-[#0B090E] text-[#C7C3D1] border border-[#2A2533]'
                           }`}
                         >
                           Peso Total
@@ -568,8 +559,8 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                           }
                           className={`px-2 py-1 rounded text-[11px] font-bold ${
                             quickWeightMode[pid] === 'per_side'
-                              ? 'bg-amber-500 text-slate-950'
-                              : 'bg-slate-800 text-slate-300'
+                              ? 'theme-bg'
+                              : 'bg-[#0B090E] text-[#C7C3D1] border border-[#2A2533]'
                           }`}
                         >
                           Por Lado (×2)
@@ -580,7 +571,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
 
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="text-[10px] text-slate-300 block mb-1">
+                      <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
                         {isBilateralPlates && quickWeightMode[pid] === 'per_side'
                           ? `Peso/lado (${weightUnit.toUpperCase()})`
                           : `Peso (${weightUnit.toUpperCase()})`}
@@ -597,11 +588,11 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                             [pid]: cleaned
                           }))
                         }}
-                        className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-lg px-2.5 py-1.5 text-sm font-bold text-white outline-none"
+                        className="clean-input theme-focus font-mono text-sm font-bold text-white outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-300 block mb-1">
+                      <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
                         Reps logradas
                       </label>
                       <input
@@ -618,11 +609,11 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                             [pid]: digits
                           }))
                         }}
-                        className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-lg px-2.5 py-1.5 text-sm font-bold text-white outline-none"
+                        className="clean-input theme-focus font-mono text-sm font-bold text-white outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-300 block mb-1">
+                      <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
                         En recámara (RIR)
                       </label>
                       <select
@@ -633,7 +624,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                             [pid]: parseInt(e.target.value, 10)
                           }))
                         }
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold text-white"
+                        className="w-full bg-[#14111A] border border-[#2A2533] rounded-md px-2 py-1.5 text-xs font-bold text-white"
                       >
                         <option value={0}>RIR 0 (Al límite)</option>
                         <option value={1}>RIR 1 (Casi límite)</option>
@@ -643,13 +634,13 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-900/95 p-2.5 rounded-lg border border-emerald-500/30">
+                  <div className="flex flex-wrap items-center justify-between gap-2 bg-[#14111A] p-2.5 rounded-md border border-[#2A2533]">
                     <div>
-                      <span className="text-xs text-emerald-300 block">
+                      <span className="text-xs text-[#E2DFEA] block">
                         Peso Ideal Sugerido:{' '}
                         <strong>{formatDualWeight(qZones.hypertrophyKg, weightUnit)}</strong>
                       </span>
-                      <span className="text-[11px] text-amber-300 font-semibold block mt-0.5">
+                      <span className="font-mono text-[10px] theme-text block mt-0.5">
                         👉{' '}
                         {getLoadInstruction(
                           qZones.hypertrophyKg,
@@ -666,7 +657,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                         onSaveQuickStrengthTest(pid, activeVariant.id, qEstimated1Rm, slot.slotId)
                         setInlineTestOpenByProfile((prev) => ({ ...prev, [pid]: false }))
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-extrabold text-xs"
+                      className="px-3 py-1.5 rounded-md bg-[#10B981] text-[#0B090E] font-extrabold text-xs"
                     >
                       ✓ Fijar Peso Ideal
                     </button>
@@ -691,7 +682,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                     className={`px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all ${
                       active
                         ? TECHNIQUE_LABELS[tech].badge
-                        : 'bg-slate-950/60 text-slate-400 border-slate-800 hover:text-slate-200'
+                        : 'bg-[#0B090E] text-[#A09BA8] border-[#2A2533] hover:text-white'
                     }`}
                   >
                     {TECHNIQUE_LABELS[tech].label}
@@ -703,7 +694,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
             <button
               type="button"
               onClick={() => onOpenGlossaryTopic(techInfo.glossaryId)}
-              className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center gap-0.5"
+              className="font-mono text-[10px] uppercase text-[#A09BA8] hover:text-white flex items-center gap-0.5"
             >
               <HelpCircle className="w-3.5 h-3.5" />
               Guía
@@ -712,7 +703,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
 
           {/* SETS TABLE FOR ACTIVE USER */}
           <div className="space-y-2">
-            <div className="grid grid-cols-12 gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-slate-400 px-1">
+            <div className="grid grid-cols-12 gap-1.5 font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] px-1">
               <div className="col-span-2">Serie</div>
               <div className="col-span-5">Peso ({weightUnit.toUpperCase()}) y Carga</div>
               <div className="col-span-3">Reps (Meta {slot.defaultTargetReps})</div>
@@ -737,22 +728,22 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                   <div
                     className={`grid grid-cols-12 gap-1.5 items-center p-2 rounded-xl border transition-all ${
                       s.completed
-                        ? 'bg-emerald-500/15 border-emerald-500/40'
-                        : 'bg-slate-950/80 border-slate-800/90'
+                        ? 'bg-[#10B981]/[0.07] border-[#10B981]/55'
+                        : 'bg-[#0B090E] border-[#2A2533]'
                     }`}
                   >
                     <div className="col-span-2 flex items-center gap-1">
-                      <span className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold flex items-center justify-center text-slate-200">
+                      <span className="w-6 h-6 rounded-md bg-[#14111A] border border-[#2A2533] font-mono text-xs font-bold flex items-center justify-center text-[#A09BA8]">
                         {s.setNumber}
                       </span>
                       {isPyramidStep &&
                         (technique === 'pyramid_asc' ? (
-                          <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+                          <TrendingUp className="w-3.5 h-3.5 theme-text" />
                         ) : (
-                          <TrendingDown className="w-3.5 h-3.5 text-purple-400" />
+                          <TrendingDown className="w-3.5 h-3.5 theme-text" />
                         ))}
                       {(s.isFailure || (technique === 'failure' && isLastSet)) && (
-                        <Flame className="w-3.5 h-3.5 text-rose-400" />
+                        <Flame className="w-3.5 h-3.5 theme-text" />
                       )}
                     </div>
 
@@ -768,9 +759,9 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                           const weightKg = parseInputToKg(isNaN(val) ? 0 : val, weightUnit)
                           onUpdateSet(pid, slot.slotId, idx, { weightKg })
                         }}
-                        className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-lg px-2.5 py-1 text-sm font-bold text-white outline-none"
+                        className="clean-input theme-focus font-mono text-sm font-bold text-white outline-none"
                       />
-                      <span className="text-[10px] text-amber-300/95 font-medium block mt-0.5 pl-0.5 leading-tight">
+                      <span className="font-mono text-[10px] uppercase theme-text font-semibold block mt-0.5 pl-0.5 leading-tight">
                         {s.weightKg > 0 ? loadHint : 'Ingresa peso o haz prueba ↑'}
                       </span>
                     </div>
@@ -788,9 +779,9 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                             actualReps: isNaN(reps) ? 0 : reps
                           })
                         }}
-                        className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-lg px-2.5 py-1 text-sm font-bold text-white outline-none"
+                        className="clean-input theme-focus font-mono text-sm font-bold text-white outline-none"
                       />
-                      <span className="text-[10px] text-slate-400 block mt-0.5 pl-0.5">
+                      <span className="font-mono text-[10px] text-[#A09BA8] block mt-0.5 pl-0.5">
                         Meta: {s.targetReps}
                       </span>
                     </div>
@@ -822,8 +813,8 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                         }}
                         className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-center border transition-all ${
                           s.completed
-                            ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20'
-                            : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700'
+                            ? 'bg-[#10B981] text-[#0B090E] border-[#10B981]'
+                            : 'bg-[#14111A] hover:bg-[#1C1826] text-[#A09BA8] border-[#2A2533]'
                         }`}
                       >
                         <Check className="w-4 h-4 stroke-[2.5]" />
@@ -832,9 +823,9 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                   </div>
 
                   {technique === 'dropset' && isLastSet && (
-                    <div className="ml-3 pl-3 border-l-2 border-cyan-500/40 space-y-1.5 py-1">
+                    <div className="ml-3 pl-3 border-l-2 theme-border space-y-1.5 py-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-cyan-300">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.04em] theme-text">
                           📉 Escalones de Dropset (sin descanso):
                         </span>
                         {(!s.drops || s.drops.length === 0) && (
@@ -845,7 +836,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                                 drops: generateDropSubSets(s.weightKg)
                               })
                             }
-                            className="text-[11px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                            className="font-mono text-[10px] uppercase px-2 py-0.5 rounded theme-soft-bg theme-text border theme-border"
                           >
                             + Generar 2 Drops (-20%)
                           </button>
@@ -857,9 +848,9 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                         return (
                           <div
                             key={drop.id}
-                            className="flex items-center justify-between gap-2 bg-cyan-950/20 border border-cyan-500/30 rounded-lg px-2.5 py-1.5 text-xs"
+                            className="flex items-center justify-between gap-2 bg-[#0B090E] border border-[#2A2533] rounded-md px-2.5 py-1.5 text-xs"
                           >
-                            <span className="font-semibold text-cyan-300">Drop {dIdx + 1}:</span>
+                            <span className="font-mono font-semibold theme-text">Drop {dIdx + 1}:</span>
                             <div className="flex items-center gap-1">
                               <input
                                 type="text"
@@ -877,9 +868,9 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                                   }
                                   onUpdateSet(pid, slot.slotId, idx, { drops: nextDrops })
                                 }}
-                                className="w-16 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-white font-bold"
+                                className="w-16 bg-[#14111A] border border-[#2A2533] rounded px-1.5 py-0.5 text-white font-mono font-bold"
                               />
-                              <span className="text-slate-400">{weightUnit} ×</span>
+                              <span className="font-mono text-[#A09BA8]">{weightUnit} ×</span>
                               <input
                                 type="text"
                                 inputMode="numeric"
@@ -896,9 +887,9 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                                   }
                                   onUpdateSet(pid, slot.slotId, idx, { drops: nextDrops })
                                 }}
-                                className="w-12 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-white font-bold"
+                                className="w-12 bg-[#14111A] border border-[#2A2533] rounded px-1.5 py-0.5 text-white font-mono font-bold"
                               />
-                              <span className="text-slate-400">reps</span>
+                              <span className="font-mono text-[#A09BA8]">reps</span>
                             </div>
                             <button
                               type="button"
@@ -909,8 +900,8 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                               }}
                               className={`p-1 rounded ${
                                 drop.completed
-                                  ? 'bg-cyan-400 text-slate-950'
-                                  : 'bg-slate-800 text-slate-400'
+                                  ? 'theme-bg'
+                                  : 'bg-[#0B090E] text-[#A09BA8] border border-[#2A2533]'
                               }`}
                             >
                               <Check className="w-3.5 h-3.5" />
@@ -929,12 +920,12 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
             <button
               type="button"
               onClick={() => onAddSet(pid, slot.slotId)}
-              className="text-xs text-slate-400 hover:text-white flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-slate-800/60"
+              className="font-mono text-[10px] uppercase text-[#A09BA8] hover:text-white flex items-center gap-1 py-1 px-2 rounded-md hover:bg-[#14111A]"
             >
               <Plus className="w-3.5 h-3.5" />
               Añadir serie extra
             </button>
-            <span className="text-[11px] text-slate-400">
+            <span className="font-mono text-[10px] text-[#A09BA8]">
               {completedCount}/{sets.length} series listas ({profile.name})
             </span>
           </div>

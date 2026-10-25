@@ -14,9 +14,52 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #0B090E;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #2A2533;
   border-radius: 9999px;
 }
+
+/* ===== Kineo Ascent (v1.5.1) ===== */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&display=swap&subset=latin,latin-ext');
+
+:root {
+  --bg: #0B090E;
+  --surface: #14111A;
+  --border: #2A2533;
+  --muted: #A09BA8;
+  --success: #10B981;
+  --theme: #FF5500;
+  --theme-fg: #0B090E;
+  --font-display: 'Barlow Condensed', 'Kineo Industrial', Impact, 'Arial Narrow', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+}
+:root[data-profile='partner'] {
+  --theme: #8B5CF6;
+  --theme-fg: #FFFFFF;
+}
+html, body { background-color: #0B090E; color: #FFFFFF; }
+.font-display, .display {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+.theme-bg { background-color: var(--theme); color: var(--theme-fg); }
+.theme-text { color: var(--theme); }
+.theme-border { border-color: var(--theme); }
+.theme-soft-bg { background-color: color-mix(in srgb, var(--theme) 12%, transparent); }
+.solar-btn {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+::-webkit-scrollbar-track { background: #0B090E; }
+
+.theme-focus:focus { border-color: var(--theme); }
+.clean-input { width: 100%; background-color: #14111A; border: 1px solid #2A2533; border-radius: 6px; padding: 7px 8px; color: #FFFFFF; outline: none; }
+.clean-input:focus { border-color: var(--theme); }

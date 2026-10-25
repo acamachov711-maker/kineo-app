@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>KINEO Ascent — Interactive App UI Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&display=swap&subset=latin,latin-ext" rel="stylesheet" />
+  <style>@font-face{font-family:Kineo Industrial;src:url('data:font/woff2;base64,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') format('woff2');font-weight:800;font-display:swap}</style>
+  <style>
+    :root {
+      --bg: #0B090E;
+      --surface: #14111A;
+      --border: #2A2533;
+      --fg: #FFFFFF;
+      --muted: #A09BA8;
+      --theme: #FF5500;
+      --theme-fg: #0B090E;
+      --secondary: #8B5CF6;
+      --success: #10B981;
+      --font-display: 'Barlow Condensed', 'Kineo Industrial', Impact, 'Arial Narrow', sans-serif;
+      --font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background-color: #0B090E; color: #FFFFFF; font-family: var(--font-body); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; touch-action: manipulation; }
+
+    .display {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.01em;
+      word-spacing: 0.06em;
+      line-height: 1;
+      margin: 0;
+    }
+
+    .preview-shell { min-height: 100vh; display: grid; grid-template-columns: 340px 1fr; max-width: 1440px; margin: 0 auto; border-inline: 1px solid var(--border); }
+    .brand-sidebar { padding: 28px 24px; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; font-size: 30px; }
+    .sidebar-brand svg { width: 34px; height: 34px; }
+    .meta-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .sidebar-headline { font-size: 46px; margin: 12px 0 10px; }
+    .screen-jump-list { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+    .jump-btn { width: 100%; text-align: left; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background-color: var(--surface); color: #FFFFFF; font-family: var(--font-mono); font-size: 11px; display: flex; align-items: center; justify-content: space-between; }
+    .jump-btn.active { background-color: var(--theme); border-color: var(--theme); color: var(--theme-fg); font-weight: 800; }
+    .token-list { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; display: grid; gap: 8px; }
+    .token-item { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #E2DFEA; }
+    .token-dot { display: inline-block; width: 10px; height: 10px; margin-right: 8px; vertical-align: middle; }
+    .tier-card { margin-top: 16px; border: 1px solid var(--border); background-color: var(--surface); padding: 12px; border-radius: 10px; color: #E2DFEA; }
+
+    .stage-area { display: flex; flex-direction: column; align-items: center; padding: 24px 16px 40px; background: radial-gradient(circle at 50% 0%, #1C1528 0%, #0B090E 65%); }
+    .top-stage-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; justify-content: center; }
+    .stage-pill { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background-color: var(--surface); color: var(--muted); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .stage-pill.active { border-color: var(--theme); background-color: color-mix(in srgb, var(--theme) 15%, transparent); color: #FFFFFF; font-weight: 700; }
+
+    .phone-frame { width: 100%; max-width: 400px; min-height: 812px; background-color: #0B090E; color: #FFFFFF; border: 2px solid var(--border); border-radius: 36px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85); position: relative; }
+    @media (max-width: 900px) {
+      .preview-shell { grid-template-columns: 1fr; border: none; }
+      .brand-sidebar { display: none; }
+      .stage-area { padding: 10px 0 0; }
+      .phone-frame { max-width: 100%; min-height: 100vh; border: none; border-radius: 0; }
+    }
+    .phone-statusbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 22px 4px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+    .phone-frame.is-onboarding .app-header, .phone-frame.is-onboarding .bottom-nav { display: none; }
+
+    /* Header */
+    .app-header { padding: 10px 16px 12px; border-bottom: 1px solid var(--border); background-color: #0B090E; position: sticky; top: 0; z-index: 20; }
+    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .brand-lockup { display: flex; align-items: center; gap: 7px; }
+    .brand-lockup svg { width: 26px; height: 26px; }
+    .brand-word { font-family: var(--font-display); font-style: italic; font-weight: 800; font-size: 26px; text-transform: uppercase; color: #FFFFFF; letter-spacing: 0.01em; }
+    .header-controls { display: flex; align-items: center; gap: 6px; }
+    .user-switch { display: inline-flex; background-color: var(--surface); border: 1px solid var(--border); padding: 2px; border-radius: 7px; }
+    .user-btn { border: none; background: transparent; padding: 5px 9px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; border-radius: 5px; color: var(--muted); text-transform: uppercase; }
+    .user-btn.active { background-color: var(--theme); color: var(--theme-fg); font-weight: 800; }
+    .unit-btn { border: 1px solid var(--border); background-color: var(--surface); color: #FFFFFF; font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 5px 8px; border-radius: 7px; }
+
+    .app-body { flex: 1; padding: 16px 16px 96px; overflow-y: auto; background-color: #0B090E; }
+    .eyebrow { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 6px; }
+    .title-xl { font-size: 36px; }
+    .title-lg { font-size: 28px; }
+
+    /* Session strip */
+    .session-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 14px 0; }
+    .session-tab { border: 1px solid var(--border); background-color: var(--surface); color: #FFFFFF; padding: 8px 4px; text-align: center; border-radius: 8px; }
+    .session-tab strong { font-family: var(--font-display); font-style: italic; font-weight: 800; font-size: 18px; display: block; line-height: 1; text-transform: uppercase; }
+    .session-tab span { font-family: var(--font-mono); font-size: 9px; color: var(--muted); display: block; margin-top: 3px; }
+    .session-tab.active { border-color: var(--theme); background-color: var(--theme); color: var(--theme-fg); }
+    .session-tab.active span { color: var(--theme-fg); font-weight: 700; }
+
+    /* Accordion */
+    .accordion-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .ex-card { border: 1px solid var(--border); background-color: var(--surface); border-radius: 10px; overflow: hidden; }
+    .ex-card.expanded { border-color: var(--theme); background-color: #181420; }
+    .ex-card.done { border-color: rgba(16, 185, 129, 0.5); }
+    .ex-header { width: 100%; border: none; background: transparent; padding: 13px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; color: #FFFFFF; }
+    .ex-left { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .ex-num { font-family: var(--font-mono); font-size: 11px; font-weight: 700; width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background-color: #0B090E; color: var(--theme); display: grid; place-items: center; flex-shrink: 0; }
+    .ex-card.done .ex-num { background-color: var(--success); border-color: var(--success); color: #0B090E; }
+    .ex-title { font-weight: 700; font-size: 14px; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ex-sub { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .ex-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .ex-progress-tag { font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 5px; background-color: #0B090E; border: 1px solid var(--border); color: #FFFFFF; }
+    .ex-body { padding: 0 14px 14px; border-top: 1px solid var(--border); }
+    .tool-row { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 10px; }
+    .tool-pill { border: 1px solid var(--border); background-color: #0B090E; color: #C7C3D1; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; padding: 5px 9px; border-radius: 6px; }
+    .tool-pill.active { border-color: var(--theme); background-color: var(--theme); color: var(--theme-fg); font-weight: 800; }
+    .coach-note { margin-top: 10px; padding: 9px 11px; background-color: #0B090E; border: 1px solid var(--border); border-left: 3px solid var(--theme); border-radius: 6px; font-size: 12px; color: #E2DFEA; }
+    .coach-note strong { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--theme); display: block; margin-bottom: 2px; }
+    .tech-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+    .tech-btn { border: 1px solid var(--border); background-color: #0B090E; color: var(--muted); font-size: 11px; font-weight: 600; padding: 5px 8px; border-radius: 6px; }
+    .tech-btn.active { border-color: var(--theme); color: var(--theme-fg); background-color: var(--theme); font-weight: 800; }
+
+    .calib-box { margin-top: 10px; padding: 11px; border: 1px solid var(--theme); background-color: #0B090E; border-radius: 8px; }
+    .calib-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .field-label { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 4px; }
+    .clean-input { width: 100%; background-color: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 7px 8px; font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: #FFFFFF; outline: none; }
+    .clean-input::placeholder { color: #5E5A68; font-weight: 400; }
+    .clean-input:focus { border-color: var(--theme); }
+    select.clean-input option { background: #14111A; }
+
+    .sets-header { display: grid; grid-template-columns: 34px 1fr 76px 42px; gap: 8px; margin-top: 12px; padding: 0 4px 4px; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .set-row { display: grid; grid-template-columns: 34px 1fr 76px 42px; gap: 8px; align-items: center; padding: 8px; border: 1px solid var(--border); background-color: #0B090E; border-radius: 8px; margin-bottom: 6px; }
+    .set-row.completed { border-color: rgba(16, 185, 129, 0.55); background-color: rgba(16, 185, 129, 0.07); }
+    .set-index { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--muted); text-align: center; }
+    .load-hint { font-family: var(--font-mono); font-size: 10px; color: var(--theme); margin-top: 3px; display: block; font-weight: 600; }
+    .check-btn { width: 38px; height: 36px; border-radius: 7px; border: 1px solid var(--border); background-color: var(--surface); color: var(--muted); font-weight: 800; display: grid; place-items: center; }
+    .check-btn.done { background-color: var(--success); border-color: var(--success); color: #0B090E; }
+
+    .solar-btn { width: 100%; border: none; background-color: var(--theme); color: var(--theme-fg); font-family: var(--font-display); font-style: italic; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; font-size: 22px; padding: 13px 18px; border-radius: 9px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .ghost-btn { width: 100%; border: 1px solid var(--border); background-color: var(--surface); color: #FFFFFF; font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 11px; border-radius: 9px; }
+
+    /* Lobby */
+    .ascent-card { border: 1px solid var(--border); background-color: var(--surface); padding: 15px; border-radius: 10px; margin-top: 12px; }
+    .streak-count { display: flex; align-items: baseline; gap: 10px; margin-top: 6px; }
+    .streak-count .num { font-family: var(--font-display); font-style: italic; font-weight: 800; font-size: 56px; line-height: 0.9; color: var(--theme); }
+    .streak-count .label { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #FFFFFF; line-height: 1.3; }
+    .week-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 12px; }
+    .day-chip { text-align: center; padding: 7px 0; border-radius: 6px; border: 1px solid var(--border); background-color: #0B090E; font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+    .day-chip.done { background-color: var(--success); border-color: var(--success); color: #0B090E; font-weight: 800; }
+    .day-chip.today { border-color: var(--theme); color: var(--theme); }
+    .plan-list { display: grid; gap: 6px; margin-top: 10px; }
+    .plan-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; background-color: #0B090E; border: 1px solid var(--border); border-radius: 8px; }
+    .plan-row .left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .plan-row .idx { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--theme); }
+    .plan-row .name { font-size: 14px; font-weight: 700; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .plan-row .meta { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .plan-row .sets { font-family: var(--font-mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+    /* Metrics / progress */
+    .big-metric { font-family: var(--font-mono); font-size: 34px; font-weight: 800; line-height: 1; color: #FFFFFF; }
+    .big-metric span { font-size: 15px; color: var(--muted); font-weight: 500; }
+    .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+    .metric-cell { border: 1px solid var(--border); background-color: #0B090E; border-radius: 8px; padding: 9px 8px; }
+    .metric-cell .val { font-family: var(--font-mono); font-size: 18px; font-weight: 800; margin-top: 4px; }
+    .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 12px; }
+    .seg button { border: 1px solid var(--border); background-color: var(--surface); color: var(--muted); padding: 7px 4px; border-radius: 7px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .seg button.active { border-color: var(--theme); color: var(--theme); background-color: color-mix(in srgb, var(--theme) 10%, transparent); }
+    .catalog-row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 11px; border: 1px solid var(--border); background-color: #0B090E; border-radius: 8px; margin-top: 6px; color: #FFFFFF; text-align: left; }
+    .catalog-row.active { border-color: var(--theme); }
+    .catalog-row small { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    /* Onboarding */
+    .ob-option { flex: 1; text-align: left; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background-color: var(--surface); }
+    .ob-option.active { border-color: var(--theme); background-color: color-mix(in srgb, var(--theme) 12%, transparent); }
+    .ob-option strong { font-family: var(--font-display); font-style: italic; font-weight: 800; font-size: 18px; text-transform: uppercase; display: block; }
+    .ob-option small { font-size: 11px; color: var(--muted); display: block; margin-top: 3px; }
+    .step-dots { display: flex; gap: 6px; margin-top: 10px; }
+    .step-dots i { width: 22px; height: 4px; border-radius: 2px; background: var(--border); }
+    .step-dots i.on { background: var(--theme); }
+    .field-block { margin-top: 12px; }
+    .gender-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .gender-row button { border: 1px solid var(--border); background-color: var(--surface); color: var(--muted); padding: 9px 4px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+    .gender-row button.active { border-color: var(--theme); color: #FFFFFF; background-color: color-mix(in srgb, var(--theme) 12%, transparent); }
+    .ob-footer { display: flex; justify-content: space-between; gap: 8px; margin-top: 18px; }
+    .ob-footer .ghost-btn { width: auto; flex: 0 0 auto; }
+    .ob-footer .solar-btn { margin-top: 0; flex: 1; font-size: 18px; padding: 11px 14px; }
+
+    .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; background-color: rgba(11, 9, 14, 0.96); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(3, 1fr); padding: 8px 12px 14px; gap: 8px; z-index: 20; }
+    .nav-btn { border: 1px solid transparent; background: transparent; color: var(--muted); padding: 8px 4px; border-radius: 8px; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; text-align: center; }
+    .nav-btn.active { border-color: var(--theme); color: var(--theme); background-color: color-mix(in srgb, var(--theme) 10%, transparent); }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <defs>
+      <linearGradient id="ascent-energy" gradientUnits="userSpaceOnUse" x1="66" y1="190" x2="190" y2="60">
+        <stop stop-color="#FF5500" />
+        <stop offset="1" stop-color="#8B5CF6" />
+      </linearGradient>
+      <symbol id="ascent-k" viewBox="0 0 256 256">
+        <path fill="url(#ascent-energy)" d="M73 80H106L102 125 148 85 140 101 151 93 162 77H144L202 56 186 112 181 97 133 137 183 200H145L100 147 94 200H60Z" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="preview-shell">
+    <aside class="brand-sidebar">
+      <div>
+        <div class="sidebar-brand display">
+          <svg viewBox="0 0 256 256"><use href="#ascent-k" /></svg>
+          KINEO
+        </div>
+        <p class="meta-label" style="margin-top:16px;">Propuesta de interfaz / Ascent UI</p>
+        <h1 class="display sidebar-headline">Built for<br>your next<br>level.</h1>
+        <p style="color:var(--muted);font-size:12px;margin-top:6px;">Elige una pantalla o interactúa directamente con el teléfono.</p>
+
+        <div class="screen-jump-list">
+          <button type="button" class="jump-btn" id="side-onboarding" onclick="jumpTo('onboarding')"><span>00 / PANTALLA INICIAL (INSTALAR)</span><span>&#8599;</span></button>
+          <button type="button" class="jump-btn active" id="side-workout" onclick="jumpTo('workout')"><span>01 / SESIÓN ACTIVA (ACORDEÓN)</span><span>&#8599;</span></button>
+          <button type="button" class="jump-btn" id="side-lobby" onclick="jumpTo('lobby')"><span>02 / PORTADA DE RACHA</span><span>&#8599;</span></button>
+          <button type="button" class="jump-btn" id="side-progress" onclick="jumpTo('progress')"><span>03 / PROGRESO COMPLETO</span><span>&#8599;</span></button>
+          <button type="button" class="jump-btn" id="side-calc" onclick="jumpTo('calc')"><span>04 / CALCULADORA (SIN DEMO)</span><span>&#8599;</span></button>
+          <button type="button" class="jump-btn" id="side-mode" onclick="jumpTo('mode')"><span>05 / MODO Y SALA EN VIVO</span><span>&#8599;</span></button>
+        </div>
+
+        <div class="token-list">
+          <div class="token-item"><span><i class="token-dot" style="background:#0B090E;border:1px solid #555;"></i>Deep Onyx (fondo)</span><code class="meta-label">#0B090E</code></div>
+          <div class="token-item"><span><i class="token-dot" style="background:#FF5500;"></i>Solar (perfil titular)</span><code class="meta-label">#FF5500</code></div>
+          <div class="token-item"><span><i class="token-dot" style="background:#8B5CF6;"></i>Violet (perfil pareja)</span><code class="meta-label">#8B5CF6</code></div>
+          <div class="token-item"><span><i class="token-dot" style="background:#10B981;"></i>Emerald (guardado)</span><code class="meta-label">#10B981</code></div>
+        </div>
+
+        <div class="tier-card">
+          <div class="meta-label" style="color:var(--theme);">Modelo de 2 niveles</div>
+          <p style="font-size:11px;margin:5px 0 0;line-height:1.4;">
+            <strong>&#8226; Gratis (actual):</strong> registro completo + modo solo o 1 partner en vivo.<br>
+            <strong>&#8226; Suscripción (futuro):</strong> entrenador IA + salas de hasta 6 partners.
+          </p>
+        </div>
+      </div>
+      <div class="meta-label">Gradient in the emblem only.<br>Flat colors keep the interface precise.</div>
+    </aside>
+
+    <main class="stage-area">
+      <div class="top-stage-bar">
+        <button type="button" class="stage-pill" id="top-onboarding" onclick="jumpTo('onboarding')">Inicio</button>
+        <button type="button" class="stage-pill active" id="top-workout" onclick="jumpTo('workout')">Sesión activa</button>
+        <button type="button" class="stage-pill" id="top-lobby" onclick="jumpTo('lobby')">Portada racha</button>
+        <button type="button" class="stage-pill" id="top-progress" onclick="jumpTo('progress')">Progreso</button>
+        <button type="button" class="stage-pill" id="top-calc" onclick="jumpTo('calc')">Peso ideal</button>
+        <button type="button" class="stage-pill" id="top-mode" onclick="jumpTo('mode')">Modo &amp; sala</button>
+      </div>
+
+      <div class="phone-frame" id="phone">
+        <div class="phone-statusbar"><span>9:41</span><span>KINEO ASCENT v1.5</span></div>
+
+        <header class="app-header">
+          <div class="header-top">
+            <div class="brand-lockup">
+              <svg viewBox="0 0 256 256"><use href="#ascent-k" /></svg>
+              <span class="brand-word">KINEO</span>
+            </div>
+            <div class="header-controls">
+              <div class="user-switch" id="header-user-switch">
+                <button type="button" class="user-btn" id="btn-user-1" onclick="switchProfile('user_1')">Titular</button>
+                <button type="button" class="user-btn" id="btn-user-2" onclick="switchProfile('user_2')">Pareja</button>
+              </div>
+              <button type="button" class="unit-btn" id="unit-toggle" onclick="toggleUnit()">KG &#8644;</button>
+            </div>
+          </div>
+        </header>
+
+        <div class="app-body" id="app-body"></div>
+
+        <nav class="bottom-nav">
+          <button type="button" class="nav-btn active" id="nav-workout" onclick="setTab('workout')">01 / Entrenar</button>
+          <button type="button" class="nav-btn" id="nav-progress" onclick="setTab('progress')">02 / Progreso</button>
+          <button type="button" class="nav-btn" id="nav-settings" onclick="setTab('settings')">03 / Ajustes</button>
+        </nav>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      tab: 'workout',           // workout | progress | settings | onboarding
+      workoutView: 'active',    // active | lobby
+      settingsSubTab: 'mode',   // mode | calc | guide
+      unit: 'kg',
+      coupleMode: true,
+      activeProfile: 'user_1',
+      activeSession: 'A',
+      expandedSlotId: 'slot-a2',
+      showCalibForSlot: null,
+      calibWeightMode: 'per_side',
+      calibWeight: '20',
+      calibReps: '',
+      progressView: 'both',
+      progressExercise: null,
+      onboard: { step: 1, mode: 'pair', gender1: '', gender2: '', goal1: '', goal2: '', roomCode: '', unit: 'kg' },
+      // Nombres vacíos por defecto: el usuario los escribe en el onboarding o en Ajustes
+      profiles: {
+        user_1: { name: '', gender: 'male' },
+        user_2: { name: '', gender: 'female' }
+      },
+      sessionsDone: { user_1: 2, user_2: 2 },
+      history: [
+        { date: '08 OCT', volume: { user_1: 2240, user_2: 1520 }, sessions: { user_1: 1, user_2: 1 } },
+        { date: '12 OCT', volume: { user_1: 2480, user_2: 1690 }, sessions: { user_1: 1, user_2: 1 } },
+        { date: '15 OCT', volume: { user_1: 3120, user_2: 2150 }, sessions: { user_1: 1, user_2: 1 } },
+        { date: '17 OCT', volume: { user_1: 2790, user_2: 1840 }, sessions: { user_1: 1, user_2: 1 } }
+      ],
+      exercises: [
+        { id: 'hip', name: 'Hip Thrust con Barra', equipment: 'Barra', muscle: 'Glúteo Mayor', best: { user_1: 60, user_2: 50 }, best1rm: { user_1: 78, user_2: 62 }, times: { user_1: 3, user_2: 3 }, series: { user_1: [40, 50, 60], user_2: [30, 40, 50] } },
+        { id: 'prensa', name: 'Prensa de Piernas 45°', equipment: 'Máquina', muscle: 'Cuádriceps & Glúteo', best: { user_1: 110, user_2: 70 }, best1rm: { user_1: 142, user_2: 91 }, times: { user_1: 4, user_2: 4 }, series: { user_1: [80, 95, 110], user_2: [50, 60, 70] } },
+        { id: 'press', name: 'Press de Pecho con Mancuernas', equipment: 'Mancuernas', muscle: 'Pecho Medio', best: { user_1: 25, user_2: 12.5 }, best1rm: { user_1: 31.5, user_2: 16 }, times: { user_1: 2, user_2: 2 }, series: { user_1: [20, 22.5, 25], user_2: [10, 11, 12.5] } }
+      ],
+      slots: [
+        {
+          id: 'slot-a1', order: '01', name: 'Prensa de Piernas 45°', equipment: 'Máquina', muscle: 'Cuádriceps & Glúteo', rest: 105, technique: 'pyramid_asc',
+          coachNote: 'Pirámide ascendente: sube peso en cada serie bajando repeticiones (12-10-8-8). Pies firmes y baja a 90°.',
+          sets: {
+            user_1: [ { num: 1, weightKg: 80, reps: 12, target: '12', done: true }, { num: 2, weightKg: 90, reps: 10, target: '10', done: true }, { num: 3, weightKg: 100, reps: 8, target: '8', done: true }, { num: 4, weightKg: 110, reps: 8, target: '8', done: true } ],
+            user_2: [ { num: 1, weightKg: 50, reps: 12, target: '12', done: true }, { num: 2, weightKg: 60, reps: 10, target: '10', done: true }, { num: 3, weightKg: 65, reps: 8, target: '8', done: true }, { num: 4, weightKg: 70, reps: 8, target: '8', done: true } ]
+          }
+        },
+        {
+          id: 'slot-a2', order: '02', name: 'Hip Thrust con Barra', equipment: 'Barra', muscle: 'Glúteo Mayor & Cadera', rest: 90, technique: 'normal',
+          coachNote: 'Empuja con los talones, mentón recogido y sostén 2 segundos apretando el glúteo arriba.',
+          sets: {
+            user_1: [ { num: 1, weightKg: 60, reps: 12, target: '10-12', done: true }, { num: 2, weightKg: 60, reps: 10, target: '10-12', done: false }, { num: 3, weightKg: 60, reps: 10, target: '10-12', done: false }, { num: 4, weightKg: 60, reps: 10, target: '10-12', done: false } ],
+            user_2: [ { num: 1, weightKg: 50, reps: 12, target: '10-12', done: true }, { num: 2, weightKg: 50, reps: 12, target: '10-12', done: true }, { num: 3, weightKg: 55, reps: 10, target: '10-12', done: false }, { num: 4, weightKg: 55, reps: 10, target: '10-12', done: false } ]
+          }
+        },
+        {
+          id: 'slot-a3', order: '03', name: 'Extensión de Cuádriceps', partnerName: 'Máquina de Abducción de Glúteo', equipment: 'Máquina', muscle: 'Cuádriceps / Glúteo Medio', rest: 30, superset: 'SS-A1', technique: 'dropset', syncMode: 'individual',
+          coachNote: 'Superserie A1 + dropset en la 3ra serie. Sostén 1 s arriba en cada repetición.',
+          sets: {
+            user_1: [ { num: 1, weightKg: 45, reps: 12, target: '12-15', done: false }, { num: 2, weightKg: 45, reps: 12, target: '12-15', done: false }, { num: 3, weightKg: 45, reps: 12, target: '12+Drop', done: false } ],
+            user_2: [ { num: 1, weightKg: 40, reps: 15, target: '12-15', done: false }, { num: 2, weightKg: 40, reps: 15, target: '12-15', done: false }, { num: 3, weightKg: 45, reps: 15, target: '15+Drop', done: false } ]
+          }
+        },
+        {
+          id: 'slot-a4', order: '04', name: 'Crunch Abdominal en Polea', equipment: 'Polea', muscle: 'Core / Recto Abdominal', rest: 75, superset: 'SS-A1', technique: 'normal',
+          coachNote: 'Superserie A2: exhala todo el aire al enrollar el abdomen hacia la pelvis.',
+          sets: {
+            user_1: [ { num: 1, weightKg: 30, reps: 15, target: '15', done: false }, { num: 2, weightKg: 30, reps: 15, target: '15', done: false }, { num: 3, weightKg: 30, reps: 15, target: '15', done: false } ],
+            user_2: [ { num: 1, weightKg: 20, reps: 15, target: '15', done: false }, { num: 2, weightKg: 20, reps: 15, target: '15', done: false }, { num: 3, weightKg: 20, reps: 15, target: '15', done: false } ]
+          }
+        }
+      ]
+    };
+
+    // ---------- Helpers ----------
+    function nameOf(pid) {
+      const n = (state.profiles[pid].name || '').trim();
+      if (n) return n;
+      return pid === 'user_1' ? 'Titular' : 'Pareja';
+    }
+    function formatW(kg) {
+      if (state.unit === 'kg') return Math.round(kg * 10) / 10;
+      return Math.round(kg * 2.20462 * 2) / 2;
+    }
+    function fmtVol(kg) {
+      const v = state.unit === 'kg' ? kg : kg * 2.20462;
+      return Math.round(v).toLocaleString('es-MX') + ' ' + state.unit.toUpperCase();
+    }
+    function findSlot(id) { return state.slots.find(s => s.id === id); }
+    function cleanDecimal(raw) {
+      const c = String(raw).replace(/[^0-9.]/g, '');
+      return c.replace(/^0+(?=\d)/, '');
+    }
+    function cleanInt(raw) {
+      const c = String(raw).replace(/[^0-9]/g, '');
+      return c.replace(/^0+(?=\d)/, '');
+    }
+    function getLoadBreakdown(weightKg, equipment, name) {
+      if (!weightKg || weightKg <= 0) return 'Ingresa peso';
+      const total = formatW(weightKg);
+      const half = Math.round((total / 2) * 10) / 10;
+      const u = state.unit.toUpperCase();
+      const lower = name.toLowerCase();
+      if (equipment === 'Barra') {
+        const bar = state.unit === 'kg' ? 20 : 45;
+        if (total > bar) {
+          const perSide = Math.round(((total - bar) / 2) * 10) / 10;
+          return 'PON ' + half + ' ' + u + '/LADO (O ' + perSide + ' ' + u + '/LADO + BARRA ' + bar + u + ')';
+        }
+        return 'PON ' + half + ' ' + u + ' DE CADA LADO';
+      }
+      if (equipment === 'Máquina' && (lower.includes('prensa') || lower.includes('hack'))) {
+        return 'DISCOS: PON ' + half + ' ' + u + ' DE CADA LADO';
+      }
+      if (equipment === 'Mancuernas') return total + ' ' + u + ' EN CADA MANO';
+      return 'PIN DIRECTO: ' + total + ' ' + u;
+    }
+
+    // ---------- Navigation ----------
+    function jumpTo(target) {
+      ['onboarding', 'workout', 'lobby', 'progress', 'calc', 'mode'].forEach(k => {
+        const s = document.getElementById('side-' + k);
+        const t = document.getElementById('top-' + k);
+        if (s) s.classList.toggle('active', k === target);
+        if (t) t.classList.toggle('active', k === target);
+      });
+      if (target === 'onboarding') { state.tab = 'onboarding'; state.onboard.step = 1; }
+      else if (target === 'workout') { state.tab = 'workout'; state.workoutView = 'active'; }
+      else if (target === 'lobby') { state.tab = 'workout'; state.workoutView = 'lobby'; }
+      else if (target === 'progress') { state.tab = 'progress'; }
+      else if (target === 'calc') { state.tab = 'settings'; state.settingsSubTab = 'calc'; }
+      else if (target === 'mode') { state.tab = 'settings'; state.settingsSubTab = 'mode'; }
+      renderAll();
+    }
+    function setTab(tab) { state.tab = tab; renderAll(); }
+    function switchProfile(pid) { state.activeProfile = pid; renderAll(); }
+    function toggleUnit() {
+      state.unit = state.unit === 'kg' ? 'lb' : 'kg';
+      renderAll();
+    }
+
+    // ---------- Workout actions ----------
+    function toggleAccordion(slotId) {
+      state.expandedSlotId = state.expandedSlotId === slotId ? null : slotId;
+      state.showCalibForSlot = null;
+      renderAll();
+    }
+    function toggleSetDone(slotId, idx) {
+      findSlot(slotId).sets[state.activeProfile][idx].done = !findSlot(slotId).sets[state.activeProfile][idx].done;
+      renderAll();
+    }
+    function updateSetWeight(slotId, idx, raw) {
+      const num = parseFloat(cleanDecimal(raw)) || 0;
+      findSlot(slotId).sets[state.activeProfile][idx].weightKg = state.unit === 'kg' ? num : num / 2.20462;
+      renderAll();
+    }
+    function updateSetReps(slotId, idx, el) {
+      const cleaned = cleanInt(el.value);
+      el.value = cleaned;
+      findSlot(slotId).sets[state.activeProfile][idx].reps = cleaned === '' ? '' : parseInt(cleaned, 10);
+    }
+    function setCalibWeight(el) { el.value = cleanDecimal(el.value); state.calibWeight = el.value; }
+    function setCalibReps(el) { el.value = cleanInt(el.value); state.calibReps = el.value; }
+    function setTechnique(slotId, tech) { findSlot(slotId).technique = tech; renderAll(); }
+    function toggleSyncMode(slotId) {
+      const s = findSlot(slotId);
+      s.syncMode = s.syncMode === 'individual' ? 'shared' : 'individual';
+      renderAll();
+    }
+    function toggleCalib(slotId) {
+      state.showCalibForSlot = state.showCalibForSlot === slotId ? null : slotId;
+      renderAll();
+    }
+
+    // ---------- Onboarding ----------
+    function obSetField(field, value) { state.onboard[field] = value; renderAll(); }
+    function obSetName(pid, el) { state.profiles[pid].name = el.value; updateChrome(); }
+    function obSetGender(pid, g) { state.profiles[pid].gender = g; renderAll(); }
+    function obNext() {
+      const ob = state.onboard;
+      const max = ob.mode === 'pair' ? 3 : 2;
+      if (ob.step === 1 && ob.mode === 'solo') { ob.step = 3; }
+      else if (ob.step < max) { ob.step += 1; }
+      renderAll();
+    }
+    function obBack() {
+      const ob = state.onboard;
+      if (ob.step === 3 && ob.mode === 'solo') ob.step = 1;
+      else if (ob.step > 1) ob.step -= 1;
+      renderAll();
+    }
+    function obFinish() {
+      state.coupleMode = state.onboard.mode === 'pair';
+      state.profiles.user_1.gender = state.onboard.gender1 || state.profiles.user_1.gender;
+      state.profiles.user_2.gender = state.onboard.gender2 || state.profiles.user_2.gender;
+      state.unit = state.onboard.unit;
+      state.tab = 'workout';
+      state.workoutView = 'lobby';
+      jumpTo('lobby');
+    }
+    function generateRoomCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let c = 'KINEO-';
+      for (let i = 0; i < 4; i++) c += chars.charAt(Math.floor(Math.random() * chars.length));
+      state.onboard.roomCode = c;
+      renderAll();
+    }
+
+    function genderButtons(pid, current) {
+      const opts = [['male', '♂ Hombre'], ['female', '♀ Mujer'], ['other', '⚡ Otro']];
+      return `<div class="gender-row">${opts.map(([g, label]) => `<button type="button" class="${current === g ? 'active' : ''}" onclick="obSetGender('${pid}','${g}')">${label}</button>`).join('')}</div>`;
+    }
+    function goalSelect(field, current) {
+      const goals = ['Recomposición corporal & definición', 'Tonificación, glúteo/pierna & ritmo metabólico', 'Hipertrofia general & estética muscular', 'Fuerza base & progresión de cargas', 'Quema de grasa, resistencia & salud metabólica'];
+      return `<select class="clean-input" onchange="obSetField('${field}', this.value)">
+        <option value="" ${!current ? 'selected' : ''} disabled>Selecciona un objetivo</option>
+        ${goals.map(g => `<option value="${g}" ${current === g ? 'selected' : ''}>${g}</option>`).join('')}
+      </select>`;
+    }
+
+    function renderOnboarding() {
+      const ob = state.onboard;
+      const totalSteps = ob.mode === 'pair' ? 3 : 2;
+      const dots = Array.from({ length: totalSteps }, (_, i) => `<i class="${i + 1 <= (ob.step === 3 && ob.mode === 'solo' ? 2 : ob.step) ? 'on' : ''}"></i>`).join('');
+      let body = '';
+
+      if (ob.step === 1) {
+        body = `
+          <p class="eyebrow">Bienvenido a Kineo</p>
+          <h2 class="display title-lg">¿Cómo vas a entrenar?</h2>
+          <div style="display:flex;gap:8px;margin-top:14px;">
+            <button type="button" class="ob-option ${ob.mode === 'solo' ? 'active' : ''}" onclick="obSetField('mode','solo')"><strong>Solo</strong><small>Entrenas tú. Sin segundo perfil.</small></button>
+            <button type="button" class="ob-option ${ob.mode === 'pair' ? 'active' : ''}" onclick="obSetField('mode','pair')"><strong>En pareja</strong><small>Sincronizas sesión con 1 partner.</small></button>
+          </div>
+          <div class="field-block">
+            <label class="field-label">Tu nombre o apodo</label>
+            <input type="text" class="clean-input" placeholder="Escribe tu nombre" value="${state.profiles.user_1.name}" oninput="obSetName('user_1', this)" />
+          </div>
+          <div class="field-block">
+            <label class="field-label">Tu género</label>
+            ${genderButtons('user_1', ob.gender1 || state.profiles.user_1.gender)}
+          </div>
+          <div class="field-block">
+            <label class="field-label">Tu objetivo principal</label>
+            ${goalSelect('goal1', ob.goal1)}
+          </div>
+          <p class="meta-label" style="margin-top:12px;font-size:9px;">Edad, peso y estatura son opcionales y se editan después en Ajustes.</p>`;
+      }
+
+      if (ob.step === 2 && ob.mode === 'pair') {
+        body = `
+          <p class="eyebrow">Vincula a tu pareja</p>
+          <h2 class="display title-lg">Sala en vivo</h2>
+          <p style="font-size:12px;color:var(--muted);margin-top:6px;">Ambos teléfonos deben usar el mismo código para ver la sesión en tiempo real.</p>
+          <div class="field-block">
+            <label class="field-label">Código de sala</label>
+            <div style="display:flex;gap:6px;">
+              <input type="text" class="clean-input" style="letter-spacing:0.12em;text-transform:uppercase;" placeholder="KINEO-XXXX" value="${ob.roomCode}" oninput="state.onboard.roomCode=this.value.toUpperCase()" />
+              <button type="button" class="ghost-btn" style="width:auto;padding:0 12px;" onclick="generateRoomCode()">Generar</button>
+            </div>
+          </div>
+          <div class="field-block">
+            <label class="field-label">Nombre de tu pareja</label>
+            <input type="text" class="clean-input" placeholder="Escribe su nombre" value="${state.profiles.user_2.name}" oninput="obSetName('user_2', this)" />
+          </div>
+          <div class="field-block">
+            <label class="field-label">Género de tu pareja</label>
+            ${genderButtons('user_2', ob.gender2 || state.profiles.user_2.gender)}
+          </div>
+          <div class="field-block">
+            <label class="field-label">Objetivo de tu pareja</label>
+            ${goalSelect('goal2', ob.goal2)}
+          </div>`;
+      }
+
+      const lastStep = ob.mode === 'pair' ? 3 : 2;
+      if ((ob.step === 3 && ob.mode === 'pair') || (ob.step === 2 && ob.mode === 'solo')) {
+        body = `
+          <p class="eyebrow">Último paso</p>
+          <h2 class="display title-lg">Unidad de peso</h2>
+          <div style="display:flex;gap:8px;margin-top:14px;">
+            <button type="button" class="ob-option ${ob.unit === 'kg' ? 'active' : ''}" onclick="obSetField('unit','kg')"><strong>Kilogramos</strong><small>KG principal, LB como referencia.</small></button>
+            <button type="button" class="ob-option ${ob.unit === 'lb' ? 'active' : ''}" onclick="obSetField('unit','lb')"><strong>Libras</strong><small>LB principal, KG como referencia.</small></button>
+          </div>
+          <p class="meta-label" style="margin-top:14px;font-size:9px;">Todo se guarda solo en este teléfono. Puedes cambiarlo en Ajustes.</p>`;
+        const finishBtn = `<button type="button" class="solar-btn" onclick="obFinish()">Entrar a Kineo &#8599;</button>`;
+        return `
+          <div class="step-dots" style="margin-bottom:6px;">${dots}</div>
+          ${body}
+          <div class="ob-footer"><button type="button" class="ghost-btn" onclick="obBack()">&#8592; Atrás</button>${finishBtn}</div>`;
+      }
+
+      const canNext = ob.step === 1 ? ob.mode !== '' : true;
+      return `
+        <div class="step-dots" style="margin-bottom:6px;">${dots}</div>
+        ${body}
+        <div class="ob-footer">
+          ${ob.step > 1 ? '<button type="button" class="ghost-btn" onclick="obBack()">&#8592; Atrás</button>' : '<span></span>'}
+          <button type="button" class="solar-btn" onclick="obNext()" ${canNext ? '' : 'disabled'}>Continuar &#8599;</button>
+        </div>`;
+    }
+
+    // ---------- Lobby ----------
+    function renderLobbyView() {
+      const days = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+      const doneDays = [0, 2];
+      const today = 3;
+      const done = state.sessionsDone[state.activeProfile];
+      return `
+        <div>
+          <p class="eyebrow">Racha activa &#8226; Semana 1 de 6</p>
+          <h2 class="display title-xl">One more.<br>One level up.</h2>
+
+          <div class="ascent-card">
+            <div class="eyebrow" style="color:var(--theme);">Constancia semanal</div>
+            <div class="streak-count">
+              <span class="num">${done}</span>
+              <span class="label">${done === 1 ? 'sesión' : 'sesiones'}<br>completadas esta semana</span>
+            </div>
+            <div class="week-row">
+              ${days.map((d, i) => `<div class="day-chip ${doneDays.includes(i) ? 'done' : ''} ${i === today ? 'today' : ''}">${d}</div>`).join('')}
+            </div>
+          </div>
+
+          <div class="session-strip">
+            ${['A', 'B', 'C', 'D', 'E'].map(code => `
+              <button type="button" class="session-tab ${state.activeSession === code ? 'active' : ''}" onclick="state.activeSession='${code}';renderAll()">
+                <strong>Ses ${code}</strong><span>${code === 'E' ? 'Opc.' : '4 ej.'}</span>
+              </button>`).join('')}
+          </div>
+
+          <div class="ascent-card">
+            <div class="eyebrow">Sesión lista para hoy &#8226; 52 min</div>
+            <h3 class="display title-lg" style="margin:6px 0 4px;">Sesión A — Tren inferior</h3>
+            <p style="font-size:12px;color:var(--muted);margin:0 0 12px;">Cuádriceps, glúteo y core</p>
+            <div class="plan-list">
+              ${state.slots.map(s => `
+                <div class="plan-row">
+                  <div class="left">
+                    <span class="idx">${s.order}</span>
+                    <div style="min-width:0;">
+                      <div class="name">${s.name}</div>
+                      <div class="meta">${s.equipment} &#8226; ${s.muscle}</div>
+                    </div>
+                  </div>
+                  <span class="sets">${s.sets.user_1.length} sets</span>
+                </div>`).join('')}
+            </div>
+            <button type="button" class="solar-btn" onclick="state.workoutView='active';renderAll()">Comenzar sesión A &#8599;</button>
+          </div>
+        </div>`;
+    }
+
+    // ---------- Workout ----------
+    function renderWorkoutTab() {
+      if (state.workoutView === 'lobby') return renderLobbyView();
+      const pid = state.activeProfile;
+      const partnerPid = pid === 'user_1' ? 'user_2' : 'user_1';
+      return `
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div>
+              <p class="eyebrow">Día 1 &#8226; 52 min</p>
+              <h2 class="display title-lg">Sesión A: Tren inferior</h2>
+            </div>
+            <button type="button" class="tool-pill" onclick="state.workoutView='lobby';renderAll()">&#8592; Portada</button>
+          </div>
+
+          <div class="accordion-list">
+            ${state.slots.map(slot => {
+              const isExpanded = state.expandedSlotId === slot.id;
+              const sets = slot.sets[pid];
+              const doneCount = sets.filter(s => s.done).length;
+              const allDone = doneCount === sets.length;
+              const partnerDone = slot.sets[partnerPid].filter(s => s.done).length;
+              const displayName = (slot.syncMode === 'individual' && pid === 'user_2' && slot.partnerName) ? slot.partnerName : slot.name;
+              return `
+                <article class="ex-card ${isExpanded ? 'expanded' : ''} ${allDone ? 'done' : ''}">
+                  <button type="button" class="ex-header" onclick="toggleAccordion('${slot.id}')">
+                    <div class="ex-left">
+                      <span class="ex-num">${allDone ? '&#10003;' : slot.order}</span>
+                      <div style="min-width:0;">
+                        <div class="ex-title">${displayName}</div>
+                        <div class="ex-sub">${slot.equipment} &#8226; ${slot.muscle} &#8226; ${slot.rest}s${slot.superset ? ' &#8226; <span style="color:#8B5CF6;font-weight:700;">' + slot.superset + '</span>' : ''}</div>
+                      </div>
+                    </div>
+                    <div class="ex-right">
+                      <div style="text-align:right;">
+                        <span class="ex-progress-tag" style="${allDone ? 'color:#10B981;border-color:#10B981;' : ''}">${doneCount}/${sets.length}</span>
+                        ${state.coupleMode ? `<span class="meta-label" style="display:block;font-size:9px;margin-top:2px;">${nameOf(partnerPid)}: ${partnerDone}/${sets.length}</span>` : ''}
+                      </div>
+                      <span style="color:var(--muted);font-size:11px;">${isExpanded ? '&#9650;' : '&#9660;'}</span>
+                    </div>
+                  </button>
+
+                  ${isExpanded ? `
+                    <div class="ex-body">
+                      <div class="tool-row">
+                        <button type="button" class="tool-pill">&#9654; Demo</button>
+                        <button type="button" class="tool-pill">&#8644; Alternativas (2)</button>
+                        <button type="button" class="tool-pill ${state.showCalibForSlot === slot.id ? 'active' : ''}" onclick="toggleCalib('${slot.id}')">&#9678; Prueba de peso</button>
+                      </div>
+
+                      <div class="coach-note"><strong>Nota del entrenador</strong>${slot.coachNote}</div>
+
+                      ${state.showCalibForSlot === slot.id ? `
+                        <div class="calib-box">
+                          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+                            <span class="meta-label" style="color:var(--theme);">Prueba de fuerza (21+ reps libres)</span>
+                            <div>
+                              <button type="button" class="tool-pill ${state.calibWeightMode === 'total' ? 'active' : ''}" onclick="state.calibWeightMode='total';renderAll()">Total</button>
+                              <button type="button" class="tool-pill ${state.calibWeightMode === 'per_side' ? 'active' : ''}" onclick="state.calibWeightMode='per_side';renderAll()">Por lado &times;2</button>
+                            </div>
+                          </div>
+                          <div class="calib-grid">
+                            <div>
+                              <label class="field-label">${state.calibWeightMode === 'per_side' ? 'Peso / lado' : 'Peso total'} (${state.unit.toUpperCase()})</label>
+                              <input type="text" inputmode="decimal" class="clean-input" value="${state.calibWeight}" oninput="setCalibWeight(this)" />
+                            </div>
+                            <div>
+                              <label class="field-label">Reps logradas</label>
+                              <input type="text" inputmode="numeric" class="clean-input" placeholder="Ej. 21" value="${state.calibReps}" oninput="setCalibReps(this)" />
+                            </div>
+                            <div>
+                              <label class="field-label">RIR</label>
+                              <select class="clean-input" style="padding:7px 4px;"><option>RIR 2 (ideal)</option><option>RIR 1</option><option>RIR 0</option></select>
+                            </div>
+                          </div>
+                          <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-size:11px;gap:6px;flex-wrap:wrap;">
+                            <span style="color:#10B981;font-family:var(--font-mono);">Sugerido: <strong>60 ${state.unit.toUpperCase()}</strong></span>
+                            <button type="button" class="tool-pill active" onclick="toggleCalib('${slot.id}')">Fijar &#10003;</button>
+                          </div>
+                        </div>` : ''}
+
+                      <div class="tech-row">
+                        ${[ { id: 'normal', label: 'Normal' }, { id: 'pyramid_asc', label: 'Pirámide &#8599;' }, { id: 'pyramid_desc', label: 'Pirámide &#8600;' }, { id: 'dropset', label: 'Dropset' }, { id: 'failure', label: 'Al fallo' } ].map(t => `
+                          <button type="button" class="tech-btn ${slot.technique === t.id ? 'active' : ''}" onclick="setTechnique('${slot.id}','${t.id}')">${t.label}</button>`).join('')}
+                      </div>
+
+                      <div class="sets-header"><div>Set</div><div>Peso (${state.unit.toUpperCase()}) + carga</div><div>Reps</div><div style="text-align:right;">OK</div></div>
+
+                      ${sets.map((s, idx) => `
+                        <div class="set-row ${s.done ? 'completed' : ''}">
+                          <div class="set-index">#${s.num}</div>
+                          <div>
+                            <input type="text" inputmode="decimal" class="clean-input" value="${s.weightKg > 0 ? formatW(s.weightKg) : ''}" onchange="updateSetWeight('${slot.id}', ${idx}, this.value)" />
+                            <span class="load-hint">${getLoadBreakdown(s.weightKg, slot.equipment, displayName)}</span>
+                          </div>
+                          <div>
+                            <input type="text" inputmode="numeric" placeholder="${s.target}" class="clean-input" value="${s.reps !== '' && s.reps > 0 ? s.reps : ''}" oninput="updateSetReps('${slot.id}', ${idx}, this)" />
+                            <span class="meta-label" style="font-size:9px;display:block;margin-top:3px;">Meta: ${s.target}</span>
+                          </div>
+                          <div style="display:flex;justify-content:flex-end;">
+                            <button type="button" class="check-btn ${s.done ? 'done' : ''}" onclick="toggleSetDone('${slot.id}', ${idx})">&#10003;</button>
+                          </div>
+                        </div>`).join('')}
+                    </div>` : ''}
+                </article>`;
+            }).join('')}
+          </div>
+
+          <button type="button" class="solar-btn">Finalizar y guardar sesión A &#8599;</button>
+        </div>`;
+    }
+
+    // ---------- Progress ----------
+    function renderProgressTab() {
+      const pv = state.progressView;
+      const showU1 = pv === 'both' || pv === 'user_1';
+      const showU2 = pv === 'both' || pv === 'user_2';
+      const sumVol = pid => state.history.reduce((a, h) => a + h.volume[pid], 0);
+      const sumSess = pid => state.history.reduce((a, h) => a + h.sessions[pid], 0);
+
+      const cards = ['user_1', 'user_2'].filter(p => pv === 'both' || pv === p).map(pid => {
+        const color = pid === 'user_1' ? '#FF5500' : '#8B5CF6';
+        return `
+          <div class="ascent-card" style="margin-top:8px;">
+            <div class="eyebrow" style="color:${color};">${nameOf(pid)}</div>
+            <div class="metric-grid">
+              <div class="metric-cell"><div class="meta-label" style="font-size:8px;">Sesiones</div><div class="val">${sumSess(pid)}</div></div>
+              <div class="metric-cell"><div class="meta-label" style="font-size:8px;">Volumen total</div><div class="val" style="font-size:13px;">${fmtVol(sumVol(pid))}</div></div>
+              <div class="metric-cell"><div class="meta-label" style="font-size:8px;">Ejercicios</div><div class="val">${state.exercises.filter(e => e.times[pid] > 0).length}</div></div>
+            </div>
+          </div>`;
+      }).join('');
+
+      const maxVol = Math.max(...state.history.flatMap(h => [h.volume.user_1, h.volume.user_2])) * 1.1;
+      const W = 300, H = 150, padL = 8, padB = 22;
+      const x = i => padL + (i * (W - padL * 2)) / (state.history.length - 1);
+      const y = v => H - padB - (v / maxVol) * (H - padB - 10);
+      const line = pid => state.history.map((h, i) => x(i) + ',' + y(h.volume[pid])).join(' ');
+      const chart = `
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:150px;margin-top:10px;">
+          <line x1="${padL}" x2="${W - padL}" y1="${H - padB}" y2="${H - padB}" stroke="#2A2533" />
+          ${showU1 ? `<polyline fill="none" stroke="#FF5500" stroke-width="2.5" points="${line('user_1')}" />` : ''}
+          ${showU1 ? state.history.map((h, i) => `<circle cx="${x(i)}" cy="${y(h.volume.user_1)}" r="3.5" fill="#FF5500" />`).join('') : ''}
+          ${showU2 ? `<polyline fill="none" stroke="#8B5CF6" stroke-width="2.5" points="${line('user_2')}" />` : ''}
+          ${showU2 ? state.history.map((h, i) => `<circle cx="${x(i)}" cy="${y(h.volume.user_2)}" r="3.5" fill="#8B5CF6" />`).join('') : ''}
+          ${state.history.map((h, i) => `<text x="${x(i)}" y="${H - 6}" fill="#A09BA8" font-size="9" font-family="monospace" text-anchor="middle">${h.date}</text>`).join('')}
+        </svg>`;
+
+      const catalog = state.exercises.map(e => {
+        const active = state.progressExercise === e.id;
+        const best = pv === 'user_2' ? e.best.user_2 : e.best.user_1;
+        return `
+          <button type="button" class="catalog-row ${active ? 'active' : ''}" onclick="state.progressExercise='${active ? '' : e.id}';renderAll()">
+            <span>${e.name}<small>${e.equipment} &#8226; ${e.muscle}</small></span>
+            <span style="text-align:right;font-family:var(--font-mono);font-size:12px;font-weight:800;">${formatW(best)} ${state.unit.toUpperCase()}<small>${pv === 'both' ? 'mejor de ambos' : 'mejor carga'}</small></span>
+          </button>
+          ${active ? detailPanel(e) : ''}`;
+      }).join('');
+
+      return `
+        <div>
+          <p class="eyebrow">Sobrecarga progresiva &#8226; historial real</p>
+          <h2 class="display title-lg">Tu progreso</h2>
+
+          <div class="seg">
+            <button type="button" class="${pv === 'both' ? 'active' : ''}" onclick="state.progressView='both';renderAll()">Ambos</button>
+            <button type="button" class="${pv === 'user_1' ? 'active' : ''}" onclick="state.progressView='user_1';renderAll()">${nameOf('user_1')}</button>
+            <button type="button" class="${pv === 'user_2' ? 'active' : ''}" onclick="state.progressView='user_2';renderAll()">${nameOf('user_2')}</button>
+          </div>
+
+          ${cards}
+
+          <div class="ascent-card">
+            <div class="eyebrow">Evolución de volumen levantado (${state.unit.toUpperCase()})</div>
+            <div style="display:flex;gap:10px;margin-top:6px;font-family:var(--font-mono);font-size:10px;">
+              ${showU1 ? '<span style="color:#FF5500;">&#9632; ' + nameOf('user_1') + '</span>' : ''}
+              ${showU2 ? '<span style="color:#8B5CF6;">&#9632; ' + nameOf('user_2') + '</span>' : ''}
+            </div>
+            ${chart}
+          </div>
+
+          <div class="ascent-card">
+            <div class="eyebrow">Ejercicios realizados</div>
+            <p style="font-size:11px;color:var(--muted);margin:4px 0 0;">Toca un ejercicio para ver su evolución de carga y 1RM.</p>
+            ${catalog}
+          </div>
+        </div>`;
+    }
+
+    function detailPanel(e) {
+      const pv = state.progressView;
+      const series = (pid, color) => {
+        const vals = e.series[pid];
+        const max = Math.max(...vals) * 1.15;
+        const pts = vals.map((v, i) => (20 + i * 120) + ',' + (100 - (v / max) * 80)).join(' ');
+        return `<polyline fill="none" stroke="${color}" stroke-width="2.5" points="${pts}" />` +
+          vals.map((v, i) => `<circle cx="${20 + i * 120}" cy="${100 - (v / max) * 80}" r="3.5" fill="${color}" />`).join('');
+      };
+      return `
+        <div class="ascent-card" style="margin-top:6px;border-color:var(--theme);">
+          <div class="eyebrow">Carga por sesión (${state.unit.toUpperCase()}) &#8226; ${e.name}</div>
+          <svg viewBox="0 0 260 120" style="width:100%;height:120px;margin-top:8px;">
+            <line x1="10" x2="250" y1="100" y2="100" stroke="#2A2533" />
+            ${(pv === 'both' || pv === 'user_1') ? series('user_1', '#FF5500') : ''}
+            ${(pv === 'both' || pv === 'user_2') ? series('user_2', '#8B5CF6') : ''}
+          </svg>
+          <div class="metric-grid">
+            <div class="metric-cell"><div class="meta-label" style="font-size:8px;">Mejor carga</div><div class="val" style="font-size:14px;">${formatW(pv === 'user_2' ? e.best.user_2 : e.best.user_1)}</div></div>
+            <div class="metric-cell"><div class="meta-label" style="font-size:8px;">1RM est.</div><div class="val" style="font-size:14px;">${formatW(pv === 'user_2' ? e.best1rm.user_2 : e.best1rm.user_1)}</div></div>
+            <div class="metric-cell"><div class="meta-label" style="font-size:8px;">Veces</div><div class="val" style="font-size:14px;">${pv === 'user_2' ? e.times.user_2 : e.times.user_1}</div></div>
+          </div>
+          <p class="meta-label" style="font-size:9px;margin-top:8px;">Registro ilustrativo &#8226; guardado solo en este dispositivo</p>
+        </div>`;
+    }
+
+    // ---------- Settings ----------
+    function renderSettingsTab() {
+      const u = state.unit.toUpperCase();
+      return `
+        <div>
+          <p class="eyebrow">Configuración &amp; calibración</p>
+          <h2 class="display title-lg">Ajustes</h2>
+
+          <div class="seg" style="margin-top:12px;">
+            <button type="button" class="${state.settingsSubTab === 'mode' ? 'active' : ''}" onclick="state.settingsSubTab='mode';renderAll()">Modo &amp; sala</button>
+            <button type="button" class="${state.settingsSubTab === 'calc' ? 'active' : ''}" onclick="state.settingsSubTab='calc';renderAll()">Peso ideal</button>
+            <button type="button" class="${state.settingsSubTab === 'guide' ? 'active' : ''}" onclick="state.settingsSubTab='guide';renderAll()">Guía</button>
+          </div>
+
+          ${state.settingsSubTab === 'mode' ? `
+            <div class="ascent-card">
+              <div class="eyebrow">Modo de entrenamiento (gratis)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+                <button type="button" class="session-tab ${!state.coupleMode ? 'active' : ''}" onclick="state.coupleMode=false;renderAll()"><strong>Solo</strong><span>1 atleta</span></button>
+                <button type="button" class="session-tab ${state.coupleMode ? 'active' : ''}" onclick="state.coupleMode=true;renderAll()"><strong>En pareja</strong><span>Sync en vivo</span></button>
+              </div>
+            </div>
+            <div class="ascent-card">
+              <div class="eyebrow">Perfiles</div>
+              <div class="field-block" style="margin-top:8px;">
+                <label class="field-label">Tu nombre</label>
+                <input type="text" class="clean-input" placeholder="Escribe tu nombre" value="${state.profiles.user_1.name}" oninput="obSetName('user_1', this)" />
+              </div>
+              ${state.coupleMode ? `
+                <div class="field-block">
+                  <label class="field-label">Nombre de tu pareja</label>
+                  <input type="text" class="clean-input" placeholder="Escribe su nombre" value="${state.profiles.user_2.name}" oninput="obSetName('user_2', this)" />
+                </div>
+                <div class="field-block">
+                  <label class="field-label">Código de sala en vivo</label>
+                  <input type="text" class="clean-input" style="letter-spacing:0.12em;" placeholder="KINEO-XXXX" value="${state.onboard.roomCode}" oninput="state.onboard.roomCode=this.value.toUpperCase()" />
+                </div>` : ''}
+            </div>
+            <div class="ascent-card" style="border-color:rgba(139,92,246,0.45);">
+              <div class="eyebrow" style="color:#8B5CF6;">Kineo Ascent Pro (futuro)</div>
+              <p style="font-size:12px;color:#E2DFEA;margin-top:6px;">Próximamente: <strong>entrenador con IA</strong> y <strong>salas de hasta 6 partners</strong>.</p>
+            </div>` : ''}
+
+          ${state.settingsSubTab === 'calc' ? `
+            <div class="ascent-card">
+              <div class="eyebrow" style="color:var(--theme);">Calculadora directa (sin demostración)</div>
+              <div class="field-block" style="margin-top:10px;">
+                <label class="field-label">Ejercicio</label>
+                <select class="clean-input"><option>[Sesión A] Hip Thrust con Barra</option><option>[Sesión A] Prensa de Piernas 45°</option><option>[Sesión B] Press de Pecho con Mancuernas</option></select>
+              </div>
+              <div class="calib-grid" style="margin-top:10px;">
+                <div><label class="field-label">Peso (${u})</label><input type="text" inputmode="decimal" class="clean-input" placeholder="0" /></div>
+                <div><label class="field-label">Reps (21+ ok)</label><input type="text" inputmode="numeric" class="clean-input" placeholder="Ej. 21" /></div>
+                <div><label class="field-label">RIR</label><select class="clean-input"><option>RIR 2</option><option>RIR 1</option></select></div>
+              </div>
+              <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+                <div class="meta-label">Peso ideal sugerido (8-10 reps)</div>
+                <div class="big-metric" style="font-size:30px;margin-top:6px;">60 <span>${u}</span></div>
+                <span class="load-hint" style="font-size:11px;margin-top:4px;">&#8594; ${getLoadBreakdown(60, 'Barra', 'Hip Thrust con Barra')}</span>
+              </div>
+            </div>` : ''}
+
+          ${state.settingsSubTab === 'guide' ? `
+            <div class="ascent-card">
+              <div class="eyebrow" style="color:var(--theme);">Pirámide ascendente vs inversa</div>
+              <p style="font-size:12px;color:#E2DFEA;margin-top:6px;">
+                <strong>Pirámide &#8599;:</strong> subes peso y bajas repeticiones en cada serie (12 &#8594; 10 &#8594; 8 &#8594; 6).<br>
+                <strong>Dropset:</strong> en la última serie bajas 20% el peso sin descansar.
+              </p>
+            </div>` : ''}
+        </div>`;
+    }
+
+    // ---------- Chrome & render ----------
+    function applyTheme() {
+      const isPartner = state.activeProfile === 'user_2';
+      const root = document.documentElement.style;
+      root.setProperty('--theme', isPartner ? '#8B5CF6' : '#FF5500');
+      root.setProperty('--theme-fg', isPartner ? '#FFFFFF' : '#0B090E');
+    }
+
+    function updateChrome() {
+      applyTheme();
+      document.getElementById('btn-user-1').textContent = nameOf('user_1');
+      document.getElementById('btn-user-2').textContent = nameOf('user_2');
+      document.getElementById('btn-user-1').classList.toggle('active', state.activeProfile === 'user_1');
+      document.getElementById('btn-user-2').classList.toggle('active', state.activeProfile === 'user_2');
+      document.getElementById('unit-toggle').innerHTML = state.unit.toUpperCase() + ' &#8644;';
+      document.getElementById('header-user-switch').style.display = state.coupleMode ? 'inline-flex' : 'none';
+    }
+
+    function renderAll() {
+      const phone = document.getElementById('phone');
+      const onboarding = state.tab === 'onboarding';
+      phone.classList.toggle('is-onboarding', onboarding);
+      ['workout', 'progress', 'settings'].forEach(t => {
+        document.getElementById('nav-' + t).classList.toggle('active', t === state.tab);
+      });
+      updateChrome();
+
+      const container = document.getElementById('app-body');
+      if (onboarding) container.innerHTML = renderOnboarding();
+      else if (state.tab === 'workout') container.innerHTML = renderWorkoutTab();
+      else if (state.tab === 'progress') container.innerHTML = renderProgressTab();
+      else if (state.tab === 'settings') container.innerHTML = renderSettingsTab();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>

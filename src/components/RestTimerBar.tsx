@@ -64,13 +64,13 @@ export const RestTimerBar: React.FC<RestTimerBarProps> = ({
 
   return (
     <div className="fixed bottom-16 left-0 right-0 z-40 px-3 pointer-events-none">
-      <div className="max-w-2xl mx-auto bg-slate-900/95 backdrop-blur-md border border-emerald-500/40 rounded-2xl shadow-2xl p-3 pointer-events-auto">
-        <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-2.5">
+      <div className="max-w-2xl mx-auto bg-[#14111A]/95 backdrop-blur-md border border-[#2A2533] rounded-[10px] shadow-2xl p-3 pointer-events-auto">
+        <div className="w-full bg-[#0B090E] h-1.5 rounded-full overflow-hidden mb-2.5">
           <div
             className={`h-full transition-all duration-300 ${
               isFinished
-                ? 'bg-amber-400 animate-pulse'
-                : 'bg-gradient-to-r from-emerald-500 to-pink-500'
+                ? 'bg-[#10B981] animate-pulse'
+                : 'theme-bg'
             }`}
             style={{ width: `${progressPct}%` }}
           />
@@ -81,8 +81,8 @@ export const RestTimerBar: React.FC<RestTimerBarProps> = ({
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                 isFinished
-                  ? 'bg-amber-500/20 text-amber-300'
-                  : 'bg-emerald-500/20 text-emerald-400'
+                  ? 'bg-[#10B981]/20 text-[#10B981]'
+                  : 'theme-soft-bg theme-text'
               }`}
             >
               {isFinished ? (
@@ -93,14 +93,14 @@ export const RestTimerBar: React.FC<RestTimerBarProps> = ({
             </div>
             <div className="truncate">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xl font-bold tracking-tight text-white">
+                <span className="font-mono text-xl font-extrabold tracking-tight text-white">
                   {isFinished ? '¡Listo!' : formatted}
                 </span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                <span className="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-[#0B090E] text-[#A09BA8] border border-[#2A2533]">
                   Descanso
                 </span>
               </div>
-              <p className="text-xs text-slate-400 truncate">
+              <p className="font-mono text-[10px] text-[#A09BA8] truncate">
                 {label || 'Recupera el aliento para la siguiente serie'}
               </p>
             </div>
@@ -109,33 +109,33 @@ export const RestTimerBar: React.FC<RestTimerBarProps> = ({
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={() => onAdjustSeconds(-15)}
-              className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700"
+              className="px-2 py-1.5 rounded-md bg-[#0B090E] hover:bg-[#1C1826] font-mono text-[10px] font-bold text-[#C7C3D1] border border-[#2A2533]"
             >
               -15s
             </button>
             <button
               onClick={() => onAdjustSeconds(15)}
-              className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700"
+              className="px-2 py-1.5 rounded-md bg-[#0B090E] hover:bg-[#1C1826] font-mono text-[10px] font-bold text-[#C7C3D1] border border-[#2A2533]"
             >
               +15s
             </button>
             <button
               onClick={onTogglePause}
-              className="p-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30"
+              className="p-2 rounded-md theme-bg border theme-border"
               title={isRunning ? 'Pausar' : 'Reanudar'}
             >
               {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </button>
             <button
               onClick={onReset}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+              className="p-2 rounded-md bg-[#0B090E] hover:bg-[#1C1826] text-[#C7C3D1] border border-[#2A2533]"
               title="Reiniciar"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
             <button
               onClick={onSkip}
-              className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-semibold flex items-center gap-1"
+              className="solar-btn px-2.5 py-1.5 rounded-md bg-[#0B090E] text-[#A09BA8] border border-[#2A2533] text-sm flex items-center gap-1"
             >
               <FastForward className="w-3.5 h-3.5" />
               Saltar

@@ -79,8 +79,8 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
       .reduce((sum, x) => sum + displayWeightValue(x.totalVolumeKg, weightUnit), 0)
     return {
       date: dateStr.slice(5),
-      [profiles.user_1.name]: Math.round(u1),
-      [profiles.user_2.name]: Math.round(u2)
+      [profiles.user_1.name]: user1History.some((h) => h.date === dateStr) ? Math.round(u1) : null,
+      [profiles.user_2.name]: user2History.some((h) => h.date === dateStr) ? Math.round(u2) : null
     }
   })
 
@@ -163,37 +163,37 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
   return (
     <div className="space-y-5 pb-24">
       {/* Filter Pills */}
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-900/90 border border-slate-800 p-3 rounded-2xl">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-[#14111A] border border-[#2A2533] p-3 rounded-[10px]">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-[#A09BA8]">
           Vista de Progreso:
         </span>
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setSelectedProfile('both')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+            className={`px-3 py-1.5 rounded-md font-mono text-[11px] font-bold uppercase border transition-all ${
               selectedProfile === 'both'
-                ? 'bg-indigo-500/25 border-indigo-400 text-white'
-                : 'bg-slate-950 border-slate-800 text-slate-400'
+                ? 'theme-bg theme-border'
+                : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8]'
             }`}
           >
             Ambos (Comparativa)
           </button>
           <button
             onClick={() => setSelectedProfile('user_1')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+            className={`px-3 py-1.5 rounded-md font-mono text-[11px] font-bold uppercase border transition-all ${
               selectedProfile === 'user_1'
-                ? 'bg-emerald-500/25 border-emerald-400 text-emerald-200'
-                : 'bg-slate-950 border-slate-800 text-slate-400'
+                ? 'theme-bg theme-border'
+                : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8]'
             }`}
           >
             {profiles.user_1.name}
           </button>
           <button
             onClick={() => setSelectedProfile('user_2')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+            className={`px-3 py-1.5 rounded-md font-mono text-[11px] font-bold uppercase border transition-all ${
               selectedProfile === 'user_2'
-                ? 'bg-pink-500/25 border-pink-400 text-pink-200'
-                : 'bg-slate-950 border-slate-800 text-slate-400'
+                ? 'theme-bg theme-border'
+                : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8]'
             }`}
           >
             {profiles.user_2.name}
@@ -216,47 +216,47 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
             return (
               <div
                 key={pid}
-                className="rounded-2xl p-4 border bg-slate-900/90 border-slate-800"
+                className="rounded-[10px] p-4 border bg-[#14111A] border-[#2A2533]"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <h3 className="font-display text-xl text-white flex items-center gap-2">
                       <span
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: prof.accentColor }}
                       />
                       {prof.name}
                     </h3>
-                    <p className="text-xs text-slate-400">{prof.goal}</p>
+                    <p className="font-mono text-[10px] text-[#A09BA8]">{prof.goal}</p>
                   </div>
                   <Trophy className="w-6 h-6" style={{ color: prof.accentColor }} />
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <div className="p-2.5 rounded-md bg-[#0B090E] border border-[#2A2533]">
+                    <span className="font-mono text-[10px] text-[#A09BA8] flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> Sesiones
                     </span>
                     <p className="text-lg font-extrabold text-white mt-0.5">{pHist.length}</p>
-                    <span className="text-[10px] text-emerald-400">Meta: 3-5/sem</span>
+                    <span className="font-mono text-[10px] theme-text">Meta: 3-5/sem</span>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <div className="p-2.5 rounded-md bg-[#0B090E] border border-[#2A2533]">
+                    <span className="font-mono text-[10px] text-[#A09BA8] flex items-center gap-1">
                       <Flame className="w-3 h-3" /> Volumen Total
                     </span>
                     <p className="text-sm font-extrabold text-white mt-1">
                       {displayWeightValue(totalVol, weightUnit).toLocaleString()} {weightUnit}
                     </p>
-                    <span className="text-[10px] text-slate-400">Acumulado</span>
+                    <span className="font-mono text-[10px] text-[#A09BA8]">Acumulado</span>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <div className="p-2.5 rounded-md bg-[#0B090E] border border-[#2A2533]">
+                    <span className="font-mono text-[10px] text-[#A09BA8] flex items-center gap-1">
                       <Award className="w-3 h-3" /> Ejercicios
                     </span>
                     <p className="text-lg font-extrabold text-white mt-0.5">{exCount}</p>
-                    <span className="text-[10px] text-slate-400">Realizados</span>
+                    <span className="font-mono text-[10px] text-[#A09BA8]">Realizados</span>
                   </div>
                 </div>
               </div>
@@ -265,14 +265,14 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
       </div>
 
       {/* 2. Volume Evolution Chart */}
-      <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-5">
+      <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 sm:p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <TrendingUp className="w-4 h-4 theme-text" />
               Evolución de Volumen Levantado ({weightUnit.toUpperCase()})
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="font-mono text-[10px] text-[#A09BA8]">
               Suma de Peso × Repeticiones completadas en cada entrenamiento
             </p>
           </div>
@@ -292,19 +292,20 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                     <stop offset="95%" stopColor={profiles.user_2.accentColor} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                <XAxis dataKey="date" stroke="#94A3B8" fontSize={12} />
-                <YAxis stroke="#94A3B8" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2A2533" />
+                <XAxis dataKey="date" stroke="#A09BA8" fontSize={12} />
+                <YAxis stroke="#A09BA8" fontSize={12} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0F172A',
-                    borderColor: '#334155',
+                    backgroundColor: '#14111A',
+                    borderColor: '#2A2533',
                     borderRadius: '12px',
                     fontSize: '12px'
                   }}
                 />
                 {(selectedProfile === 'both' || selectedProfile === 'user_1') && (
                   <Area
+                    connectNulls
                     type="monotone"
                     dataKey={profiles.user_1.name}
                     stroke={profiles.user_1.accentColor}
@@ -315,6 +316,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                 )}
                 {(selectedProfile === 'both' || selectedProfile === 'user_2') && (
                   <Area
+                    connectNulls
                     type="monotone"
                     dataKey={profiles.user_2.name}
                     stroke={profiles.user_2.accentColor}
@@ -327,42 +329,42 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
             </ResponsiveContainer>
           </div>
         ) : (
-          <p className="text-xs text-slate-400 py-8 text-center">
+          <p className="font-mono text-[10px] text-[#A09BA8] py-8 text-center">
             Aún no hay entrenamientos registrados.
           </p>
         )}
       </div>
 
       {/* 3. Unique Performed Exercises Catalog + Individual Clickable Stats */}
-      <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-5 space-y-4">
+      <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 sm:p-5 space-y-4">
         <div>
           <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-            <Dumbbell className="w-4 h-4 text-emerald-400" />
+            <Dumbbell className="w-4 h-4 theme-text" />
             Ejercicios Realizados (Toca cualquiera para ver sus estadísticas individuales)
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="font-mono text-[10px] text-[#A09BA8] mt-0.5">
             Catálogo único sin repetir de los ejercicios trabajados y su evolución de peso
           </p>
         </div>
 
         {/* Individual Exercise Statistics Modal / Drawer when clicked */}
         {activeDetailExercise && (
-          <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/40 space-y-4 shadow-xl">
-            <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-3">
+          <div className="p-4 rounded-[10px] bg-[#0B090E] border theme-border space-y-4">
+            <div className="flex items-start justify-between gap-2 border-b border-[#2A2533] pb-3">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] theme-text">
                   Estadísticas Individuales del Ejercicio
                 </span>
                 <h4 className="text-base sm:text-lg font-extrabold text-white mt-0.5">
                   {activeDetailExercise.variantName}
                 </h4>
-                <p className="text-xs text-slate-400">
+                <p className="font-mono text-[10px] text-[#A09BA8]">
                   {activeDetailExercise.equipment} • {activeDetailExercise.muscleGroup}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedExerciseId(null)}
-                className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700"
+                className="p-1.5 rounded-md bg-[#14111A] hover:bg-[#1C1826] text-[#A09BA8] border border-[#2A2533]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -370,7 +372,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
 
             {/* Individual Exercise KPI Cards per Profile */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+              <div className="p-3 rounded-md bg-[#14111A] border border-[#2A2533] space-y-1.5">
                 <span
                   className="text-xs font-extrabold block"
                   style={{ color: profiles.user_1.accentColor }}
@@ -379,20 +381,20 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                 </span>
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div>
-                    <span className="text-[10px] text-slate-400 block">Mejor Peso</span>
+                    <span className="font-mono text-[10px] text-[#A09BA8] block">Mejor Peso</span>
                     <strong className="text-white">
                       {formatDualWeight(activeDetailExercise.bestWeightKgU1, weightUnit)}
                     </strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block">1RM Est.</span>
-                    <strong className="text-emerald-300">
+                    <span className="font-mono text-[10px] text-[#A09BA8] block">1RM Est.</span>
+                    <strong className="theme-text">
                       {displayWeightValue(activeDetailExercise.best1RmKgU1, weightUnit)}{' '}
                       {weightUnit}
                     </strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block">Sesiones</span>
+                    <span className="font-mono text-[10px] text-[#A09BA8] block">Sesiones</span>
                     <strong className="text-white">
                       {activeDetailExercise.timesPerformedU1} veces
                     </strong>
@@ -400,7 +402,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+              <div className="p-3 rounded-md bg-[#14111A] border border-[#2A2533] space-y-1.5">
                 <span
                   className="text-xs font-extrabold block"
                   style={{ color: profiles.user_2.accentColor }}
@@ -409,20 +411,20 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                 </span>
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div>
-                    <span className="text-[10px] text-slate-400 block">Mejor Peso</span>
+                    <span className="font-mono text-[10px] text-[#A09BA8] block">Mejor Peso</span>
                     <strong className="text-white">
                       {formatDualWeight(activeDetailExercise.bestWeightKgU2, weightUnit)}
                     </strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block">1RM Est.</span>
-                    <strong className="text-pink-300">
+                    <span className="font-mono text-[10px] text-[#A09BA8] block">1RM Est.</span>
+                    <strong className="theme-text">
                       {displayWeightValue(activeDetailExercise.best1RmKgU2, weightUnit)}{' '}
                       {weightUnit}
                     </strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block">Sesiones</span>
+                    <span className="font-mono text-[10px] text-[#A09BA8] block">Sesiones</span>
                     <strong className="text-white">
                       {activeDetailExercise.timesPerformedU2} veces
                     </strong>
@@ -433,7 +435,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
 
             {/* Weight Progression LineChart for this specific exercise */}
             <div>
-              <p className="text-xs font-bold text-slate-300 mb-2">
+              <p className="font-mono text-[10px] font-bold uppercase text-[#A09BA8] mb-2">
                 Curva de Progreso de Peso en {activeDetailExercise.variantName} (
                 {weightUnit.toUpperCase()}):
               </p>
@@ -441,13 +443,13 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                 <div className="h-52 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={detailChartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                      <XAxis dataKey="date" stroke="#94A3B8" fontSize={11} />
-                      <YAxis stroke="#94A3B8" fontSize={11} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2A2533" />
+                      <XAxis dataKey="date" stroke="#A09BA8" fontSize={11} />
+                      <YAxis stroke="#A09BA8" fontSize={11} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#0F172A',
-                          borderColor: '#334155',
+                          backgroundColor: '#14111A',
+                          borderColor: '#2A2533',
                           borderRadius: '10px',
                           fontSize: '12px'
                         }}
@@ -472,7 +474,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="text-xs text-slate-400 py-4 text-center">
+                <p className="font-mono text-[10px] text-[#A09BA8] py-4 text-center">
                   Completa más sesiones de este ejercicio para graficar su curva temporal.
                 </p>
               )}
@@ -493,20 +495,20 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                   }
                   className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2 ${
                     isSelected
-                      ? 'bg-emerald-500/15 border-emerald-400 text-white'
-                      : 'bg-slate-950/80 border-slate-800 hover:border-slate-700 text-slate-200'
+                      ? 'theme-soft-bg theme-border text-white'
+                      : 'bg-[#0B090E] border-[#2A2533] hover:border-[#3A3345] text-[#E2DFEA]'
                   }`}
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-emerald-300 font-bold">
+                      <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#14111A] border border-[#2A2533] text-[#E2DFEA] font-bold">
                         {ex.equipment}
                       </span>
-                      <span className="text-[11px] text-slate-400 truncate">
+                      <span className="font-mono text-[10px] text-[#A09BA8] truncate">
                         {ex.muscleGroup}
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm font-extrabold text-white mt-1 truncate">
+                    <p className="text-xs sm:text-sm font-bold text-white mt-1 truncate">
                       {ex.variantName}
                     </p>
                     <div className="flex flex-wrap items-center gap-3 mt-1.5 text-[11px]">
@@ -524,13 +526,13 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                       )}
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-[#A09BA8] shrink-0" />
                 </button>
               )
             })}
           </div>
         ) : (
-          <div className="p-6 rounded-xl bg-slate-950/60 border border-slate-800 text-center text-xs text-slate-400">
+          <div className="p-6 rounded-md bg-[#0B090E] border border-[#2A2533] text-center text-xs text-[#A09BA8]">
             Aún no hay ejercicios realizados en el historial. Completa tu primera sesión en la
             pestaña <strong>Entrenar</strong> para ver aquí cada ejercicio y sus gráficas.
           </div>

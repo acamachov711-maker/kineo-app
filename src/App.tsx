@@ -721,83 +721,49 @@ export function App() {
   const hasSampleData = history.some((h) => h.isSampleData)
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col">
-      {/* Clean Top Bar (Collaborative 'Pareja' button removed — only direct user switch) */}
-      <header className="sticky top-0 z-30 bg-[#090D16]/90 backdrop-blur-md border-b border-slate-800/80 px-3 sm:px-6 py-2.5">
-        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-pink-500 p-[1.5px]">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-black text-sm tracking-tighter text-white">
-                K
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-sm sm:text-base font-black tracking-tight text-white">
-                  KINEO <span className="text-emerald-400 text-xs font-bold">v1.5</span>
-                </h1>
-                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                  Sem {mesocycle.currentWeek}/{mesocycle.durationWeeks}
-                </span>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
-                  <Flame className="w-3 h-3 text-amber-400 fill-amber-400" />
-                  {streakPrimary.weeklySessionsDone}/3
-                </span>
-                {deviceConfig.coupleModeEnabled && deviceConfig.syncRoomCode && (
-                  <button
-                    onClick={() => {
-                      setSettingsSubTab('profiles')
-                      setActiveTab('settings')
-                    }}
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${
-                      syncStatus === 'connected'
-                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
-                        : 'bg-slate-800 text-slate-400 border-slate-700'
-                    }`}
-                    title={`Sala en vivo: ${deviceConfig.syncRoomCode}`}
-                  >
-                    <Wifi className="w-2.5 h-2.5" />
-                    <span className="hidden xs:inline">{deviceConfig.syncRoomCode}</span>
-                  </button>
-                )}
-              </div>
-            </div>
+    <div className="min-h-screen bg-[#0B090E] text-white flex flex-col">
+      {/* Kineo Ascent header: logo K, switch Titular / Pareja (theme), unit */}
+      <header className="sticky top-0 z-30 bg-[#0B090E]/95 backdrop-blur-md border-b border-[#2A2533] px-3 sm:px-6 py-2.5">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <svg viewBox="0 0 256 256" className="w-7 h-7" aria-hidden="true">
+              <defs>
+                <linearGradient id="ascent-energy" gradientUnits="userSpaceOnUse" x1="66" y1="190" x2="190" y2="60">
+                  <stop stopColor="#FF5500" />
+                  <stop offset="1" stopColor="#8B5CF6" />
+                </linearGradient>
+              </defs>
+              <path fill="url(#ascent-energy)" d="M73 80H106L102 125 148 85 140 101 151 93 162 77H144L202 56 186 112 181 97 133 137 183 200H145L100 147 94 200H60Z" />
+            </svg>
+            <span className="font-display text-2xl leading-none">KINEO</span>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Direct 2-user switch (Only rendered when Couple Mode is enabled) */}
             {deviceConfig.coupleModeEnabled && (
-              <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-0.5">
+              <div className="flex items-center bg-[#14111A] border border-[#2A2533] rounded-lg p-0.5">
                 <button
                   onClick={() => setActiveProfileId(primaryPid)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                    activeProfileId === primaryPid
-                      ? 'bg-emerald-500 text-slate-950 font-extrabold shadow'
-                      : 'text-slate-400 hover:text-white'
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase font-mono transition-all ${
+                    activeProfileId === primaryPid ? 'theme-bg' : 'text-[#A09BA8]'
                   }`}
                 >
-                  <User className="w-3 h-3" />
-                  {profiles[primaryPid].name.split(' ')[0]}
+                  {profiles[primaryPid].name.trim() || 'Titular'}
                 </button>
                 <button
                   onClick={() => setActiveProfileId(secondaryPid)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                    activeProfileId === secondaryPid
-                      ? 'bg-pink-500 text-slate-950 font-extrabold shadow'
-                      : 'text-slate-400 hover:text-white'
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase font-mono transition-all ${
+                    activeProfileId === secondaryPid ? 'theme-bg' : 'text-[#A09BA8]'
                   }`}
                 >
-                  <User className="w-3 h-3" />
-                  {profiles[secondaryPid].name.split(' ')[0]}
+                  {profiles[secondaryPid].name.trim() || 'Pareja'}
                 </button>
               </div>
             )}
 
             <button
               onClick={() => setWeightUnit((u) => (u === 'kg' ? 'lb' : 'kg'))}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-extrabold text-amber-300 flex items-center gap-1"
+              className="px-2 py-1.5 rounded-lg bg-[#14111A] border border-[#2A2533] text-[11px] font-bold font-mono text-white"
             >
-              <Scale className="w-3.5 h-3.5" />
               {weightUnit.toUpperCase()} ⇄
             </button>
           </div>
@@ -815,35 +781,36 @@ export function App() {
                   profiles={profiles}
                   primaryProfileId={primaryPid}
                   history={history}
+                  activeProfileId={activeProfileId}
                 />
 
-                <div className="rounded-3xl bg-gradient-to-br from-emerald-950/50 via-slate-900 to-indigo-950/40 border border-emerald-500/40 p-6 text-center space-y-4 shadow-2xl">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 mx-auto">
+                <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-6 text-center space-y-4">
+                  <div className="w-14 h-14 rounded-[10px] bg-[#0B090E] border border-[#10B981] flex items-center justify-center text-[#10B981] mx-auto">
                     <Moon className="w-7 h-7" />
                   </div>
                   <div className="space-y-1 max-w-lg mx-auto">
-                    <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-400">
+                    <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#10B981]">
                       ¡Sesión {deviceConfig.lastCompletedSessionCode || ''} Completada!
                     </span>
-                    <h2 className="text-xl font-black text-white">
+                    <h2 className="font-display text-3xl text-white">
                       Descanso Muscular hasta Mañana
                     </h2>
-                    <p className="text-xs text-slate-300">
-                      Mañana toca: <strong>{currentSession.title}</strong>.
+                    <p className="text-xs text-[#A09BA8]">
+                      Mañana toca: <strong className="text-white">{currentSession.title}</strong>.
                     </p>
                   </div>
 
                   <div className="pt-1 flex flex-wrap items-center justify-center gap-2.5">
                     <button
                       onClick={() => setActiveTab('progress')}
-                      className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center gap-2"
+                      className="solar-btn theme-bg px-4 py-2.5 rounded-[9px] text-base flex items-center gap-2"
                     >
                       <BarChart3 className="w-4 h-4" />
                       Ver Progreso
                     </button>
                     <button
                       onClick={() => setIsWorkoutStarted(true)}
-                      className="px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1.5"
+                      className="px-3.5 py-2.5 rounded-[9px] bg-[#14111A] hover:bg-[#1C1826] text-[#A09BA8] hover:text-white border border-[#2A2533] font-mono text-[11px] font-bold uppercase flex items-center gap-1.5"
                     >
                       <Unlock className="w-3.5 h-3.5" />
                       Desbloquear hoy
@@ -858,23 +825,24 @@ export function App() {
                   profiles={profiles}
                   primaryProfileId={primaryPid}
                   history={history}
+                  activeProfileId={activeProfileId}
                 />
 
-                <div className="rounded-3xl bg-slate-900/95 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl">
+                <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 sm:p-5 space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                      <span className="font-mono text-[11px] font-bold uppercase tracking-wider theme-text flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5" />
                         Sesión Lista para Hoy
                       </span>
-                      <h2 className="text-lg sm:text-xl font-black text-white mt-0.5">
+                      <h2 className="font-display text-3xl text-white mt-0.5">
                         {currentSession.title}
                       </h2>
-                      <p className="text-xs text-slate-400">{currentSession.subtitle}</p>
+                      <p className="text-xs text-[#A09BA8]">{currentSession.subtitle}</p>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
-                      <Clock className="w-3.5 h-3.5 text-emerald-400" />~
+                    <div className="flex items-center gap-1.5 font-mono text-[11px] text-[#E2DFEA] bg-[#0B090E] px-3 py-1.5 rounded-md border border-[#2A2533]">
+                      <Clock className="w-3.5 h-3.5 theme-text" />~
                       {currentSession.estimatedMinutes} min • {currentSession.slots.length} ejerc.
                     </div>
                   </div>
@@ -887,16 +855,18 @@ export function App() {
                         <button
                           key={sess.id}
                           onClick={() => setActiveSessionId(sess.id)}
-                          className={`p-2 rounded-xl border text-center transition-all ${
+                          className={`p-2 rounded-lg border text-center transition-all ${
                             isSelected
-                              ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-extrabold shadow-lg shadow-emerald-500/20'
-                              : 'bg-slate-950/70 border-slate-800 text-slate-300'
+                              ? 'theme-bg theme-border'
+                              : 'bg-[#0B090E] border-[#2A2533] text-white'
                           }`}
                         >
-                          <span className="text-xs font-black block">Sesión {sess.code}</span>
+                          <span className="font-display text-lg block leading-none">
+                            {sess.code}
+                          </span>
                           <span
-                            className={`text-[10px] block truncate ${
-                              isSelected ? 'text-slate-900 font-semibold' : 'text-slate-400'
+                            className={`font-mono text-[9px] block truncate mt-0.5 ${
+                              isSelected ? 'font-semibold' : 'text-[#A09BA8]'
                             }`}
                           >
                             {sess.isOptional5thDay ? 'Opc.' : `${sess.slots.length} ej.`}
@@ -911,9 +881,9 @@ export function App() {
                     {currentSession.slots.map((slot) => (
                       <div
                         key={slot.slotId}
-                        className="flex items-center gap-2 text-xs text-slate-300 bg-slate-950/80 px-3 py-2 rounded-xl border border-slate-800/80"
+                        className="flex items-center gap-2 text-xs text-[#E2DFEA] bg-[#0B090E] px-3 py-2 rounded-md border border-[#2A2533]"
                       >
-                        <span className="w-5 h-5 rounded bg-slate-800 text-emerald-400 font-bold text-[11px] flex items-center justify-center shrink-0">
+                        <span className="w-5 h-5 rounded bg-[#14111A] border border-[#2A2533] theme-text font-mono font-bold text-[11px] flex items-center justify-center shrink-0">
                           {slot.order}
                         </span>
                         <span className="truncate font-medium">{slot.primaryExercise.name}</span>
@@ -926,80 +896,38 @@ export function App() {
                       setIsWorkoutStarted(true)
                       setExpandedSlotId(null)
                     }}
-                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-base shadow-xl shadow-emerald-500/25 transition-all flex items-center justify-center gap-2"
+                    className="solar-btn theme-bg w-full py-3 rounded-[9px] text-[22px] flex items-center justify-center gap-2"
                   >
-                    <Play className="w-5 h-5 fill-slate-950" />
-                    Comenzar Sesión {currentSession.code}
+                    <Play className="w-5 h-5" />
+                    Comenzar Sesión {currentSession.code} ↗
                   </button>
                 </div>
               </div>
             ) : (
               /* STATE C: ACTIVE WORKOUT SESSION (EXCLUSIVE ACCORDION VIEW) */
               <div className="space-y-3">
-                <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-3.5 space-y-2.5">
+                <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-3.5 space-y-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <h2 className="text-sm sm:text-base font-extrabold text-white">
+                      <h2 className="font-display text-2xl text-white leading-none">
                         {currentSession.title}
                       </h2>
-                      <p className="text-[11px] text-slate-400">
-                        Toca un ejercicio para abrirlo (se mostrará uno a la vez).
+                      <p className="font-mono text-[10px] uppercase tracking-[0.04em] text-[#A09BA8] mt-1">
+                        {activeProfileId === primaryPid ? 'Titular' : 'Pareja'} ·{' '}
+                        {activeProfileId === primaryPid
+                          ? statsPrimary.completed
+                          : statsSecondary.completed}
+                        /
+                        {activeProfileId === primaryPid ? statsPrimary.total : statsSecondary.total}{' '}
+                        series
                       </p>
                     </div>
                     <button
                       onClick={() => setIsWorkoutStarted(false)}
-                      className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 shrink-0"
+                      className="px-2.5 py-1.5 rounded-lg bg-[#0B090E] hover:bg-[#1C1826] font-mono text-[10px] font-bold uppercase text-[#A09BA8] hover:text-white border border-[#2A2533] shrink-0"
                     >
                       ← Portada
                     </button>
-                  </div>
-
-                  <div
-                    className={`grid gap-2 ${
-                      deviceConfig.coupleModeEnabled ? 'grid-cols-2' : 'grid-cols-1'
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setActiveProfileId(primaryPid)}
-                      className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs transition-all ${
-                        activeProfileId === primaryPid
-                          ? 'bg-emerald-950/30 border-emerald-500/50 text-white'
-                          : 'bg-slate-950/70 border-slate-800 text-slate-400'
-                      }`}
-                    >
-                      <span
-                        className="font-bold truncate"
-                        style={{ color: profiles[primaryPid].accentColor }}
-                      >
-                        ★ {profiles[primaryPid].name}
-                      </span>
-                      <span className="font-semibold">
-                        {statsPrimary.completed}/{statsPrimary.total} series
-                      </span>
-                    </button>
-
-                    {deviceConfig.coupleModeEnabled && (
-                      <button
-                        type="button"
-                        onClick={() => setActiveProfileId(secondaryPid)}
-                        className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs transition-all ${
-                          activeProfileId === secondaryPid
-                            ? 'bg-pink-950/30 border-pink-500/50 text-white'
-                            : 'bg-slate-950/70 border-slate-800 text-slate-400'
-                        }`}
-                      >
-                        <span
-                          className="font-bold truncate"
-                          style={{ color: profiles[secondaryPid].accentColor }}
-                        >
-                          {profiles[secondaryPid].name}
-                        </span>
-                        <span className="font-semibold">
-                          {statsSecondary.completed}/{statsSecondary.total} series
-                        </span>
-                      </button>
-                    )}
                   </div>
                 </div>
 
@@ -1049,28 +977,28 @@ export function App() {
                   })}
                 </div>
 
-                <div className="rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-pink-950/60 border border-emerald-500/30 p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                    <h3 className="font-mono text-[11px] font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 theme-text" />
                       ¿Terminaron la sesión {currentSession.code}?
                     </h3>
-                    <p className="text-[11px] text-slate-300">
+                    <p className="text-[11px] text-[#A09BA8]">
                       Guarda el progreso de hoy y suma día a la racha.
                     </p>
                   </div>
                   <button
                     onClick={handleFinishWorkoutSession}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-emerald-500/20"
+                    className="solar-btn theme-bg w-full sm:w-auto px-5 py-2.5 rounded-[9px] text-lg flex items-center justify-center gap-2 shrink-0"
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    Finalizar y Guardar ({currentSession.code})
+                    Finalizar y Guardar Sesión {currentSession.code}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
 
                 {finishBanner && (
-                  <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-400 text-amber-200 text-xs font-bold text-center">
+                  <div className="p-3 rounded-md bg-amber-500/20 border border-amber-400 text-amber-200 text-xs font-bold text-center">
                     {finishBanner}
                   </div>
                 )}
@@ -1140,13 +1068,13 @@ export function App() {
       />
 
       {/* Strictly 3 Bottom Navigation Tabs */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#090D16]/95 backdrop-blur-md border-t border-slate-800 px-3 py-1.5">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#0B090E]/95 backdrop-blur-md border-t border-[#2A2533] px-3 py-2">
         <div className="max-w-md mx-auto grid grid-cols-3 gap-2">
           {(
             [
-              { id: 'workout', label: 'Entrenar', icon: Dumbbell },
-              { id: 'progress', label: 'Progreso', icon: BarChart3 },
-              { id: 'settings', label: 'Ajustes', icon: Settings }
+              { id: 'workout', label: '01 / Entrenar', icon: Dumbbell },
+              { id: 'progress', label: '02 / Progreso', icon: BarChart3 },
+              { id: 'settings', label: '03 / Ajustes', icon: Settings }
             ] as const
           ).map((item) => {
             const Icon = item.icon
@@ -1157,12 +1085,12 @@ export function App() {
                 onClick={() => setActiveTab(item.id)}
                 className={`flex flex-col items-center justify-center py-2 rounded-xl transition-all ${
                   active
-                    ? 'text-emerald-400 bg-emerald-500/15 font-extrabold border border-emerald-500/30'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'theme-text theme-soft-bg font-extrabold border theme-border'
+                    : 'text-[#A09BA8] hover:text-white'
                 }`}
               >
                 <Icon className="w-5 h-5" />
-                <span className="text-[11px] mt-0.5">{item.label}</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.06em] mt-0.5">{item.label}</span>
               </button>
             )
           })}

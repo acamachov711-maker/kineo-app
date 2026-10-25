@@ -63,8 +63,8 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
       ? parseInputToKg(parseFloat(partnerWeight), unit)
       : undefined
 
-    const ownerColor = ownerGender === 'female' ? '#EC4899' : '#10B981'
-    const partnerColor = partnerGender === 'female' ? '#EC4899' : '#10B981'
+    const ownerColor = '#FF5500'
+    const partnerColor = '#8B5CF6'
 
     const updatedProfiles: Record<'user_1' | 'user_2', UserProfile> = {
       user_1: {
@@ -78,10 +78,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         bodyWeightKg: ownerWeightKg,
         heightCm: ownerHeight ? parseFloat(ownerHeight) : undefined,
         accentColor: ownerColor,
-        badgeColor:
-          ownerGender === 'female'
-            ? 'bg-pink-500/20 text-pink-300 border-pink-500/40'
-            : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+        badgeColor: 'theme-soft-bg theme-text border theme-border'
       },
       user_2: {
         ...initialProfiles.user_2,
@@ -93,11 +90,8 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         age: partnerAge ? parseInt(partnerAge, 10) : undefined,
         bodyWeightKg: partnerWeightKg,
         heightCm: partnerHeight ? parseFloat(partnerHeight) : undefined,
-        accentColor: partnerColor === ownerColor ? '#6366F1' : partnerColor,
-        badgeColor:
-          partnerGender === 'female'
-            ? 'bg-pink-500/20 text-pink-300 border-pink-500/40'
-            : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+        accentColor: partnerColor,
+        badgeColor: 'theme-soft-bg theme-text border theme-border'
       }
     }
 
@@ -112,25 +106,25 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 flex items-center justify-center p-4">
-      <div className="max-w-xl w-full bg-slate-900/95 border border-slate-800 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-5">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+    <div className="min-h-screen bg-[#0B090E] text-white flex items-center justify-center p-4">
+      <div className="max-w-xl w-full bg-[#14111A] border border-[#2A2533] rounded-[10px] p-5 sm:p-7 space-y-5">
+        <div className="flex items-center justify-between border-b border-[#2A2533] pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-pink-500 p-[2px]">
-              <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-xl text-white">
+            <div className="w-11 h-11 rounded-[10px] bg-[#0B090E] border border-[#2A2533] flex items-center justify-center">
+              <div className="font-display text-2xl text-white">
                 K
               </div>
             </div>
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
-                Configuración Inicial • Kineo v1.5
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] theme-text">
+                Configuración Inicial • Kineo v1.5.1
               </span>
-              <h1 className="text-lg sm:text-xl font-black text-white">
+              <h1 className="font-display text-2xl text-white">
                 Personaliza tu Entrenamiento
               </h1>
             </div>
           </div>
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+          <span className="font-mono text-[10px] font-bold px-2.5 py-1 rounded bg-[#0B090E] text-[#C7C3D1] border border-[#2A2533]">
             Paso {step} de {coupleMode ? 3 : 2}
           </span>
         </div>
@@ -139,24 +133,24 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         {step === 1 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-2">
+              <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-2">
                 1. ¿Cómo vas a usar Kineo? (Puedes cambiarlo luego en Ajustes)
               </label>
               <div className="grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
                   onClick={() => setCoupleMode(false)}
-                  className={`p-3 rounded-xl border text-left transition-all ${
+                  className={`p-3 rounded-md border text-left transition-all ${
                     !coupleMode
-                      ? 'bg-emerald-500/20 border-emerald-400 text-white shadow-md'
-                      : 'bg-slate-950 border-slate-800 text-slate-400'
+                      ? 'theme-soft-bg theme-border text-white shadow-md'
+                      : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8]'
                   }`}
                 >
                   <div className="flex items-center gap-2 font-extrabold text-xs sm:text-sm">
-                    <User className="w-4 h-4 text-emerald-400" />
+                    <User className="w-4 h-4 theme-text" />
                     Individual (Solo)
                   </div>
-                  <p className="text-[11px] opacity-80 mt-1">
+                  <p className="text-[11px] text-[#A09BA8] mt-1">
                     Interfaz limpia dedicada 100% a ti.
                   </p>
                 </button>
@@ -164,33 +158,33 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 <button
                   type="button"
                   onClick={() => setCoupleMode(true)}
-                  className={`p-3 rounded-xl border text-left transition-all ${
+                  className={`p-3 rounded-md border text-left transition-all ${
                     coupleMode
-                      ? 'bg-pink-500/20 border-pink-400 text-white shadow-md'
-                      : 'bg-slate-950 border-slate-800 text-slate-400'
+                      ? 'theme-soft-bg theme-border text-white shadow-md'
+                      : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8]'
                   }`}
                 >
                   <div className="flex items-center gap-2 font-extrabold text-xs sm:text-sm">
-                    <Users className="w-4 h-4 text-pink-400" />
+                    <Users className="w-4 h-4 theme-text" />
                     En Pareja (Sync)
                   </div>
-                  <p className="text-[11px] opacity-80 mt-1">
+                  <p className="text-[11px] text-[#A09BA8] mt-1">
                     Sincroniza 2 teléfonos en vivo o alterna perfiles.
                   </p>
                 </button>
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 flex items-start gap-2.5">
-              <Smartphone className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-slate-300 leading-snug">
+            <div className="p-3 rounded-[10px] bg-[#14111A] border border-[#2A2533] flex items-start gap-2.5">
+              <Smartphone className="w-4 h-4 theme-text shrink-0 mt-0.5" />
+              <p className="text-xs text-[#C7C3D1] leading-snug">
                 <strong>Datos del dueño de este celular (#1):</strong> Si es el teléfono de tu
                 pareja, pon sus datos aquí para que ella aparezca primero.
               </p>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1.5">
+              <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
                 Tu Nombre o Apodo
               </label>
               <input
@@ -198,12 +192,12 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 placeholder="Ej. Adolfo o Dani"
                 value={ownerName}
                 onChange={(e) => setOwnerName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-xl px-3.5 py-2.5 text-sm font-bold text-white outline-none"
+                className="clean-input font-mono text-sm font-bold text-white"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1.5">Tu Género</label>
+              <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">Tu Género</label>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { id: 'male' as GenderType, label: '♂ Hombre' },
@@ -214,10 +208,10 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     key={g.id}
                     type="button"
                     onClick={() => setOwnerGender(g.id)}
-                    className={`p-2.5 rounded-xl border text-xs font-bold transition-all ${
+                    className={`p-2.5 rounded-md border font-mono text-[11px] font-bold uppercase transition-all ${
                       ownerGender === g.id
-                        ? 'bg-emerald-500/20 border-emerald-400 text-white'
-                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                        ? 'theme-soft-bg theme-border text-white'
+                        : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8]'
                     }`}
                   >
                     {g.label}
@@ -227,13 +221,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1.5">
+              <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
                 Tu Objetivo Principal
               </label>
               <select
                 value={ownerGoal}
                 onChange={(e) => setOwnerGoal(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-white outline-none"
+                className="clean-input font-mono text-xs sm:text-sm font-semibold text-white"
               >
                 {GOAL_OPTIONS.map((goalOpt) => (
                   <option key={goalOpt} value={goalOpt}>
@@ -243,9 +237,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               </select>
             </div>
 
-            <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
+            <div className="p-3 rounded-[10px] bg-[#0B090E] border border-[#2A2533] space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8]">
                   Datos Físicos (Opcional)
                 </span>
               </div>
@@ -256,7 +250,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                   placeholder="Edad"
                   value={ownerAge}
                   onChange={(e) => setOwnerAge(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  className="clean-input font-mono text-xs text-white"
                 />
                 <input
                   type="text"
@@ -264,7 +258,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                   placeholder={`Peso (${unit})`}
                   value={ownerWeight}
                   onChange={(e) => setOwnerWeight(e.target.value.replace(/[^0-9.]/g, ''))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  className="clean-input font-mono text-xs text-white"
                 />
                 <input
                   type="text"
@@ -272,7 +266,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                   placeholder="Altura (cm)"
                   value={ownerHeight}
                   onChange={(e) => setOwnerHeight(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  className="clean-input font-mono text-xs text-white"
                 />
               </div>
             </div>
@@ -280,7 +274,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="pt-1 flex justify-end">
               <button
                 onClick={() => setStep(coupleMode ? 2 : 3)}
-                className="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center gap-2"
+                className="solar-btn theme-bg px-5 py-3 rounded-md text-base flex items-center gap-2"
               >
                 Continuar
                 <ArrowRight className="w-4 h-4" />
@@ -292,16 +286,16 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         {/* STEP 2: PARTNER & LIVE SYNC CODE (Only if coupleMode === true) */}
         {step === 2 && coupleMode && (
           <div className="space-y-4">
-            <div className="p-3.5 rounded-2xl bg-indigo-950/30 border border-indigo-500/40 space-y-2">
+            <div className="p-3.5 rounded-[10px] bg-[#14111A] border border-[#2A2533] space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-indigo-300 flex items-center gap-1.5">
-                  <Wifi className="w-4 h-4 text-emerald-400" />
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] flex items-center gap-1.5">
+                  <Wifi className="w-4 h-4 text-[#10B981]" />
                   Código de Sala en Vivo (Conecta los 2 Teléfonos)
                 </span>
                 <button
                   type="button"
                   onClick={() => setSyncRoomCode(generateCoupleRoomCode())}
-                  className="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700"
+                  className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#0B090E] text-[#C7C3D1] border border-[#2A2533]"
                 >
                   Generar otro
                 </button>
@@ -311,9 +305,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 value={syncRoomCode}
                 onChange={(e) => setSyncRoomCode(e.target.value.toUpperCase())}
                 placeholder="Ej. KINEO-4829"
-                className="w-full bg-slate-950 border border-indigo-500/50 rounded-xl px-3.5 py-2 text-base font-black tracking-widest text-emerald-300 uppercase outline-none"
+                className="clean-input font-mono text-base font-black tracking-widest text-white uppercase"
               />
-              <p className="text-[11px] text-slate-300 leading-snug">
+              <p className="text-[11px] text-[#A09BA8] leading-snug">
                 Pon este <strong>mismo código</strong> en ambos teléfonos para que lo que anote tu
                 pareja o tú se actualice en vivo en los dos celulares.
               </p>
@@ -321,7 +315,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
 
             <div className="space-y-3 pt-1">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
                   Nombre de tu Pareja
                 </label>
                 <input
@@ -329,12 +323,12 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                   placeholder="Ej. Dani o Adolfo"
                   value={partnerName}
                   onChange={(e) => setPartnerName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-pink-400 rounded-xl px-3.5 py-2.5 text-sm font-bold text-white outline-none"
+                  className="clean-input font-mono text-sm font-bold text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
                   Género de tu Pareja
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -347,10 +341,10 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                       key={g.id}
                       type="button"
                       onClick={() => setPartnerGender(g.id)}
-                      className={`p-2.5 rounded-xl border text-xs font-bold transition-all ${
+                      className={`p-2.5 rounded-md border font-mono text-[11px] font-bold uppercase transition-all ${
                         partnerGender === g.id
-                          ? 'bg-pink-500/20 border-pink-400 text-white'
-                          : 'bg-slate-950 border-slate-800 text-slate-400'
+                          ? 'theme-soft-bg theme-border text-white'
+                          : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8]'
                       }`}
                     >
                       {g.label}
@@ -360,13 +354,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
                   Objetivo de tu Pareja
                 </label>
                 <select
                   value={partnerGoal}
                   onChange={(e) => setPartnerGoal(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-pink-400 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-white outline-none"
+                  className="clean-input font-mono text-xs sm:text-sm font-semibold text-white"
                 >
                   {GOAL_OPTIONS.map((goalOpt) => (
                     <option key={goalOpt} value={goalOpt}>
@@ -380,13 +374,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="flex items-center justify-between pt-2">
               <button
                 onClick={() => setStep(1)}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold"
+                className="px-4 py-2.5 rounded-md bg-[#0B090E] text-[#A09BA8] border border-[#2A2533] font-mono text-[10px] font-bold uppercase"
               >
                 ← Atrás
               </button>
               <button
                 onClick={() => setStep(3)}
-                className="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center gap-2"
+                className="solar-btn theme-bg px-5 py-3 rounded-md text-base flex items-center gap-2"
               >
                 Continuar
                 <ArrowRight className="w-4 h-4" />
@@ -399,36 +393,36 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         {step === 3 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
-                <Scale className="w-4 h-4 text-amber-400" />
+              <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-2 flex items-center gap-1.5">
+                <Scale className="w-4 h-4 theme-text" />
                 ¿Qué unidad principal prefieres ver en las pesas?
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setUnit('kg')}
-                  className={`p-3.5 rounded-xl border text-left transition-all ${
+                  className={`p-3.5 rounded-md border text-left transition-all ${
                     unit === 'kg'
-                      ? 'bg-amber-500/20 border-amber-400 text-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-400'
+                      ? 'theme-soft-bg theme-border text-white'
+                      : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8]'
                   }`}
                 >
-                  <p className="text-sm font-extrabold">Kilogramos (KG)</p>
-                  <p className="text-[11px] opacity-80 mt-0.5">
+                  <p className="font-display text-lg">Kilogramos (KG)</p>
+                  <p className="text-[11px] text-[#A09BA8] mt-0.5">
                     Muestra KG y cuánto poner de cada lado.
                   </p>
                 </button>
                 <button
                   type="button"
                   onClick={() => setUnit('lb')}
-                  className={`p-3.5 rounded-xl border text-left transition-all ${
+                  className={`p-3.5 rounded-md border text-left transition-all ${
                     unit === 'lb'
-                      ? 'bg-amber-500/20 border-amber-400 text-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-400'
+                      ? 'theme-soft-bg theme-border text-white'
+                      : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8]'
                   }`}
                 >
-                  <p className="text-sm font-extrabold">Libras (LB)</p>
-                  <p className="text-[11px] opacity-80 mt-0.5">
+                  <p className="font-display text-lg">Libras (LB)</p>
+                  <p className="text-[11px] text-[#A09BA8] mt-0.5">
                     Muestra LB y cuánto poner de cada lado.
                   </p>
                 </button>
@@ -438,16 +432,16 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="flex items-center justify-between pt-2">
               <button
                 onClick={() => setStep(coupleMode ? 2 : 1)}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold"
+                className="px-4 py-2.5 rounded-md bg-[#0B090E] text-[#A09BA8] border border-[#2A2533] font-mono text-[10px] font-bold uppercase"
               >
                 ← Atrás
               </button>
               <button
                 onClick={handleFinish}
-                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm shadow-lg shadow-emerald-500/25 flex items-center gap-2"
+                className="solar-btn theme-bg px-6 py-3 rounded-md text-base flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
-                Entrar a Kineo v1.5
+                Entrar a Kineo v1.5.1
               </button>
             </div>
           </div>

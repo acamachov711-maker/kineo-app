@@ -119,16 +119,16 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl bg-gradient-to-br from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-500/30 p-4">
+      <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 shrink-0">
+          <div className="w-10 h-10 rounded-md bg-[#0B090E] border border-[#2A2533] flex items-center justify-center theme-text shrink-0">
             <Target className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-white">
+            <h2 className="font-display text-2xl text-white">
               Calculadora de Peso Ideal Seguro
             </h2>
-            <p className="text-xs text-slate-300 mt-0.5">
+            <p className="text-xs text-[#C7C3D1] mt-0.5">
               Ingresa el peso usado y las repeticiones que lograste (puedes poner 20, 21 o más).
               Kineo calculará tu peso exacto y cuánto poner de cada lado.
             </p>
@@ -136,10 +136,10 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
         </div>
       </div>
 
-      <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 space-y-4">
+      <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 space-y-4">
         {coupleModeEnabled && (
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-[#A09BA8] mb-2">
               1. ¿Para quién es la prueba?
             </label>
             <div className="grid grid-cols-2 gap-2.5">
@@ -152,8 +152,8 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
                     onClick={() => setTargetProfileId(pid)}
                     className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
                       active
-                        ? 'bg-slate-800 border-white/40 text-white shadow-md'
-                        : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                        ? 'theme-soft-bg theme-border text-white shadow-md'
+                        : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8] hover:text-white'
                     }`}
                   >
                     <span
@@ -171,13 +171,13 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
         )}
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+          <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-[#A09BA8] mb-1.5">
             Ejercicio o Máquina
           </label>
           <select
             value={selectedVariantId}
             onChange={(e) => setSelectedVariantId(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white outline-none focus:border-emerald-400"
+            className="w-full clean-input rounded-md px-3.5 py-2.5 text-sm font-semibold text-white font-mono focus:border-[#FF5500]"
           >
             {allVariants.map((item) => (
               <option key={item.variant.id} value={item.variant.id}>
@@ -188,8 +188,8 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
         </div>
 
         {isBilateralPlates && (
-          <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs text-amber-200 font-semibold">
+          <div className="p-2.5 rounded-[10px] bg-[#0B090E] border theme-border flex flex-wrap items-center justify-between gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-[0.04em] text-[#A09BA8]">
               ⚖️ Este ejercicio carga discos de ambos lados. ¿Cómo vas a anotar el peso?
             </span>
             <div className="flex items-center gap-1.5">
@@ -198,8 +198,8 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
                 onClick={() => setWeightMode('total')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
                   weightMode === 'total'
-                    ? 'bg-amber-500 text-slate-950 border-amber-400'
-                    : 'bg-slate-900 text-slate-300 border-slate-700'
+                    ? 'theme-bg theme-border'
+                    : 'bg-[#14111A] text-[#C7C3D1] border-[#2A2533]'
                 }`}
               >
                 Peso Total
@@ -209,8 +209,8 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
                 onClick={() => setWeightMode('per_side')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
                   weightMode === 'per_side'
-                    ? 'bg-amber-500 text-slate-950 border-amber-400'
-                    : 'bg-slate-900 text-slate-300 border-slate-700'
+                    ? 'theme-bg theme-border'
+                    : 'bg-[#14111A] text-[#C7C3D1] border-[#2A2533]'
                 }`}
               >
                 Peso de 1 Solo Lado (×2)
@@ -221,7 +221,7 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
               {isBilateralPlates && weightMode === 'per_side'
                 ? `Peso en CADA lado (${weightUnit.toUpperCase()})`
                 : currentVariant?.equipment === 'Mancuernas'
@@ -237,9 +237,9 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
                 const cleaned = e.target.value.replace(/[^0-9.]/g, '')
                 setTestWeightInput(cleaned)
               }}
-              className="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-xl px-3.5 py-2.5 text-base font-bold text-white outline-none"
+              className="w-full clean-input rounded-xl px-3.5 py-2.5 font-display text-2xl text-white font-mono"
             />
-            <span className="text-[11px] text-emerald-300 mt-1 block font-medium">
+            <span className="font-mono text-[10px] uppercase theme-text mt-1 block font-medium">
               {currentVariant
                 ? getLoadInstruction(
                     weightKg,
@@ -252,7 +252,7 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
               Repeticiones logradas
             </label>
             <input
@@ -264,15 +264,15 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
                 const digits = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '')
                 setTestRepsInput(digits)
               }}
-              className="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-xl px-3.5 py-2.5 text-base font-bold text-white outline-none"
+              className="w-full clean-input rounded-xl px-3.5 py-2.5 font-display text-2xl text-white font-mono"
             />
-            <span className="text-[11px] text-slate-400 mt-1 block">
+            <span className="font-mono text-[10px] text-[#A09BA8] mt-1 block">
               Puedes escribir cualquier número (ej. 8, 15, 21+)
             </span>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
               En recámara (RIR {testRir})
             </label>
             <div className="grid grid-cols-4 gap-1.5">
@@ -282,8 +282,8 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
                   onClick={() => setTestRir(rirVal)}
                   className={`py-2.5 rounded-lg text-xs font-bold border transition-all ${
                     testRir === rirVal
-                      ? 'bg-emerald-500/25 border-emerald-400 text-emerald-200'
-                      : 'bg-slate-950 border-slate-800 text-slate-400'
+                      ? 'theme-bg theme-border'
+                      : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8]'
                   }`}
                 >
                   RIR {rirVal}
@@ -294,32 +294,32 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
         </div>
       </div>
 
-      <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#2A2533] pb-3">
           <div>
-            <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold">
+            <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-[#A09BA8] font-semibold">
               Resultado para {profiles[targetProfileId].name}
             </span>
-            <h3 className="text-lg font-bold text-white mt-0.5">
+            <h3 className="font-display text-2xl text-white mt-0.5">
               1RM Estimado: {formatDualWeight(zones.oneRepMaxKg, weightUnit)}
             </h3>
           </div>
-          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+          <span className="px-2.5 py-1 rounded font-mono text-[10px] font-bold uppercase bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/40 flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4" />
             Zona Segura
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
-            <span className="text-xs font-semibold text-amber-300">
+          <div className="p-3.5 rounded-[10px] bg-[#0B090E] border border-[#2A2533]">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.06em] theme-text">
               💪 Fuerza (5-6 reps)
             </span>
-            <p className="text-xl font-extrabold text-white mt-1">
+            <p className="font-mono text-xl font-extrabold text-white mt-1">
               {formatDualWeight(zones.strengthKg, weightUnit)}
             </p>
             {currentVariant && (
-              <p className="text-[11px] text-amber-200/90 mt-1 font-medium">
+              <p className="font-mono text-[10px] uppercase theme-text mt-1 font-medium">
                 {getLoadInstruction(
                   zones.strengthKg,
                   currentVariant.equipment,
@@ -330,16 +330,16 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
             )}
           </div>
 
-          <div className="p-3.5 rounded-xl bg-emerald-950/25 border border-emerald-500/40">
-            <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1">
+          <div className="p-3.5 rounded-[10px] bg-[#0B090E] border theme-border">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.06em] theme-text flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5" />
               ⭐ Peso Ideal (8-10 reps)
             </span>
-            <p className="text-xl font-extrabold text-white mt-1">
+            <p className="font-mono text-xl font-extrabold text-white mt-1">
               {formatDualWeight(zones.hypertrophyKg, weightUnit)}
             </p>
             {currentVariant && (
-              <p className="text-[11px] text-emerald-200 mt-1 font-semibold">
+              <p className="font-mono text-[10px] uppercase theme-text mt-1 font-semibold">
                 {getLoadInstruction(
                   zones.hypertrophyKg,
                   currentVariant.equipment,
@@ -350,15 +350,15 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
             )}
           </div>
 
-          <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
-            <span className="text-xs font-semibold text-pink-300">
+          <div className="p-3.5 rounded-[10px] bg-[#0B090E] border border-[#2A2533]">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8]">
               🔥 Tonificación (12-15 reps)
             </span>
-            <p className="text-xl font-extrabold text-white mt-1">
+            <p className="font-mono text-xl font-extrabold text-white mt-1">
               {formatDualWeight(zones.metabolicToneKg, weightUnit)}
             </p>
             {currentVariant && (
-              <p className="text-[11px] text-pink-200/90 mt-1 font-medium">
+              <p className="font-mono text-[10px] uppercase text-[#A09BA8] mt-1 font-medium">
                 {getLoadInstruction(
                   zones.metabolicToneKg,
                   currentVariant.equipment,
@@ -370,8 +370,8 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
           </div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800">
-          <div className="flex items-center gap-2 text-xs font-bold text-amber-300 mb-2.5">
+        <div className="p-3.5 rounded-[10px] bg-[#0B090E] border border-[#2A2533]">
+          <div className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.06em] theme-text mb-2.5">
             <TrendingUp className="w-4 h-4" />
             Escalones Pirámide Ascendente (12 ➔ 10 ➔ 8 ➔ 6 reps):
           </div>
@@ -379,16 +379,16 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
             {[12, 10, 8, 6].map((repTarget, idx) => (
               <div
                 key={repTarget}
-                className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-center"
+                className="p-2.5 rounded-md bg-[#14111A] border border-[#2A2533] text-center"
               >
-                <span className="text-[10px] uppercase text-slate-400 block">
+                <span className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block">
                   Serie {idx + 1} ({repTarget} reps)
                 </span>
-                <span className="text-sm font-bold text-white mt-0.5 block">
+                <span className="font-mono text-sm font-bold text-white mt-0.5 block">
                   {formatDualWeight(zones.pyramidAscKg[idx], weightUnit)}
                 </span>
                 {currentVariant && (
-                  <span className="text-[10px] text-amber-300 block mt-0.5">
+                  <span className="font-mono text-[9px] uppercase theme-text block mt-0.5">
                     {getLoadInstruction(
                       zones.pyramidAscKg[idx],
                       currentVariant.equipment,
@@ -405,14 +405,14 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
         <div className="pt-1 flex flex-col sm:flex-row items-center justify-between gap-3">
           <button
             onClick={handleApplyToRoutine}
-            className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+            className="w-full sm:w-auto solar-btn theme-bg px-5 py-3 rounded-md text-base transition-all flex items-center justify-center gap-2"
           >
             <CheckCircle2 className="w-4 h-4" />
             Guardar y Fijar Peso Ideal para {profiles[targetProfileId].name}
           </button>
 
           {savedBanner && (
-            <span className="text-xs font-semibold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-3 py-2 rounded-xl">
+            <span className="font-mono text-[10px] uppercase text-[#10B981] bg-[#10B981]/15 border border-[#10B981]/40 px-3 py-2 rounded-md">
               ✓ ¡Peso ideal aplicado a la rutina!
             </span>
           )}
