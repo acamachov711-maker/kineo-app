@@ -37,6 +37,7 @@ export function saveDeviceConfig(config: DeviceConfig): void {
 
 // Kineo Ascent: el color de perfil depende del id, nunca del género ni de datos heredados.
 const ASCENT_COLORS = { user_1: '#FF5500', user_2: '#8B5CF6' } as const
+const ASCENT_BADGE_CLASS = 'theme-soft-bg theme-text theme-border'
 
 export function loadProfiles(): Record<'user_1' | 'user_2', UserProfile> {
   try {
@@ -45,8 +46,16 @@ export function loadProfiles(): Record<'user_1' | 'user_2', UserProfile> {
     const parsed = JSON.parse(raw) as Record<'user_1' | 'user_2', UserProfile>
     // T1-02: migra colores antiguos (#10B981, #EC4899, #6366F1) sin tocar nombres, historial ni claves.
     return {
-      user_1: { ...parsed.user_1, accentColor: ASCENT_COLORS.user_1 },
-      user_2: { ...parsed.user_2, accentColor: ASCENT_COLORS.user_2 }
+      user_1: {
+        ...parsed.user_1,
+        accentColor: ASCENT_COLORS.user_1,
+        badgeColor: ASCENT_BADGE_CLASS
+      },
+      user_2: {
+        ...parsed.user_2,
+        accentColor: ASCENT_COLORS.user_2,
+        badgeColor: ASCENT_BADGE_CLASS
+      }
     }
   } catch {
     return INITIAL_PROFILES

@@ -193,6 +193,14 @@ export function App() {
     }
   }, [deviceConfig.coupleModeEnabled, deviceConfig.primaryProfileId])
 
+  // Sync global CSS theme variables (:root[data-profile='partner' | 'owner']) with activeProfileId
+  useEffect(() => {
+    document.documentElement.setAttribute(
+      'data-profile',
+      activeProfileId === 'user_2' ? 'partner' : 'owner'
+    )
+  }, [activeProfileId])
+
   useEffect(() => {
     if (isApplyingRemoteRef.current) return
     setSlotsState(buildSessionState(currentSession.slots, profiles))
@@ -251,11 +259,13 @@ export function App() {
             user_1: {
               ...prev.user_1,
               ...remotePayload.profiles.user_1,
+              accentColor: '#FF5500',
               isDeviceOwner: prev.user_1.isDeviceOwner
             },
             user_2: {
               ...prev.user_2,
               ...remotePayload.profiles.user_2,
+              accentColor: '#8B5CF6',
               isDeviceOwner: prev.user_2.isDeviceOwner
             }
           }))
@@ -1024,6 +1034,8 @@ export function App() {
             deviceConfig={deviceConfig}
             mesocycle={mesocycle}
             weightUnit={weightUnit}
+            activeProfileId={activeProfileId}
+            onSelectActiveProfile={setActiveProfileId}
             syncStatus={syncStatus}
             initialSubTab={settingsSubTab}
             calculatorPreselect={calculatorPreselect}

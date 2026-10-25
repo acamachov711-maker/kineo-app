@@ -19,6 +19,7 @@ interface IdealWeightCalculatorProps {
   mesocycle: MesocyclePlan
   profiles: Record<'user_1' | 'user_2', UserProfile>
   selectedProfileId: 'user_1' | 'user_2'
+  onSelectProfile?: (profileId: 'user_1' | 'user_2') => void
   coupleModeEnabled?: boolean
   weightUnit: WeightUnit
   preselectedVariant?: {
@@ -38,12 +39,17 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
   mesocycle,
   profiles,
   selectedProfileId,
+  onSelectProfile,
   coupleModeEnabled = true,
   weightUnit,
   preselectedVariant,
   onSaveIdealWeight
 }) => {
   const [targetProfileId, setTargetProfileId] = useState<'user_1' | 'user_2'>(selectedProfileId)
+
+  useEffect(() => {
+    setTargetProfileId(selectedProfileId)
+  }, [selectedProfileId])
 
   const allVariants: { variant: ExerciseVariant; slotId: string; sessionCode: string }[] = []
   const seen = new Set<string>()
@@ -118,7 +124,10 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+      data-profile={targetProfileId === 'user_2' ? 'partner' : 'owner'}
+    >
       <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-md bg-[#0B090E] border border-[#2A2533] flex items-center justify-center theme-text shrink-0">
@@ -149,7 +158,10 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
                 return (
                   <button
                     key={pid}
-                    onClick={() => setTargetProfileId(pid)}
+                    onClick={() => {
+                      setTargetProfileId(pid)
+                      onSelectProfile?.(pid)
+                    }}
                     className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
                       active
                         ? 'theme-soft-bg theme-border text-white shadow-md'
@@ -177,7 +189,7 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
           <select
             value={selectedVariantId}
             onChange={(e) => setSelectedVariantId(e.target.value)}
-            className="w-full clean-input rounded-md px-3.5 py-2.5 text-sm font-semibold text-white font-mono focus:border-[#FF5500]"
+            className="w-full clean-input theme-focus rounded-md px-3.5 py-2.5 text-sm font-semibold text-white font-mono"
           >
             {allVariants.map((item) => (
               <option key={item.variant.id} value={item.variant.id}>

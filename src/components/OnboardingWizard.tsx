@@ -244,30 +244,45 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Edad"
-                  value={ownerAge}
-                  onChange={(e) => setOwnerAge(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="clean-input font-mono text-xs text-white"
-                />
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder={`Peso (${unit})`}
-                  value={ownerWeight}
-                  onChange={(e) => setOwnerWeight(e.target.value.replace(/[^0-9.]/g, ''))}
-                  className="clean-input font-mono text-xs text-white"
-                />
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Altura (cm)"
-                  value={ownerHeight}
-                  onChange={(e) => setOwnerHeight(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="clean-input font-mono text-xs text-white"
-                />
+                <div>
+                  <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                    Edad
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Ej. 32"
+                    value={ownerAge}
+                    onChange={(e) => setOwnerAge(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="clean-input font-mono text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                    Peso ({unit.toUpperCase()})
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="Ej. 78"
+                    value={ownerWeight}
+                    onChange={(e) => setOwnerWeight(e.target.value.replace(/[^0-9.]/g, ''))}
+                    className="clean-input font-mono text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                    Altura (CM)
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Ej. 178"
+                    value={ownerHeight}
+                    onChange={(e) => setOwnerHeight(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="clean-input font-mono text-xs text-white"
+                  />
+                </div>
               </div>
             </div>
 

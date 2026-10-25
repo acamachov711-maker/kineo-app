@@ -50,7 +50,7 @@ jobs:
 
       - name: Verify build.gradle version matches
         run: |
-          GRADLE_VERSION=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)
+          GRADLE_VERSION=$(node -p "fs.readFileSync('android/app/build.gradle','utf8').match(/versionName\s+\"([^\"]+)\"/)[1]")
           if [ "$GRADLE_VERSION" != "${{ steps.ver.outputs.version }}" ]; then
             echo "::error::build.gradle versionName=$GRADLE_VERSION no coincide con ${{ steps.ver.outputs.version }}"
             exit 1

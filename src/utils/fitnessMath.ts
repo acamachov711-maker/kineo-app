@@ -266,8 +266,8 @@ export function calculateProfileStreak(
 
 export interface ExerciseWeightPoint {
   date: string
-  user1Weight: number
-  user2Weight: number
+  user1Weight: number | null
+  user2Weight: number | null
   user1OneRm: number
   user2OneRm: number
 }
@@ -284,18 +284,18 @@ export function getExerciseWeightHistory(
       if (ex.variantId !== variantId) return
       const existing = byDate.get(entry.date) || {
         date: entry.date.slice(5),
-        user1Weight: 0,
-        user2Weight: 0,
+        user1Weight: null,
+        user2Weight: null,
         user1OneRm: 0,
         user2OneRm: 0
       }
       const convertedMax = displayWeightValue(ex.maxWeightKg, unit)
       const converted1Rm = displayWeightValue(ex.estimated1RmKg, unit)
       if (entry.profileId === 'user_1') {
-        existing.user1Weight = Math.max(existing.user1Weight, convertedMax)
+        existing.user1Weight = Math.max(existing.user1Weight ?? 0, convertedMax)
         existing.user1OneRm = Math.max(existing.user1OneRm, converted1Rm)
       } else {
-        existing.user2Weight = Math.max(existing.user2Weight, convertedMax)
+        existing.user2Weight = Math.max(existing.user2Weight ?? 0, convertedMax)
         existing.user2OneRm = Math.max(existing.user2OneRm, converted1Rm)
       }
       byDate.set(entry.date, existing)

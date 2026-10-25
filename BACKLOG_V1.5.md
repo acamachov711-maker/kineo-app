@@ -331,35 +331,23 @@
 
 ## ✅ ESTADO DE EJECUCIÓN: Kineo v1.5.1 (carpeta ./gym-tracker-v1.5.1)
 
-**Versión:** ersionName 1.5.1, ersionCode 6, package.json 1.5.1. Keystore fijo kineo-shared.keystore (alias kineokey) conservado.
+**Versión:** `versionName "1.5.1"`, `versionCode 6`, `package.json "1.5.1"`. Keystore fijo `kineo-shared.keystore` (`alias kineokey`) conservado.
 
-**Base:** ./gym-tracker-v1.5.1 creada desde 37ca06. ./gym-tracker-v1.5 no se ha modificado.
+**Base:** `./gym-tracker-v1.5.1` creada desde `b37ca06`. `./gym-tracker-v1.5` no se ha modificado.
 
 **Aplicado (tandas #1 a #5):**
-- T1-01 Iconos: mipmap-* (mdpi a xxxhdpi) generados desde kineo-ascent-app-icon-8k.png; fondo adaptativo #0B090E; splash Onyx con K; eliminado el icono vectorial de Capacitor.
-- T1-02 / T2-04 / T3-03: ccentColor fijo por id (user_1 = #FF5500, user_2 = #8B5CF6) en storageService.ts (migración al cargar), handleSaveProfiles y OnboardingWizard. Sin fallback #6366F1.
+- T1-01 Iconos: `mipmap-*` (`mdpi` a `xxxhdpi`) generados desde `kineo-ascent-app-icon-8k.png`; fondo adaptativo `#0B090E`; splash Onyx con K; eliminado el icono vectorial de Capacitor.
+- T1-02 / T2-04 / T3-03: `accentColor` fijo por `id` (`user_1 = #FF5500`, `user_2 = #8B5CF6`) y `badgeColor: 'theme-soft-bg theme-text theme-border'` en `storageService.ts` (migración al cargar), `initialData.ts`, recepción MQTT en `App.tsx`, `handleSaveProfiles` y `OnboardingWizard`. Sin fallback `#6366F1`. Reactividad global de `:root[data-profile='partner' | 'owner']` sincronizada con `activeProfileId`.
 - T1-03 / T1-04: portada con "Constancia semanal" (perfil activo) y tarjeta "Sesión lista" en Ascent.
 - T1-05 / T2-01: Progreso y catálogo sin verde/rosa/slate; colores por perfil.
-- T1-06: gráfica de volumen con 
-ull en días sin sesión y connectNulls.
-- T2-02 / T2-03 / T3-04 a T3-07: Ajustes en paleta Ascent; etiquetas de perfil; semana del mesociclo en --theme.
-- T3-01 / T4-02 / T4-03: calculadora de peso ideal en --theme; Emerald solo en confirmaciones.
+- T1-06: gráficas de volumen y de historial de peso por ejercicio con `null` en días sin sesión y `connectNulls`.
+- T2-02 / T2-03 / T3-04 a T3-07: Ajustes en paleta Ascent; etiquetas visibles `EDAD`, `PESO (KG/LB)` y `ALTURA (CM)` en perfiles y asistente; semana del mesociclo en `--theme`.
+- T3-01 / T4-02 / T4-03: calculadora de peso ideal sincronizada con el perfil seleccionado (`--theme`); Emerald solo en confirmaciones.
 - T3-02 / T4-04: Guía sin índigo ni ámbar.
 - T3-08 / T5-06: visor de demostración y gráfica inline en Ascent.
 - T5-01: eliminado el selector de perfiles duplicado en sesión activa.
-- T5-02 a T5-05: acordeón, herramientas, nota del entrenador, modal de alternativas, calibración y tabla de series en Ascent.
-- T5-07: barra de descanso, botón de cierre, tarjetas y navegación  1 / ENTRENAR,  2 / PROGRESO,  3 / AJUSTES.
-- T2-05: **no aplicado** (decisión del usuario: se mantiene la ubicación actual de "Dueño de este teléfono").
-- Ejercicios: tipografía display en Barlow Condensed 800 Italic (importada en index.css).
-
-**Verificación:**
-- 	sc --noEmit: OK.
-- 
-pm run build (Vite): OK.
-- 
-px cap sync android: OK.
-- gradlew assembleRelease local: **no ejecutable en este equipo** (error TLS al descargar Gradle y Java local 1.8; Capacitor 8 requiere Java 21). Se compila en GitHub Actions (Node 22 + Java 21).
-
-**Pendiente antes de publicar:**
-- Revisión visual en dispositivo (captura con ambos perfiles) de Entrenar, Progreso, Ajustes y sesión activa.
-- Commit, tag 1.5.1 y push a origin: **no ejecutados** (requieren confirmación explícita).
+- T5-02 a T5-05: acordeón, herramientas, nota del entrenador, modal de alternativas, calibración y tabla de series en Ascent (`theme-border` reactivo al perfil).
+- T5-07: barra de descanso, botón de cierre, tarjetas y navegación `01 / ENTRENAR`, `02 / PROGRESO`, `03 / AJUSTES`.
+- T2-05: **no aplicado** (decisión del usuario: se mantiene la ubicación actual de "Dueño de este teléfono", "Cambiar Titular" y "Asistente").
+- Tipografía display en `Barlow Condensed` 800 Italic (`@import` en la primera línea de `src/index.css`).
+- Workflow CI (`.github/workflows/build-apk.yml`): validación de `versionName` mediante Node sobre `android/app/build.gradle`.

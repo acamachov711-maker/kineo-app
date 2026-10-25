@@ -237,7 +237,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
     <div
       className={`rounded-[10px] border transition-all ${
         isExpanded
-          ? 'bg-[#181420] border-[#FF5500] shadow-xl'
+          ? 'bg-[#181420] theme-border shadow-xl'
           : allSetsDone
           ? 'bg-[#14111A] border-[#10B981]/50'
           : 'bg-[#14111A] border-[#2A2533] hover:border-[#3A3345]'
@@ -418,6 +418,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                         }}
                       />
                       <Line
+                        connectNulls
                         type="monotone"
                         dataKey="user1Weight"
                         name={profiles.user_1.name}
@@ -427,6 +428,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                       />
                       {coupleModeEnabled && (
                         <Line
+                          connectNulls
                           type="monotone"
                           dataKey="user2Weight"
                           name={profiles.user_2.name}
@@ -455,7 +457,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
           )}
 
           {showAlternativesModal && (
-            <div className="p-3 rounded-[10px] bg-[#0B090E] border border-[#FF5500] space-y-2">
+            <div className="p-3 rounded-[10px] bg-[#0B090E] border theme-border space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[11px] font-bold uppercase tracking-wider theme-text flex items-center gap-1.5">
                   <Shuffle className="w-3.5 h-3.5" />
@@ -504,7 +506,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
 
           {/* QUICK FIRST-TIME STRENGTH TEST (Supports 21+ reps, free backspace, and bilateral per-side toggle) */}
           {isFirstTimeExercise && (
-            <div className="p-3 rounded-[10px] bg-[#0B090E] border border-[#FF5500] space-y-2.5">
+            <div className="p-3 rounded-[10px] bg-[#0B090E] border theme-border space-y-2.5">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 theme-text shrink-0" />

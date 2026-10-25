@@ -38,6 +38,8 @@ interface SettingsHubProps {
   deviceConfig: DeviceConfig
   mesocycle: MesocyclePlan
   weightUnit: WeightUnit
+  activeProfileId?: 'user_1' | 'user_2'
+  onSelectActiveProfile?: (profileId: 'user_1' | 'user_2') => void
   syncStatus?: 'disconnected' | 'connecting' | 'connected'
   initialSubTab?: SettingsSubTab
   calculatorPreselect?: {
@@ -66,6 +68,8 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
   deviceConfig,
   mesocycle,
   weightUnit,
+  activeProfileId,
+  onSelectActiveProfile,
   syncStatus = 'disconnected',
   initialSubTab = 'profiles',
   calculatorPreselect,
@@ -326,7 +330,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                   value={roomCodeInput}
                   onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
                   placeholder="Ej. KINEO-4829"
-                  className="flex-1 bg-[#0B090E] border border-[#2A2533] focus:border-[#FF5500] rounded-md px-3.5 py-2 text-sm font-black tracking-widest text-white uppercase outline-none font-mono"
+                  className="flex-1 bg-[#0B090E] border border-[#2A2533] theme-focus rounded-md px-3.5 py-2 text-sm font-black tracking-widest text-white uppercase outline-none font-mono"
                 />
                 <div className="flex items-center gap-2">
                   <button
@@ -462,30 +466,45 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Edad"
-                    value={age1}
-                    onChange={(e) => setAge1(e.target.value.replace(/[^0-9]/g, ''))}
-                    className="clean-input font-mono text-xs text-white"
-                  />
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder={`Peso (${weightUnit})`}
-                    value={weight1}
-                    onChange={(e) => setWeight1(e.target.value.replace(/[^0-9.]/g, ''))}
-                    className="clean-input font-mono text-xs text-white"
-                  />
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Altura (cm)"
-                    value={height1}
-                    onChange={(e) => setHeight1(e.target.value.replace(/[^0-9]/g, ''))}
-                    className="clean-input font-mono text-xs text-white"
-                  />
+                  <div>
+                    <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                      Edad
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Ej. 32"
+                      value={age1}
+                      onChange={(e) => setAge1(e.target.value.replace(/[^0-9]/g, ''))}
+                      className="clean-input font-mono text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                      Peso ({weightUnit.toUpperCase()})
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder={`Ej. ${weightUnit === 'kg' ? '78' : '172'}`}
+                      value={weight1}
+                      onChange={(e) => setWeight1(e.target.value.replace(/[^0-9.]/g, ''))}
+                      className="clean-input font-mono text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                      Altura (CM)
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Ej. 178"
+                      value={height1}
+                      onChange={(e) => setHeight1(e.target.value.replace(/[^0-9]/g, ''))}
+                      className="clean-input font-mono text-xs text-white"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -546,30 +565,45 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Edad"
-                      value={age2}
-                      onChange={(e) => setAge2(e.target.value.replace(/[^0-9]/g, ''))}
-                      className="clean-input font-mono text-xs text-white"
-                    />
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      placeholder={`Peso (${weightUnit})`}
-                      value={weight2}
-                      onChange={(e) => setWeight2(e.target.value.replace(/[^0-9.]/g, ''))}
-                      className="clean-input font-mono text-xs text-white"
-                    />
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Altura (cm)"
-                      value={height2}
-                      onChange={(e) => setHeight2(e.target.value.replace(/[^0-9]/g, ''))}
-                      className="clean-input font-mono text-xs text-white"
-                    />
+                    <div>
+                      <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                        Edad
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Ej. 29"
+                        value={age2}
+                        onChange={(e) => setAge2(e.target.value.replace(/[^0-9]/g, ''))}
+                        className="clean-input font-mono text-xs text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                        Peso ({weightUnit.toUpperCase()})
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder={`Ej. ${weightUnit === 'kg' ? '60' : '132'}`}
+                        value={weight2}
+                        onChange={(e) => setWeight2(e.target.value.replace(/[^0-9.]/g, ''))}
+                        className="clean-input font-mono text-xs text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                        Altura (CM)
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Ej. 165"
+                        value={height2}
+                        onChange={(e) => setHeight2(e.target.value.replace(/[^0-9]/g, ''))}
+                        className="clean-input font-mono text-xs text-white"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -648,7 +682,8 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
         <IdealWeightCalculator
           mesocycle={mesocycle}
           profiles={profiles}
-          selectedProfileId={deviceConfig.primaryProfileId}
+          selectedProfileId={activeProfileId || deviceConfig.primaryProfileId}
+          onSelectProfile={onSelectActiveProfile}
           coupleModeEnabled={deviceConfig.coupleModeEnabled}
           weightUnit={weightUnit}
           preselectedVariant={calculatorPreselect}

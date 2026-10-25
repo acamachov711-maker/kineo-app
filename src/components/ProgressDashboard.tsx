@@ -455,6 +455,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                         }}
                       />
                       <Line
+                        connectNulls
                         type="monotone"
                         dataKey="user1Weight"
                         name={`${profiles.user_1.name} (${weightUnit})`}
@@ -463,6 +464,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                         dot={{ r: 4 }}
                       />
                       <Line
+                        connectNulls
                         type="monotone"
                         dataKey="user2Weight"
                         name={`${profiles.user_2.name} (${weightUnit})`}

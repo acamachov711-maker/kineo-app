@@ -25,25 +25,25 @@ export const INITIAL_DEVICE_CONFIG: DeviceConfig = {
 export const INITIAL_PROFILES: Record<'user_1' | 'user_2', UserProfile> = {
   user_1: {
     id: 'user_1',
-    name: 'Adolfo',
+    name: '',
     gender: 'male',
     isDeviceOwner: true,
     goal: 'Recomposición Corporal & Definición',
     level: 'Principiante / Retomando',
-    accentColor: '#10B981',
-    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    accentColor: '#FF5500',
+    badgeColor: 'theme-soft-bg theme-text theme-border',
     activeVariantBySlot: {},
     estimated1RMByVariant: {}
   },
   user_2: {
     id: 'user_2',
-    name: 'Dani',
+    name: '',
     gender: 'female',
     isDeviceOwner: false,
     goal: 'Tonificación, Glúteo/Pierna & Ritmo Metabólico',
     level: 'Principiante / Retomando',
-    accentColor: '#EC4899',
-    badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
+    accentColor: '#8B5CF6',
+    badgeColor: 'theme-soft-bg theme-text theme-border',
     activeVariantBySlot: {},
     estimated1RMByVariant: {}
   }

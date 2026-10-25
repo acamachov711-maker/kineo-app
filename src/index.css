@@ -1,3 +1,6 @@
+/* ===== Kineo Ascent (v1.5.1) ===== */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&display=swap&subset=latin,latin-ext');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -21,10 +24,8 @@
   border-radius: 9999px;
 }
 
-/* ===== Kineo Ascent (v1.5.1) ===== */
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&display=swap&subset=latin,latin-ext');
-
-:root {
+:root,
+[data-profile='owner'] {
   --bg: #0B090E;
   --surface: #14111A;
   --border: #2A2533;
@@ -35,7 +36,8 @@
   --font-display: 'Barlow Condensed', 'Kineo Industrial', Impact, 'Arial Narrow', sans-serif;
   --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
 }
-:root[data-profile='partner'] {
+:root[data-profile='partner'],
+[data-profile='partner'] {
   --theme: #8B5CF6;
   --theme-fg: #FFFFFF;
 }
