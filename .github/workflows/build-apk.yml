@@ -1,18 +1,24 @@
 name: Build Kineo Android APK
 
+# Solo se dispara con un tag v* (p. ej. v1.5.1) o manualmente.
+# Ya NO se dispara en cada push a main.
 on:
   push:
-    branches:
-      - main
-      - master
+    tags:
+      - 'v*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión (ej. 1.5.1). Debe coincidir con build.gradle'
+        required: true
+        default: '1.5.1'
 
 permissions:
   contents: write
 
 jobs:
   build-apk:
-    name: Compilar APK Instalable (Kineo v1.5)
+    name: Compilar APK firmado (Kineo)
     runs-on: ubuntu-latest
 
     steps:
@@ -31,50 +37,65 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Install NPM dependencies
-        run: npm install --no-audit --no-fund
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Versión: $VERSION"
 
-      - name: Build Kineo v1.5 Web App & Sync Capacitor Android
+      - name: Verify build.gradle version matches
+        run: |
+          GRADLE_VERSION=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)
+          if [ "$GRADLE_VERSION" != "${{ steps.ver.outputs.version }}" ]; then
+            echo "::error::build.gradle versionName=$GRADLE_VERSION no coincide con ${{ steps.ver.outputs.version }}"
+            exit 1
+          fi
+
+      - name: Install NPM dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build web app & sync Capacitor Android
         run: |
           npm run build
           npx cap sync android
 
-      - name: Grant execute permission & normalize LF for Gradlew
+      - name: Grant execute permission for Gradlew
         working-directory: ./android
         run: |
           sed -i 's/\r$//' gradlew
           chmod +x gradlew
 
-      - name: Build Signed APK
+      - name: Build signed release APK
         working-directory: ./android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleRelease --no-daemon
 
-      - name: Rename APK to Kineo-v1.5.apk
+      - name: Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk Kineo-v1.5.apk
-          ls -lh Kineo-v1.5.apk
+          cp android/app/build/outputs/apk/release/app-release.apk "Kineo-v${{ steps.ver.outputs.version }}.apk"
+          ls -lh "Kineo-v${{ steps.ver.outputs.version }}.apk"
 
-      - name: Upload Kineo-v1.5.apk Artifact
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Kineo-v1.5-APK
-          path: Kineo-v1.5.apk
+          name: Kineo-v${{ steps.ver.outputs.version }}-APK
+          path: Kineo-v${{ steps.ver.outputs.version }}.apk
           if-no-files-found: error
           retention-days: 90
 
-      - name: Publish APK to GitHub Releases (Direct Download)
+      - name: Publish APK to GitHub Release
+        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.5.0
-          name: "Kineo v1.5 — Live Sync-Partner & UI Mejorada (APK)"
+          tag_name: ${{ github.ref_name }}
+          name: "Kineo v${{ steps.ver.outputs.version }}"
           body: |
-            ### 📱 Kineo v1.5 — Smart Duo Gym Tracker (APK Android)
-            1. **Sesiones Compartidas en Vivo (2 Teléfonos):** Conéctense con el mismo Código de Sala (`KINEO-XXXX`) para que los pesos, repeticiones y series completadas se actualicen en tiempo real en ambos celulares.
-            2. **Acordeón Exclusivo de Ejercicios:** Todos los ejercicios inician contraídos y al tocar uno se expande únicamente ese.
-            3. **Claridad Total de Peso por Lado / Mancuerna / Barra:** En Hip Thrust, Prensa, Mancuernas, etc. indica exactamente cuánto poner de cada lado o en cada mano.
-            4. **Inputs Libres Corregidos:** Permite registrar `21+` repeticiones en la prueba de peso sin bloquearse en `1` y elimina los ceros a la izquierda (`012`).
-            5. **Modo Individual (Solo) o En Pareja:** Selector desde el inicio y en Ajustes, y barra superior sin botón colaborativo redundante.
-            6. **Firma Criptográfica Fija:** A partir de v1.5, todas las versiones futuras se actualizarán directamente encima sin borrar datos.
-          files: Kineo-v1.5.apk
+            Kineo v${{ steps.ver.outputs.version }} (APK Android firmado con kineo-shared.keystore).
+            Instalar encima de la versión anterior conserva tu historial y perfiles.
+          files: Kineo-v${{ steps.ver.outputs.version }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
