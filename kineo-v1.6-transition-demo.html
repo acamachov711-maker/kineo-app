@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kineo v1.6 — Comparativa de Animaciones de Ejercicio en Acordeón</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-onyx: #0B090E;
+      --bg-card: #14111A;
+      --border: #2A2533;
+      --text-main: #FFFFFF;
+      --text-muted: #A09BA8;
+      --solar: #FF5500;
+      --violet: #8B5CF6;
+      --emerald: #10B981;
+      --theme: #FF5500;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      background-color: #050407;
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 12px 40px;
+      gap: 12px;
+    }
+
+    .font-display {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-style: italic;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* LAB CONTROLS BAR */
+    .lab-bar {
+      width: 100%;
+      max-width: 450px;
+      background: #14111A;
+      border: 1px solid #2A2533;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+    }
+
+    .lab-title {
+      font-size: 11px;
+      color: var(--solar);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .lab-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .lab-field label {
+      display: block;
+      font-size: 9.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .lab-field select {
+      width: 100%;
+      background: #0B090E;
+      color: #fff;
+      border: 1px solid #2A2533;
+      border-radius: 7px;
+      padding: 6px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .style-pills {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .style-pill {
+      background: #0B090E;
+      border: 1px solid #2A2533;
+      color: var(--text-muted);
+      padding: 7px 6px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .style-pill.active {
+      background: rgba(255, 85, 0, 0.14);
+      border-color: var(--solar);
+      color: #fff;
+    }
+
+    /* MOBILE PHONE SIMULATOR */
+    .phone-frame {
+      width: 100%;
+      max-width: 416px;
+      min-height: 820px;
+      background: var(--bg-onyx);
+      border: 2px solid #2A2533;
+      border-radius: 28px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
+    }
+
+    .app-header {
+      padding: 11px 15px;
+      background: rgba(11, 9, 14, 0.95);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand svg {
+      width: 25px;
+      height: 25px;
+    }
+
+    .profile-switch {
+      display: flex;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .profile-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .profile-btn.active-solar {
+      background: var(--solar);
+      color: #0B090E;
+    }
+
+    .profile-btn.active-violet {
+      background: var(--violet);
+      color: #FFFFFF;
+    }
+
+    .app-main {
+      padding: 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 150px;
+    }
+
+    /* COLLAPSED ACCORDION CARD EXAMPLE */
+    .collapsed-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      opacity: 0.75;
+    }
+
+    /* EXPANDED ACCORDION CARD */
+    .slot-card {
+      background: #0B090E;
+      border: 1.5px solid var(--theme);
+      border-radius: 12px;
+      padding: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .slot-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      cursor: pointer;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      margin-bottom: 3px;
+    }
+
+    .chip {
+      font-size: 9.5px;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: #0B090E;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .chip-theme {
+      color: var(--theme);
+      border-color: var(--theme);
+      background: rgba(255, 85, 0, 0.12);
+    }
+
+    /* =====================================================
+       INLINE EXERCISE ANIMATION RIGHT BELOW TITLE (SEAMLESS LIGHTEN BLEND)
+       ===================================================== */
+    .inline-demo-stage {
+      background: #0B090E;
+      border: none;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Layout C: 1:1 Cuadrado Grande con Fusión Continua Sin Bordes */
+    .inline-demo-stage.layout-square .single-video-wrap {
+      width: 100%;
+      height: 295px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0B090E;
+      position: relative;
+    }
+
+    .inline-demo-stage.layout-square video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      mix-blend-mode: lighten;
+      -webkit-mask-image: radial-gradient(ellipse 84% 88% at 50% 48%, #000 68%, transparent 100%);
+      mask-image: radial-gradient(ellipse 84% 88% at 50% 48%, #000 68%, transparent 100%);
+    }
+
+    /* Layout A: Banner Cinemático Compacto (Recomendado) */
+    .inline-demo-stage.layout-banner .single-video-wrap {
+      width: 100%;
+      height: 215px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0B090E;
+      position: relative;
+    }
+
+    .inline-demo-stage.layout-banner video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Layout B: Split HUD Alargado Vertical (Muestra cuerpo completo de pies a cabeza) */
+    .inline-demo-stage.layout-split {
+      display: grid;
+      grid-template-columns: 172px 1fr;
+      gap: 11px;
+      padding: 9px;
+      align-items: stretch;
+    }
+
+    .inline-demo-stage.layout-split .single-video-wrap {
+      width: 172px;
+      height: 252px;
+      border-radius: 9px;
+      overflow: hidden;
+      background: #000000;
+      border: 1px solid #2A2533;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .inline-demo-stage.layout-split video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000000;
+    }
+
+    /* Layout B-Square: Split con caja 1:1 más grande y contain sin recorte */
+    .inline-demo-stage.layout-split-1x1 {
+      display: grid;
+      grid-template-columns: 184px 1fr;
+      gap: 10px;
+      padding: 9px;
+      align-items: center;
+    }
+
+    .inline-demo-stage.layout-split-1x1 .single-video-wrap {
+      width: 184px;
+      height: 184px;
+      border-radius: 9px;
+      overflow: hidden;
+      background: #000000;
+      border: 1px solid #2A2533;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .inline-demo-stage.layout-split-1x1 video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000000;
+    }
+
+    /* Layout C: 1:1 Cuadrado Grande */
+    .inline-demo-stage.layout-square .single-video-wrap {
+      width: 100%;
+      height: 295px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0B090E;
+      position: relative;
+    }
+
+    .inline-demo-stage.layout-square video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Side-by-side comparison mode */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 8px;
+      background: #0B090E;
+    }
+
+    .compare-box {
+      background: #14111A;
+      border: 1px solid #2A2533;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .compare-box.selected {
+      border-color: var(--solar);
+    }
+
+    .compare-box video {
+      width: 100%;
+      height: 175px;
+      object-fit: cover;
+      background: #000;
+    }
+
+    .compare-caption {
+      padding: 6px;
+      font-size: 9.5px;
+      text-align: center;
+      color: #E2DFEA;
+      border-top: 1px solid #2A2533;
+    }
+
+    .demo-overlay-pill {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      background: rgba(11, 9, 14, 0.86);
+      backdrop-filter: blur(6px);
+      border: 1px solid #2A2533;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 9.5px;
+      color: #E2DFEA;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--emerald);
+    }
+
+    .action-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: space-between;
+    }
+
+    .btn-mini {
+      background: #0B090E;
+      border: 1px solid var(--border);
+      color: #C7C3D1;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    /* COACH TIP COLLAPSED */
+    .coach-toggle {
+      width: 100%;
+      background: #0B090E;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      color: var(--text-muted);
+      font-size: 10.5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .coach-body {
+      display: none;
+      background: #0B090E;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #D5D1E0;
+    }
+
+    .coach-body.open {
+      display: block;
+    }
+
+    /* SETS TABLE */
+    .table-head {
+      display: grid;
+      grid-template-columns: 34px 1fr 88px 48px;
+      gap: 6px;
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding: 0 4px;
+    }
+
+    .set-row {
+      display: grid;
+      grid-template-columns: 34px 1fr 88px 48px;
+      gap: 6px;
+      align-items: center;
+      background: #0B090E;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    .set-row.completed {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.55);
+    }
+
+    .set-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: #14111A;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .clean-input {
+      width: 100%;
+      background: #14111A;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 7px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .sub-hint {
+      font-size: 9px;
+      color: var(--theme);
+      margin-top: 2px;
+      display: block;
+      font-weight: 600;
+    }
+
+    .meta-hint {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      display: block;
+    }
+
+    .check-btn {
+      width: 40px;
+      height: 34px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: #14111A;
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+    }
+
+    .check-btn.done {
+      background: var(--emerald);
+      color: #0B090E;
+      border-color: var(--emerald);
+    }
+
+    /* =====================================================
+       FIXED 2-LEVEL REST TIMER BAR (NEVER TRUNCATES 1:15)
+       ===================================================== */
+    .rest-bar {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 12px;
+      background: rgba(20, 17, 26, 0.97);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 11px;
+      z-index: 20;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .rest-progress-track {
+      height: 4px;
+      background: #0B090E;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .rest-progress-fill {
+      height: 100%;
+      width: 35%;
+      background: linear-gradient(90deg, var(--solar), var(--violet));
+    }
+
+    .rest-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .rest-time-cluster {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .rest-clock {
+      font-size: 20px;
+      font-weight: 800;
+      color: #FFFFFF;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .rest-label {
+      font-size: 10.5px;
+      color: #C7C3D1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rest-controls-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr) 1.2fr;
+      gap: 5px;
+    }
+
+    .rest-ctrl-btn {
+      background: #0B090E;
+      border: 1px solid #2A2533;
+      color: #E2DFEA;
+      border-radius: 6px;
+      padding: 5px 0;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .rest-ctrl-btn.skip {
+      background: rgba(244, 63, 94, 0.14);
+      border-color: rgba(244, 63, 94, 0.45);
+      color: #FDA4AF;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PANEL SUPERIOR DE COMPARACIÓN -->
+  <div class="lab-bar">
+    <div class="lab-title font-mono">
+      <span>🎬 Comparativa de Animación en Acordeón</span>
+      <span style="color:#10B981;">v1.6 Demo</span>
+    </div>
+
+    <div>
+      <label class="font-mono" style="font-size:9.5px; color:#A09BA8; display:block; margin-bottom:5px; text-transform:uppercase;">
+        1. Elige qué video mostrar debajo del título:
+      </label>
+      <div class="style-pills font-mono">
+        <button class="style-pill" id="pillCompare" onclick="setVideoChoice('compare')">
+          ⚖️ Ver Ambos Lado a Lado
+        </button>
+        <button class="style-pill active" id="pillStyle1" onclick="setVideoChoice('style1')">
+          🔥 Estilo 1: Rim-Light 2.5D
+        </button>
+        <button class="style-pill" id="pillStyle2" onclick="setVideoChoice('style2')">
+          📐 Estilo 2: Riel Biomecánico
+        </button>
+      </div>
+    </div>
+
+    <div class="lab-grid">
+      <div class="lab-field">
+        <label class="font-mono">2. Diseño dentro del Acordeón</label>
+        <select id="layoutSelect" onchange="renderDemoStage()">
+          <option value="layout-square" selected>Layout C: Formato Cuadrado 1:1 Fusión Continua (Aprobado)</option>
+          <option value="layout-split">Layout B1: Split Alargado Vertical (172×252px)</option>
+          <option value="layout-split-1x1">Layout B2: Split 1:1 Amplio Sin Recorte (184×184px)</option>
+          <option value="layout-banner">Layout A: Banner Debajo del Título</option>
+        </select>
+      </div>
+
+      <div class="lab-field">
+        <label class="font-mono">Velocidad del Loop</label>
+        <select id="loopSpeedSelect" onchange="updateLoopSpeed()">
+          <option value="1.0" selected>1.0x (Tempo Real Biomecánico)</option>
+          <option value="1.2">1.2x (Dinámico)</option>
+          <option value="0.85">0.85x (Cámara Lenta Técnica)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIMULADOR DEL TELÉFONO -->
+  <div class="phone-frame">
+    <header class="app-header">
+      <div class="brand">
+        <svg viewBox="0 0 256 256" aria-hidden="true">
+          <defs>
+            <linearGradient id="ascent-energy" gradientUnits="userSpaceOnUse" x1="66" y1="190" x2="190" y2="60">
+              <stop stop-color="#FF5500" />
+              <stop offset="1" stop-color="#8B5CF6" />
+            </linearGradient>
+          </defs>
+          <path fill="url(#ascent-energy)" d="M73 80H106L102 125 148 85 140 101 151 93 162 77H144L202 56 186 112 181 97 133 137 183 200H145L100 147 94 200H60Z" />
+        </svg>
+        <span class="font-display" style="font-size: 23px;">KINEO</span>
+      </div>
+
+      <div class="profile-switch font-mono">
+        <button class="profile-btn active-solar">Adolfo</button>
+        <button class="profile-btn">Dani</button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- EJERCICIO #1 CONTRAÍDO (ACORDEÓN CERRADO) -->
+      <div class="collapsed-card">
+        <div>
+          <span class="chip font-mono">#1 • Prensa 45°</span>
+          <div class="font-display" style="font-size:17px; margin-top:2px;">Prensa de Piernas 45°</div>
+        </div>
+        <span class="chip font-mono" style="color:#10B981; border-color:#10B981;">✓ 3/3 series ▾</span>
+      </div>
+
+      <!-- EJERCICIO #2 EXPANDIDO (ANIMACIÓN ENSEGUIDA DEL TÍTULO) -->
+      <div class="slot-card">
+        <!-- 1. TÍTULO DEL EJERCICIO -->
+        <div class="slot-top">
+          <div>
+            <div class="badge-row font-mono">
+              <span class="chip">#2</span>
+              <span class="chip chip-theme">Mancuerna Única</span>
+              <span class="chip">Cuádriceps & Glúteo • 90s</span>
+            </div>
+            <h2 class="font-display" style="font-size: 23px;">Sentadilla Goblet con Mancuerna</h2>
+          </div>
+          <span class="chip font-mono">1/3 series ▴</span>
+        </div>
+
+        <!-- 2. ANIMACIÓN DEL EJERCICIO ENSEGUIDA DEL TÍTULO -->
+        <div id="demoStageContainer"></div>
+
+        <!-- 3. TIP DEL ENTRENADOR JUSTO DEBAJO DEL VIDEO (CONTRAÍDO POR DEFECTO - V1.6-06) -->
+        <button class="coach-toggle font-mono" onclick="toggleCoach()">
+          <span>📌 Ver tip del entrenador y técnica</span>
+          <span id="coachArrow">▾</span>
+        </button>
+        <div class="coach-body" id="coachBody">
+          <strong style="color: var(--solar);">📌 Entrenador:</strong> Sujeta 1 sola mancuerna pegada al pecho. Baja profundo manteniendo el torso erguido.<br>
+          <strong style="color: #10B981;">💡 Técnica:</strong> 3s al bajar • 1s pausa abajo • 1s subir empujando con talones.
+        </div>
+
+        <!-- 4. BARRA DE ACCIONES SECUNDARIAS -->
+        <div class="action-bar font-mono" id="secondaryActionsBar">
+          <div style="display:flex; gap:5px;">
+            <button class="btn-mini">🔀 Cambiar Máquina</button>
+            <button class="btn-mini">📈 Historial</button>
+          </div>
+          <div style="display:flex; gap:5px;">
+            <button class="btn-mini" style="color:var(--solar);">🎯 Calibrar Peso</button>
+          </div>
+        </div>
+
+        <!-- 5. TABLA DE SERIES -->
+        <div class="table-head font-mono">
+          <div>Serie</div>
+          <div>Peso (LB) • Pesa Única</div>
+          <div>Reps</div>
+          <div style="text-align:right;">Listo</div>
+        </div>
+
+        <div class="set-row completed">
+          <div class="set-num font-mono">1</div>
+          <div>
+            <input class="clean-input font-mono" type="text" value="45" />
+            <span class="sub-hint font-mono">Pesa única: 45 lb total</span>
+          </div>
+          <div>
+            <input class="clean-input font-mono" type="text" value="12" />
+            <span class="meta-hint font-mono">Meta: 12 reps</span>
+          </div>
+          <button class="check-btn done">✓</button>
+        </div>
+
+        <div class="set-row">
+          <div class="set-num font-mono">2</div>
+          <div>
+            <input class="clean-input font-mono" type="text" value="45" />
+            <span class="sub-hint font-mono">Pesa única: 45 lb total</span>
+          </div>
+          <div>
+            <input class="clean-input font-mono" type="text" value="12" />
+            <span class="meta-hint font-mono">Meta: 12 reps</span>
+          </div>
+          <button class="check-btn">✓</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- NUEVO CRONÓMETRO EN 2 NIVELES (NUNCA SE ENCIMA NI TRUNCA 1:15) -->
+    <div class="rest-bar">
+      <div class="rest-progress-track">
+        <div class="rest-progress-fill"></div>
+      </div>
+      <div class="rest-top-row">
+        <div class="rest-time-cluster">
+          <span class="rest-clock font-mono">1:15</span>
+          <span class="rest-label font-mono">Adolfo • Sentadilla Goblet (Serie 1)</span>
+        </div>
+        <span class="chip font-mono" style="color:#10B981; border-color:#10B981; flex-shrink:0;">Descanso Activo</span>
+      </div>
+      <div class="rest-controls-row font-mono">
+        <button class="rest-ctrl-btn">-15s</button>
+        <button class="rest-ctrl-btn">+15s</button>
+        <button class="rest-ctrl-btn" style="background:var(--solar); color:#0B090E; border-color:var(--solar);">⏸ Pausa</button>
+        <button class="rest-ctrl-btn">↺ Reset</button>
+        <button class="rest-ctrl-btn skip">⏭ Saltar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const VIDEO_STYLE_1 = './public/animations/exercises/01-goblet-squat.mp4';
+    const VIDEO_STYLE_2 = './public/animations/exercises/02-leg-press-45.mp4';
+
+    let currentChoice = 'compare';
+
+    function setVideoChoice(choice) {
+      currentChoice = choice;
+      document.getElementById('pillCompare').className = choice === 'compare' ? 'style-pill active' : 'style-pill';
+      document.getElementById('pillStyle1').className = choice === 'style1' ? 'style-pill active' : 'style-pill';
+      document.getElementById('pillStyle2').className = choice === 'style2' ? 'style-pill active' : 'style-pill';
+      renderDemoStage();
+    }
+
+    function renderDemoStage() {
+      const container = document.getElementById('demoStageContainer');
+      const layout = document.getElementById('layoutSelect').value;
+      const secondaryBar = document.getElementById('secondaryActionsBar');
+
+      if (currentChoice === 'compare') {
+        secondaryBar.style.display = 'flex';
+        container.innerHTML = `
+          <div class="inline-demo-stage">
+            <div class="compare-grid">
+              <div class="compare-box" onclick="setVideoChoice('style1')" style="cursor:pointer;">
+                <video src="${VIDEO_STYLE_1}" autoplay loop muted playsinline></video>
+                <div class="compare-caption font-mono">
+                  <strong style="color:#FF5500;">Estilo 1: Rim-Light 2.5D</strong><br>
+                  <span>Toca para ver en grande</span>
+                </div>
+              </div>
+              <div class="compare-box" onclick="setVideoChoice('style2')" style="cursor:pointer;">
+                <video src="${VIDEO_STYLE_2}" autoplay loop muted playsinline></video>
+                <div class="compare-caption font-mono">
+                  <strong style="color:#10B981;">Estilo 2: Riel Biomecánico</strong><br>
+                  <span>Toca para ver en grande</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        updateLoopSpeed();
+        return;
+      }
+
+      const activeVideoSrc = currentChoice === 'style1' ? VIDEO_STYLE_1 : VIDEO_STYLE_2;
+      const styleBadge = currentChoice === 'style1'
+        ? 'Estilo 1 • Rim-Light 2.5D'
+        : 'Estilo 2 • Riel Biomecánico';
+
+      if (layout === 'layout-split' || layout === 'layout-split-1x1') {
+        secondaryBar.style.display = 'none';
+        container.innerHTML = `
+          <div class="inline-demo-stage ${layout}">
+            <div class="single-video-wrap">
+              <video src="${activeVideoSrc}" autoplay loop muted playsinline></video>
+            </div>
+            <div style="display:flex; flex-direction:column; justify-content:space-between; gap:8px; py:2px;">
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <div class="font-mono" style="font-size:9.5px; color:#10B981; font-weight:700; line-height:1.3;">
+                  ● TEMPO:<br>3S BAJAR • 1S PAUSA • 1S SUBIR
+                </div>
+                <div style="font-size:11px; color:#D5D1E0; line-height:1.4;">
+                  Espalda neutra, mancuerna pegada al pecho y rodillas alineadas con las puntas de los pies.
+                </div>
+                <div class="font-mono" style="font-size:9.5px; color:#A09BA8; background:#14111A; border:1px solid #2A2533; border-radius:6px; padding:5px 7px;">
+                  💪 Enfoque: <strong style="color:#fff;">Cuádriceps & Glúteo</strong>
+                </div>
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:5px;" class="font-mono">
+                <button class="btn-mini">🔀 Máquina</button>
+                <button class="btn-mini">📈 Historial</button>
+                <button class="btn-mini" style="color:var(--solar); border-color:rgba(255,85,0,0.4);">🎯 Calibrar</button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        secondaryBar.style.display = 'flex';
+        container.innerHTML = `
+          <div class="inline-demo-stage ${layout}">
+            <div class="single-video-wrap">
+              <video src="${activeVideoSrc}" autoplay loop muted playsinline></video>
+              <div class="demo-overlay-pill font-mono">
+                <span class="pulse-dot"></span>
+                <span>Tempo: 3s bajar • 1s pausa • 1s subir (${styleBadge})</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      updateLoopSpeed();
+    }
+
+    function updateLoopSpeed() {
+      const speed = parseFloat(document.getElementById('loopSpeedSelect').value) || 1.0;
+      document.querySelectorAll('#demoStageContainer video').forEach((v) => {
+        v.playbackRate = speed;
+      });
+    }
+
+    function toggleCoach() {
+      const body = document.getElementById('coachBody');
+      const arrow = document.getElementById('coachArrow');
+      body.classList.toggle('open');
+      arrow.textContent = body.classList.contains('open') ? '▴' : '▾';
+    }
+
+    setVideoChoice('style1');
+  </script>
+</body>
+</html>
