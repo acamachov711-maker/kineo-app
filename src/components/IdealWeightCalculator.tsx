@@ -11,7 +11,9 @@ import {
   getIdealWeightZones,
   displayWeightValue,
   parseInputToKg,
+  sanitizeDecimalInput,
   formatDualWeight,
+  getExerciseLoadCategory,
   getLoadInstruction
 } from '../utils/fitnessMath'
 
@@ -75,7 +77,8 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
   )
   const [testWeightInput, setTestWeightInput] = useState<string>('20')
   const [testRepsInput, setTestRepsInput] = useState<string>('8')
-  const [weightMode, setWeightMode] = useState<'total' | 'per_side'>('total')
+  const [plateMode, setPlateMode] = useState<'total' | 'per_side'>('total')
+  const [dumbbellMode, setDumbbellMode] = useState<'single_hand' | 'pair_sum'>('single_hand')
   const [testRir, setTestRir] = useState<number>(2)
   const [savedBanner, setSavedBanner] = useState<boolean>(false)
 
@@ -87,7 +90,7 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
         profiles[preselectedVariant.profileId].estimated1RMByVariant[
           preselectedVariant.variant.id
         ] || 25
-      const workingWeight = Math.round(current1Rm * 0.75)
+      const workingWeight = Math.round(current1Rm * 0.75 * 10) / 10
       setTestWeightInput(String(displayWeightValue(workingWeight, weightUnit)))
     }
   }, [preselectedVariant, profiles, weightUnit])
@@ -95,16 +98,23 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
   const currentItem = allVariants.find((x) => x.variant.id === selectedVariantId)
   const currentVariant = currentItem?.variant
 
-  const isBilateralPlates =
-    currentVariant &&
-    (currentVariant.equipment === 'Barra' ||
-      (currentVariant.equipment === 'Máquina' &&
-        (currentVariant.name.toLowerCase().includes('prensa') ||
-          currentVariant.name.toLowerCase().includes('hack'))))
+  const loadCategory = currentVariant
+    ? getExerciseLoadCategory(currentVariant.equipment, currentVariant.name)
+    : 'stack_or_body'
+  const isBilateralPlates = loadCategory === 'bilateral_plates'
+  const isDualDumbbell = loadCategory === 'dual_dumbbell'
+  const isSingleImplement = loadCategory === 'single_implement'
 
-  const rawTypedWeight = parseFloat(testWeightInput) || 0
-  const effectiveTypedWeight =
-    isBilateralPlates && weightMode === 'per_side' ? rawTypedWeight * 2 : rawTypedWeight
+  const rawTypedWeight = parseFloat(sanitizeDecimalInput(testWeightInput)) || 0
+  const effectiveTypedWeight = isBilateralPlates
+    ? plateMode === 'per_side'
+      ? rawTypedWeight * 2
+      : rawTypedWeight
+    : isDualDumbbell
+    ? dumbbellMode === 'pair_sum'
+      ? rawTypedWeight / 2
+      : rawTypedWeight
+    : rawTypedWeight
 
   const weightKg = parseInputToKg(effectiveTypedWeight, weightUnit)
   const parsedReps = Math.max(1, parseInt(testRepsInput, 10) || 1)
@@ -138,8 +148,8 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
               Calculadora de Peso Ideal Seguro
             </h2>
             <p className="text-xs text-[#C7C3D1] mt-0.5">
-              Ingresa el peso usado y las repeticiones que lograste (puedes poner 20, 21 o más).
-              Kineo calculará tu peso exacto y cuánto poner de cada lado.
+              Ingresa el peso usado con decimales si lo necesitas (ej. 2.5, 12.5, 22.5) y las
+              repeticiones logradas. Kineo calculará cuánto cargar por mano o por lado.
             </p>
           </div>
         </div>
@@ -158,6 +168,7 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
                 return (
                   <button
                     key={pid}
+                    type="button"
                     onClick={() => {
                       setTargetProfileId(pid)
                       onSelectProfile?.(pid)
@@ -199,6 +210,40 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
           </select>
         </div>
 
+        {/* V1.6-03: Selector para Doble Mancuerna */}
+        {isDualDumbbell && (
+          <div className="p-2.5 rounded-[10px] bg-[#0B090E] border theme-border flex flex-wrap items-center justify-between gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-[0.04em] text-[#A09BA8]">
+              🏋️ Este ejercicio usa 2 mancuernas (1 en cada mano). ¿Cómo vas a anotar el peso?
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setDumbbellMode('single_hand')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
+                  dumbbellMode === 'single_hand'
+                    ? 'theme-bg theme-border'
+                    : 'bg-[#14111A] text-[#C7C3D1] border-[#2A2533]'
+                }`}
+              >
+                Peso de 1 Mancuerna (c/mano)
+              </button>
+              <button
+                type="button"
+                onClick={() => setDumbbellMode('pair_sum')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
+                  dumbbellMode === 'pair_sum'
+                    ? 'theme-bg theme-border'
+                    : 'bg-[#14111A] text-[#C7C3D1] border-[#2A2533]'
+                }`}
+              >
+                Suma de las 2 Mancuernas (÷2)
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* V1.6-03: Selector para Discos a Cada Lado */}
         {isBilateralPlates && (
           <div className="p-2.5 rounded-[10px] bg-[#0B090E] border theme-border flex flex-wrap items-center justify-between gap-2">
             <span className="font-mono text-[10px] uppercase tracking-[0.04em] text-[#A09BA8]">
@@ -207,20 +252,20 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setWeightMode('total')}
+                onClick={() => setPlateMode('total')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
-                  weightMode === 'total'
+                  plateMode === 'total'
                     ? 'theme-bg theme-border'
                     : 'bg-[#14111A] text-[#C7C3D1] border-[#2A2533]'
                 }`}
               >
-                Peso Total
+                Peso Total (Ambos lados)
               </button>
               <button
                 type="button"
-                onClick={() => setWeightMode('per_side')}
+                onClick={() => setPlateMode('per_side')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
-                  weightMode === 'per_side'
+                  plateMode === 'per_side'
                     ? 'theme-bg theme-border'
                     : 'bg-[#14111A] text-[#C7C3D1] border-[#2A2533]'
                 }`}
@@ -231,26 +276,43 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
           </div>
         )}
 
+        {/* V1.6-03: Aviso para Mancuerna / Kettlebell única */}
+        {isSingleImplement && (
+          <div className="p-2.5 rounded-[10px] bg-[#0B090E] border border-[#2A2533] font-mono text-[10px] text-[#C7C3D1]">
+            💡 <strong>Peso de la mancuerna / pesa única (total):</strong> Este ejercicio se realiza sujetando 1 sola pesa con ambas manos.
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
-              {isBilateralPlates && weightMode === 'per_side'
+              {isBilateralPlates && plateMode === 'per_side'
                 ? `Peso en CADA lado (${weightUnit.toUpperCase()})`
-                : currentVariant?.equipment === 'Mancuernas'
-                ? `Peso de 1 Mancuerna (${weightUnit.toUpperCase()})`
+                : isDualDumbbell
+                ? dumbbellMode === 'pair_sum'
+                  ? `Suma de las 2 mancuernas (${weightUnit.toUpperCase()})`
+                  : `Peso de 1 Mancuerna (${weightUnit.toUpperCase()})`
+                : isSingleImplement
+                ? `Peso de la pesa única (${weightUnit.toUpperCase()})`
                 : `Peso usado (${weightUnit.toUpperCase()})`}
             </label>
             <input
               type="text"
               inputMode="decimal"
-              placeholder="Ej. 20"
+              placeholder="Ej. 22.5"
               value={testWeightInput}
               onChange={(e) => {
-                const cleaned = e.target.value.replace(/[^0-9.]/g, '')
+                const cleaned = sanitizeDecimalInput(e.target.value)
                 setTestWeightInput(cleaned)
               }}
               className="w-full clean-input rounded-xl px-3.5 py-2.5 font-display text-2xl text-white font-mono"
             />
+            {isDualDumbbell && dumbbellMode === 'pair_sum' && rawTypedWeight > 0 && (
+              <span className="font-mono text-[10px] text-[#10B981] mt-1 block font-bold">
+                Ingresaste {rawTypedWeight} {weightUnit} totales ➔{' '}
+                {Math.round((rawTypedWeight / 2) * 10) / 10} {weightUnit} por mano
+              </span>
+            )}
             <span className="font-mono text-[10px] uppercase theme-text mt-1 block font-medium">
               {currentVariant
                 ? getLoadInstruction(
@@ -291,6 +353,7 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
               {[0, 1, 2, 3].map((rirVal) => (
                 <button
                   key={rirVal}
+                  type="button"
                   onClick={() => setTestRir(rirVal)}
                   className={`py-2.5 rounded-lg text-xs font-bold border transition-all ${
                     testRir === rirVal
@@ -416,6 +479,7 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
 
         <div className="pt-1 flex flex-col sm:flex-row items-center justify-between gap-3">
           <button
+            type="button"
             onClick={handleApplyToRoutine}
             className="w-full sm:w-auto solar-btn theme-bg px-5 py-3 rounded-md text-base transition-all flex items-center justify-center gap-2"
           >

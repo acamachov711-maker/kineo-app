@@ -3,8 +3,6 @@ import {
   Dumbbell,
   BarChart3,
   Settings,
-  User,
-  Scale,
   CheckCircle2,
   Calendar,
   Sparkles,
@@ -13,8 +11,7 @@ import {
   Play,
   Moon,
   Clock,
-  Unlock,
-  Wifi
+  Unlock
 } from 'lucide-react'
 import {
   CompletedExerciseRecord,
@@ -51,16 +48,21 @@ import {
   buildPyramidSets,
   generateDropSubSets,
   getIdealWeightZones,
-  formatDualWeight,
-  calculateProfileStreak,
   calculateSafe1RM
 } from './utils/fitnessMath'
+import { ASCENT_COLOR_PALETTE } from './data/initialData'
 import { OnboardingWizard } from './components/OnboardingWizard'
 import { ExerciseSlotCard } from './components/ExerciseSlotCard'
 import { RestTimerBar } from './components/RestTimerBar'
 import { ProgressDashboard } from './components/ProgressDashboard'
 import { SettingsAndMesocycle, SettingsSubTab } from './components/SettingsAndMesocycle'
 import { StreakBanner } from './components/StreakBanner'
+import {
+  TransitionOverlay,
+  TransitionEventPayload,
+  TransitionType,
+  TRANSITION_CATALOG
+} from './components/TransitionOverlay'
 
 // Strictly 3 Bottom Tabs: 'workout' | 'progress' | 'settings'
 type ActiveTab = 'workout' | 'progress' | 'settings'
@@ -145,6 +147,33 @@ export function App() {
   const [highlightedGlossaryId, setHighlightedGlossaryId] = useState<string | null>(null)
   const [finishBanner, setFinishBanner] = useState<string | null>(null)
 
+  // V1.6-08: Motor de Transiciones Animadas y regla anti-repetición consecutiva
+  const [activeTransition, setActiveTransition] = useState<TransitionEventPayload | null>(null)
+  const lastPlayedTransitionRef = useRef<TransitionType | null>(null)
+
+  const triggerKineoTransition = useCallback(
+    (preferredType: TransitionType, subtitle: string) => {
+      let chosenType: TransitionType = preferredType
+      // V1.6-08: Prohibido mostrar 2 transiciones iguales consecutivas
+      if (lastPlayedTransitionRef.current === preferredType) {
+        if (preferredType === 'station_complete') {
+          chosenType = 'overload_dropset'
+        } else if (preferredType === 'overload_dropset') {
+          chosenType = 'station_complete'
+        } else if (preferredType === 'new_record_pr') {
+          chosenType = 'overload_dropset'
+        }
+      }
+      lastPlayedTransitionRef.current = chosenType
+      const base = TRANSITION_CATALOG[chosenType]
+      setActiveTransition({
+        ...base,
+        subtitle
+      })
+    },
+    []
+  )
+
   const currentSession =
     mesocycle.sessions.find((s) => s.id === activeSessionId) || mesocycle.sessions[0]
 
@@ -193,13 +222,22 @@ export function App() {
     }
   }, [deviceConfig.coupleModeEnabled, deviceConfig.primaryProfileId])
 
-  // Sync global CSS theme variables (:root[data-profile='partner' | 'owner']) with activeProfileId
+  // V1.6-10: Sync global CSS theme variables (--theme & --theme-fg) with activeProfileId's chosen Ascent color
   useEffect(() => {
+    const activeProf = profiles[activeProfileId]
+    const hex = activeProf?.accentColor || (activeProfileId === 'user_2' ? '#8B5CF6' : '#FF5500')
+    const foundColor = ASCENT_COLOR_PALETTE.find(
+      (c) => c.hex.toUpperCase() === hex.toUpperCase()
+    )
+    const fgHex = foundColor ? foundColor.fgHex : '#0B090E'
+
     document.documentElement.setAttribute(
       'data-profile',
       activeProfileId === 'user_2' ? 'partner' : 'owner'
     )
-  }, [activeProfileId])
+    document.documentElement.style.setProperty('--theme', hex)
+    document.documentElement.style.setProperty('--theme-fg', fgHex)
+  }, [activeProfileId, profiles])
 
   useEffect(() => {
     if (isApplyingRemoteRef.current) return
@@ -231,7 +269,7 @@ export function App() {
     saveActiveSessionId(activeSessionId)
   }, [activeSessionId])
 
-  // LIVE REAL-TIME SYNC SUBSCRIPTION (Option 1)
+  // LIVE REAL-TIME SYNC SUBSCRIPTION
   useEffect(() => {
     if (!deviceConfig.coupleModeEnabled || !deviceConfig.syncRoomCode) {
       liveSyncManager.disconnect()
@@ -259,13 +297,13 @@ export function App() {
             user_1: {
               ...prev.user_1,
               ...remotePayload.profiles.user_1,
-              accentColor: '#FF5500',
+              accentColor: remotePayload.profiles.user_1.accentColor || prev.user_1.accentColor || '#FF5500',
               isDeviceOwner: prev.user_1.isDeviceOwner
             },
             user_2: {
               ...prev.user_2,
               ...remotePayload.profiles.user_2,
-              accentColor: '#8B5CF6',
+              accentColor: remotePayload.profiles.user_2.accentColor || prev.user_2.accentColor || '#8B5CF6',
               isDeviceOwner: prev.user_2.isDeviceOwner
             }
           }))
@@ -448,14 +486,22 @@ export function App() {
           idx === currentSets.length - 1
             ? {
                 ...s,
+                isFailure: false,
                 drops: s.drops?.length ? s.drops : generateDropSubSets(s.weightKg)
               }
-            : s
+            : { ...s, isFailure: false, drops: undefined }
         )
       } else if (technique === 'failure') {
         updatedSets = currentSets.map((s, idx) => ({
           ...s,
+          drops: undefined,
           isFailure: idx === currentSets.length - 1
+        }))
+      } else {
+        updatedSets = currentSets.map((s) => ({
+          ...s,
+          drops: undefined,
+          isFailure: false
         }))
       }
 
@@ -484,6 +530,80 @@ export function App() {
     triggerRestSeconds?: number,
     exerciseLabel?: string
   ) => {
+    const slot = currentSession.slots.find((s) => s.slotId === slotId)
+    const currentSlotState = slotsState[slotId]
+
+    // Detect if this update completes the final set of the exercise for this user (V1.6-08)
+    if (slot && currentSlotState && updated.completed === true) {
+      const currentSets = currentSlotState.setsByProfile[profileId]
+      const wasAlreadyAllDone =
+        currentSets.length > 0 && currentSets.every((stItem) => stItem.completed)
+      const nextSetsPreview = currentSets.map((stItem, idx) =>
+        idx === setIndex ? { ...stItem, ...updated } : stItem
+      )
+      const isNowAllDone =
+        nextSetsPreview.length > 0 && nextSetsPreview.every((stItem) => stItem.completed)
+
+      if (!wasAlreadyAllDone && isNowAllDone) {
+        const prof = profiles[profileId]
+        const options =
+          currentSlotState.syncMode === 'individual' &&
+          prof.gender === 'female' &&
+          slot.femaleFocusedPrimary
+            ? [
+                slot.femaleFocusedPrimary,
+                ...(slot.femaleFocusedAlternatives || slot.alternatives)
+              ]
+            : [slot.primaryExercise, ...slot.alternatives]
+        const activeVarId = prof.activeVariantBySlot[slotId] || options[0].id
+        const activeVar = options.find((o) => o.id === activeVarId) || options[0]
+        const tech = currentSlotState.techniqueByProfile[profileId]
+
+        // Check if user achieved a New Personal Record (PR) compared to history or calibrated 1RM
+        const maxWeightToday = Math.max(...nextSetsPreview.map((s) => s.weightKg), 0)
+        const bestSet = nextSetsPreview.reduce(
+          (best, cur) => (cur.weightKg >= best.weightKg ? cur : best),
+          nextSetsPreview[0]
+        )
+        const todayEstimated1Rm = calculateSafe1RM(
+          bestSet.weightKg,
+          bestSet.actualReps || 8,
+          1
+        )
+        const previousHistoryWeights = history
+          .filter((h) => h.profileId === profileId)
+          .flatMap((h) => h.exercises)
+          .filter((ex) => ex.variantId === activeVarId)
+          .map((ex) => ex.maxWeightKg)
+
+        const previousBestWeight =
+          previousHistoryWeights.length > 0 ? Math.max(...previousHistoryWeights) : 0
+        const calibrated1Rm = prof.estimated1RMByVariant[activeVarId] || 0
+
+        const isNewPR =
+          (previousBestWeight > 0 && maxWeightToday > previousBestWeight + 0.2) ||
+          (calibrated1Rm > 0 && todayEstimated1Rm > calibrated1Rm + 1.0)
+
+        // Priority hierarchy: 3 (PR) > 2 (Dropset / Failure) > 1 (Standard Station Complete)
+        if (isNewPR) {
+          triggerKineoTransition(
+            'new_record_pr',
+            `${prof.name} superó su marca en ${activeVar.name}`
+          )
+        } else if (tech === 'dropset' || tech === 'failure') {
+          triggerKineoTransition(
+            'overload_dropset',
+            `${prof.name} completó todas las series de ${activeVar.name}`
+          )
+        } else {
+          triggerKineoTransition(
+            'station_complete',
+            `${prof.name} dominó ${activeVar.name} (${nextSetsPreview.length}/${nextSetsPreview.length} series)`
+          )
+        }
+      }
+    }
+
     setSlotsState((prev) => {
       const current = prev[slotId]
       if (!current) return prev
@@ -510,24 +630,80 @@ export function App() {
     setSlotsState((prev) => {
       const current = prev[slotId]
       if (!current) return prev
+      const tech = current.techniqueByProfile[profileId]
       const currentSets = current.setsByProfile[profileId]
       const last = currentSets[currentSets.length - 1]
+
+      // Al añadir una serie nueva, el Dropset o Fallo pasa a la nueva última serie (V1.6-05 / V1.6-09)
+      const cleanedPrevSets = currentSets.map((s) => ({
+        ...s,
+        isFailure: false,
+        drops: undefined
+      }))
+
       const newSet: SetEntry = {
         setNumber: currentSets.length + 1,
         targetReps: last?.targetReps || '10',
         weightKg: last?.weightKg || 0,
         actualReps: last?.actualReps || 10,
         rir: 1,
-        isFailure: false,
-        completed: false
+        isFailure: tech === 'failure',
+        completed: false,
+        drops: tech === 'dropset' ? generateDropSubSets(last?.weightKg || 20) : undefined
       }
+
       return {
         ...prev,
         [slotId]: {
           ...current,
           setsByProfile: {
             ...current.setsByProfile,
-            [profileId]: [...currentSets, newSet]
+            [profileId]: [...cleanedPrevSets, newSet]
+          }
+        }
+      }
+    })
+  }
+
+  /**
+   * V1.6-09: Eliminar serie extra manteniendo presionada la fila (long-press) o con el botón 🗑️,
+   * renumerando las series restantes (1, 2, 3...) y reubicando el Dropset / Fallo en la nueva última serie.
+   */
+  const handleDeleteSet = (
+    profileId: 'user_1' | 'user_2',
+    slotId: string,
+    setIndex: number
+  ) => {
+    setSlotsState((prev) => {
+      const current = prev[slotId]
+      if (!current) return prev
+      const tech = current.techniqueByProfile[profileId]
+      const currentSets = current.setsByProfile[profileId]
+      if (currentSets.length <= 1) return prev
+
+      const filtered = currentSets.filter((_, idx) => idx !== setIndex)
+      const renumbered = filtered.map((s, idx) => {
+        const isLast = idx === filtered.length - 1
+        return {
+          ...s,
+          setNumber: idx + 1,
+          isFailure: tech === 'failure' ? isLast : false,
+          drops:
+            tech === 'dropset' && isLast
+              ? s.drops && s.drops.length > 0
+                ? s.drops
+                : generateDropSubSets(s.weightKg)
+              : undefined
+        }
+      })
+
+      return {
+        ...prev,
+        [slotId]: {
+          ...current,
+          setsByProfile: {
+            ...current.setsByProfile,
+            [profileId]: renumbered
           }
         }
       }
@@ -538,7 +714,9 @@ export function App() {
     profileId: 'user_1' | 'user_2',
     variantId: string,
     oneRmKg: number,
-    slotId?: string
+    slotId?: string,
+    triggerRestSeconds?: number,
+    restLabel?: string
   ) => {
     const nextProfiles = {
       ...profiles,
@@ -562,7 +740,14 @@ export function App() {
         const nextSets =
           tech === 'pyramid_asc' || tech === 'pyramid_desc'
             ? buildPyramidSets(tech, oneRmKg, currentSets)
-            : currentSets.map((s) => ({ ...s, weightKg: zones.hypertrophyKg }))
+            : currentSets.map((s, idx) => ({
+                ...s,
+                weightKg: zones.hypertrophyKg,
+                drops:
+                  tech === 'dropset' && idx === currentSets.length - 1
+                    ? generateDropSubSets(zones.hypertrophyKg)
+                    : s.drops
+              }))
         return {
           ...prev,
           [slotId]: {
@@ -574,6 +759,14 @@ export function App() {
           }
         }
       })
+    }
+
+    // V1.6-02: Iniciar descanso automático de 120s (2:00 min) tras completar la prueba rápida
+    if (triggerRestSeconds && triggerRestSeconds > 0) {
+      startRestTimer(
+        triggerRestSeconds,
+        restLabel || `${profiles[profileId].name} • Descanso post-prueba • Prepárate para la Serie 1`
+      )
     }
   }
 
@@ -671,6 +864,12 @@ export function App() {
 
     setHistory((prev) => [...prev, ...newEntries])
 
+    // V1.6-08: Disparar animación de Cierre de Sesión Juntos (04-session-complete-duo.mp4)
+    triggerKineoTransition(
+      'session_complete_duo',
+      `Sesión ${currentSession.code} guardada en el historial • ¡Día sumado a la racha!`
+    )
+
     const coreOrder = ['session-a', 'session-b', 'session-c', 'session-d']
     const currentIdx = coreOrder.indexOf(currentSession.id)
     const nextSessionId =
@@ -727,23 +926,38 @@ export function App() {
 
   const statsPrimary = getLiveStats(primaryPid)
   const statsSecondary = getLiveStats(secondaryPid)
-  const streakPrimary = calculateProfileStreak(history, primaryPid)
   const hasSampleData = history.some((h) => h.isSampleData)
 
   return (
     <div className="min-h-screen bg-[#0B090E] text-white flex flex-col">
-      {/* Kineo Ascent header: logo K, switch Titular / Pareja (theme), unit */}
+      {/* V1.6-08: Overlay de Transición Animada (Touch-to-Skip, 1.35x, mode-blend) */}
+      <TransitionOverlay
+        activeTransition={activeTransition}
+        onDismiss={() => setActiveTransition(null)}
+      />
+
+      {/* Kineo Ascent header */}
       <header className="sticky top-0 z-30 bg-[#0B090E]/95 backdrop-blur-md border-b border-[#2A2533] px-3 sm:px-6 py-2.5">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <svg viewBox="0 0 256 256" className="w-7 h-7" aria-hidden="true">
               <defs>
-                <linearGradient id="ascent-energy" gradientUnits="userSpaceOnUse" x1="66" y1="190" x2="190" y2="60">
-                  <stop stopColor="#FF5500" />
-                  <stop offset="1" stopColor="#8B5CF6" />
+                <linearGradient
+                  id="ascent-energy"
+                  gradientUnits="userSpaceOnUse"
+                  x1="66"
+                  y1="190"
+                  x2="190"
+                  y2="60"
+                >
+                  <stop stopColor={profiles.user_1.accentColor || '#FF5500'} />
+                  <stop offset="1" stopColor={profiles.user_2.accentColor || '#8B5CF6'} />
                 </linearGradient>
               </defs>
-              <path fill="url(#ascent-energy)" d="M73 80H106L102 125 148 85 140 101 151 93 162 77H144L202 56 186 112 181 97 133 137 183 200H145L100 147 94 200H60Z" />
+              <path
+                fill="url(#ascent-energy)"
+                d="M73 80H106L102 125 148 85 140 101 151 93 162 77H144L202 56 186 112 181 97 133 137 183 200H145L100 147 94 200H60Z"
+              />
             </svg>
             <span className="font-display text-2xl leading-none">KINEO</span>
           </div>
@@ -752,6 +966,7 @@ export function App() {
             {deviceConfig.coupleModeEnabled && (
               <div className="flex items-center bg-[#14111A] border border-[#2A2533] rounded-lg p-0.5">
                 <button
+                  type="button"
                   onClick={() => setActiveProfileId(primaryPid)}
                   className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase font-mono transition-all ${
                     activeProfileId === primaryPid ? 'theme-bg' : 'text-[#A09BA8]'
@@ -760,6 +975,7 @@ export function App() {
                   {profiles[primaryPid].name.trim() || 'Titular'}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveProfileId(secondaryPid)}
                   className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase font-mono transition-all ${
                     activeProfileId === secondaryPid ? 'theme-bg' : 'text-[#A09BA8]'
@@ -771,6 +987,7 @@ export function App() {
             )}
 
             <button
+              type="button"
               onClick={() => setWeightUnit((u) => (u === 'kg' ? 'lb' : 'kg'))}
               className="px-2 py-1.5 rounded-lg bg-[#14111A] border border-[#2A2533] text-[11px] font-bold font-mono text-white"
             >
@@ -783,7 +1000,7 @@ export function App() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 pt-3">
         {/* TAB 1: ENTRENAR */}
         {activeTab === 'workout' && (
-          <div className="space-y-4 pb-28">
+          <div className="space-y-4 pb-44">
             {/* STATE A: COMPLETED TODAY -> WAIT UNTIL TOMORROW */}
             {isCompletedToday && !isWorkoutStarted ? (
               <div className="space-y-4">
@@ -812,6 +1029,7 @@ export function App() {
 
                   <div className="pt-1 flex flex-wrap items-center justify-center gap-2.5">
                     <button
+                      type="button"
                       onClick={() => setActiveTab('progress')}
                       className="solar-btn theme-bg px-4 py-2.5 rounded-[9px] text-base flex items-center gap-2"
                     >
@@ -819,6 +1037,7 @@ export function App() {
                       Ver Progreso
                     </button>
                     <button
+                      type="button"
                       onClick={() => setIsWorkoutStarted(true)}
                       className="px-3.5 py-2.5 rounded-[9px] bg-[#14111A] hover:bg-[#1C1826] text-[#A09BA8] hover:text-white border border-[#2A2533] font-mono text-[11px] font-bold uppercase flex items-center gap-1.5"
                     >
@@ -864,6 +1083,7 @@ export function App() {
                       return (
                         <button
                           key={sess.id}
+                          type="button"
                           onClick={() => setActiveSessionId(sess.id)}
                           className={`p-2 rounded-lg border text-center transition-all ${
                             isSelected
@@ -901,7 +1121,30 @@ export function App() {
                     ))}
                   </div>
 
+                  {/* V1.6-11: Quick access to Guided Cardio protocol */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-md bg-[#0B090E] border border-[#2A2533]">
+                    <span className="font-mono text-[10px] text-[#C7C3D1] flex items-center gap-1.5">
+                      <Flame className="w-3.5 h-3.5 theme-text shrink-0" />
+                      <span>
+                        <strong>Cardio Recomendado:</strong> 5 min suave al inicio o 15–20 min con
+                        inclinación (%) al final.
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHighlightedGlossaryId(null)
+                        setSettingsSubTab('guide')
+                        setActiveTab('settings')
+                      }}
+                      className="font-mono text-[10px] font-bold uppercase theme-text hover:underline shrink-0"
+                    >
+                      Ver Velocidad + % ↗
+                    </button>
+                  </div>
+
                   <button
+                    type="button"
                     onClick={() => {
                       setIsWorkoutStarted(true)
                       setExpandedSlotId(null)
@@ -933,6 +1176,7 @@ export function App() {
                       </p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => setIsWorkoutStarted(false)}
                       className="px-2.5 py-1.5 rounded-lg bg-[#0B090E] hover:bg-[#1C1826] font-mono text-[10px] font-bold uppercase text-[#A09BA8] hover:text-white border border-[#2A2533] shrink-0"
                     >
@@ -971,6 +1215,7 @@ export function App() {
                         onChangeTechnique={handleChangeTechnique}
                         onUpdateSet={handleUpdateSet}
                         onAddSet={handleAddSet}
+                        onDeleteSet={handleDeleteSet}
                         onSaveQuickStrengthTest={handleSaveIdealWeight}
                         onOpenCalculatorForVariant={(pid, variant, sId) => {
                           setCalculatorPreselect({ profileId: pid, variant, slotId: sId })
@@ -998,6 +1243,7 @@ export function App() {
                     </p>
                   </div>
                   <button
+                    type="button"
                     onClick={handleFinishWorkoutSession}
                     className="solar-btn theme-bg w-full sm:w-auto px-5 py-2.5 rounded-[9px] text-lg flex items-center justify-center gap-2 shrink-0"
                   >
@@ -1094,6 +1340,7 @@ export function App() {
             return (
               <button
                 key={item.id}
+                type="button"
                 onClick={() => setActiveTab(item.id)}
                 className={`flex flex-col items-center justify-center py-2 rounded-xl transition-all ${
                   active
@@ -1102,7 +1349,9 @@ export function App() {
                 }`}
               >
                 <Icon className="w-5 h-5" />
-                <span className="font-mono text-[10px] uppercase tracking-[0.06em] mt-0.5">{item.label}</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.06em] mt-0.5">
+                  {item.label}
+                </span>
               </button>
             )
           })}

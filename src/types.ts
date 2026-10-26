@@ -18,6 +18,7 @@ export interface ExerciseVariant {
   muscleGroup: string
   secondaryMuscles?: string
   demoFolderId: string
+  localVideoUrl?: string
   tempo?: string
   cues: string
   stepByStep?: [string, string, string]
@@ -38,6 +39,7 @@ export interface SetEntry {
   rir: number
   isFailure?: boolean
   completed: boolean
+  compensatedDirection?: 'up' | 'down' | null
   drops?: DropSubSet[]
 }
 

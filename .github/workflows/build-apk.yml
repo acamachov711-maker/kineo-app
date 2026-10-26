@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Versión (ej. 1.5.1). Debe coincidir con build.gradle'
+        description: 'Versión (ej. 1.6.0). Debe coincidir con build.gradle'
         required: true
-        default: '1.5.1'
+        default: '1.6.0'
 
 permissions:
   contents: write

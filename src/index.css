@@ -1,4 +1,4 @@
-/* ===== Kineo Ascent (v1.5.1) ===== */
+/* ===== Kineo Ascent (v1.6) ===== */
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&display=swap&subset=latin,latin-ext');
 
 @tailwind base;
@@ -6,9 +6,15 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 }
 
@@ -65,3 +71,10 @@ html, body { background-color: #0B090E; color: #FFFFFF; }
 .theme-focus:focus { border-color: var(--theme); }
 .clean-input { width: 100%; background-color: #14111A; border: 1px solid #2A2533; border-radius: 6px; padding: 7px 8px; color: #FFFFFF; outline: none; }
 .clean-input:focus { border-color: var(--theme); }
+
+/* V1.6-08 & V1.6-13: Seamless blend mode & soft radial mask for exercise and transition videos */
+.kineo-blend-video {
+  mix-blend-mode: lighten;
+  -webkit-mask-image: radial-gradient(ellipse 86% 86% at 50% 50%, #000 62%, rgba(0, 0, 0, 0.55) 82%, transparent 100%);
+  mask-image: radial-gradient(ellipse 86% 86% at 50% 50%, #000 62%, rgba(0, 0, 0, 0.55) 82%, transparent 100%);
+}

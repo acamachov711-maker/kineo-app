@@ -14,6 +14,119 @@ export const GOAL_OPTIONS: string[] = [
   'Quema de Grasa, Resistencia & Salud Metabólica'
 ]
 
+export interface AscentColorOption {
+  id: string
+  name: string
+  hex: string
+  fgHex: string
+}
+
+export const ASCENT_COLOR_PALETTE: AscentColorOption[] = [
+  { id: 'solar-orange', name: 'Solar Orange', hex: '#FF5500', fgHex: '#0B090E' },
+  { id: 'hyper-violet', name: 'Hyper Violet', hex: '#8B5CF6', fgHex: '#FFFFFF' },
+  { id: 'cyber-cyan', name: 'Cyber Cyan', hex: '#06B6D4', fgHex: '#0B090E' },
+  { id: 'crimson-pulse', name: 'Crimson Pulse', hex: '#F43F5E', fgHex: '#FFFFFF' },
+  { id: 'amber-gold', name: 'Amber Gold', hex: '#F59E0B', fgHex: '#0B090E' },
+  { id: 'neon-lime', name: 'Neon Lime', hex: '#84CC16', fgHex: '#0B090E' },
+  { id: 'electric-blue', name: 'Electric Blue', hex: '#3B82F6', fgHex: '#FFFFFF' },
+  { id: 'magenta-rose', name: 'Magenta Rose', hex: '#EC4899', fgHex: '#FFFFFF' }
+]
+
+/**
+ * V1.6-13: Mapeo oficial de ejercicios a las 21 animaciones locales propias en
+ * /animations/exercises/01-goblet-squat.mp4 ... 21-kettlebell-swing.mp4
+ */
+export const LOCAL_EXERCISE_VIDEOS: Record<string, string> = {
+  // 01 - Goblet Squat
+  'ex-a1-alt1': '/animations/exercises/01-goblet-squat.mp4',
+  'ex-c2-alt2': '/animations/exercises/01-goblet-squat.mp4',
+  // 02 - Prensa de Piernas 45°
+  'ex-a1-main': '/animations/exercises/02-leg-press-45.mp4',
+  'ex-a1-alt2': '/animations/exercises/02-leg-press-45.mp4',
+  // 03 - Hip Thrust / Puente de Glúteo
+  'ex-a2-main': '/animations/exercises/03-barbell-hip-thrust.mp4',
+  'ex-a2-alt1': '/animations/exercises/03-barbell-hip-thrust.mp4',
+  'ex-e2-partner-alt1': '/animations/exercises/03-barbell-hip-thrust.mp4',
+  // 04 - Extensión de Cuádriceps
+  'ex-a3-main': '/animations/exercises/04-leg-extension.mp4',
+  'ex-a3-partner-alt1': '/animations/exercises/04-leg-extension.mp4',
+  // 05 - Abducción de Glúteo Sentado
+  'ex-a3-partner': '/animations/exercises/05-glute-abduction.mp4',
+  'ex-c4-alt1': '/animations/exercises/05-glute-abduction.mp4',
+  'ex-e2-partner-alt2': '/animations/exercises/05-glute-abduction.mp4',
+  // 06 - Crunch Abdominal en Polea
+  'ex-a4-main': '/animations/exercises/06-cable-crunch.mp4',
+  'ex-a4-alt1': '/animations/exercises/06-cable-crunch.mp4',
+  'ex-a4-alt2': '/animations/exercises/06-cable-crunch.mp4',
+  'ex-c4-alt2': '/animations/exercises/06-cable-crunch.mp4',
+  // 07 - Press de Pecho Plano
+  'ex-b1-main': '/animations/exercises/07-dumbbell-bench-press.mp4',
+  'ex-b1-alt1': '/animations/exercises/07-dumbbell-bench-press.mp4',
+  'ex-b1-alt2': '/animations/exercises/07-dumbbell-bench-press.mp4',
+  // 08 - Press Militar Sentado
+  'ex-b2-main': '/animations/exercises/08-seated-db-shoulder-press.mp4',
+  'ex-b2-alt1': '/animations/exercises/08-seated-db-shoulder-press.mp4',
+  'ex-b2-alt2': '/animations/exercises/08-seated-db-shoulder-press.mp4',
+  // 09 - Elevaciones Laterales
+  'ex-b3-main': '/animations/exercises/09-lateral-raise.mp4',
+  'ex-b3-alt1': '/animations/exercises/09-lateral-raise.mp4',
+  'ex-b3-alt2': '/animations/exercises/09-lateral-raise.mp4',
+  // 10 - Extensión de Tríceps en Polea con Cuerda
+  'ex-b4-main': '/animations/exercises/10-triceps-rope-pushdown.mp4',
+  'ex-b4-alt1': '/animations/exercises/10-triceps-rope-pushdown.mp4',
+  'ex-b4-alt2': '/animations/exercises/10-triceps-rope-pushdown.mp4',
+  // 11 - Peso Muerto Rumano
+  'ex-c1-main': '/animations/exercises/11-romanian-deadlift-db.mp4',
+  'ex-c1-alt1': '/animations/exercises/11-romanian-deadlift-db.mp4',
+  'ex-c1-alt2': '/animations/exercises/11-romanian-deadlift-db.mp4',
+  // 12 - Zancadas / Desplantes / Búlgara / Step-up
+  'ex-c2-main': '/animations/exercises/12-dumbbell-lunges.mp4',
+  'ex-a2-alt2': '/animations/exercises/12-dumbbell-lunges.mp4',
+  'ex-a3-alt1': '/animations/exercises/12-dumbbell-lunges.mp4',
+  'ex-a3-alt2': '/animations/exercises/12-dumbbell-lunges.mp4',
+  'ex-c2-alt1': '/animations/exercises/12-dumbbell-lunges.mp4',
+  // 13 - Curl Femoral Sentado
+  'ex-c3-main': '/animations/exercises/13-seated-leg-curl.mp4',
+  'ex-c3-alt1': '/animations/exercises/13-seated-leg-curl.mp4',
+  'ex-c3-alt2': '/animations/exercises/13-seated-leg-curl.mp4',
+  // 14 - Patada de Glúteo en Polea Baja
+  'ex-c4-main': '/animations/exercises/14-cable-glute-kickback.mp4',
+  'ex-e2-partner': '/animations/exercises/14-cable-glute-kickback.mp4',
+  'ex-a3-partner-alt2': '/animations/exercises/14-cable-glute-kickback.mp4',
+  // 15 - Jalón al Pecho en Polea Alta
+  'ex-d1-main': '/animations/exercises/15-lat-pulldown.mp4',
+  'ex-d1-alt1': '/animations/exercises/15-lat-pulldown.mp4',
+  'ex-d1-alt2': '/animations/exercises/15-lat-pulldown.mp4',
+  // 16 - Remo Sentado en Polea Baja
+  'ex-d2-main': '/animations/exercises/16-seated-cable-row.mp4',
+  'ex-d2-alt1': '/animations/exercises/16-seated-cable-row.mp4',
+  'ex-d2-alt2': '/animations/exercises/16-seated-cable-row.mp4',
+  // 17 - Face Pulls en Polea Alta
+  'ex-d3-main': '/animations/exercises/17-face-pull.mp4',
+  'ex-d3-alt1': '/animations/exercises/17-face-pull.mp4',
+  'ex-d3-alt2': '/animations/exercises/17-face-pull.mp4',
+  // 18 - Curl de Bíceps con Mancuernas
+  'ex-d4-main': '/animations/exercises/18-alternate-bicep-curl.mp4',
+  'ex-d4-alt1': '/animations/exercises/18-alternate-bicep-curl.mp4',
+  'ex-d4-alt2': '/animations/exercises/18-alternate-bicep-curl.mp4',
+  // 19 - Press Inclinado con Mancuernas 30°
+  'ex-e1-main': '/animations/exercises/19-incline-db-press.mp4',
+  'ex-e1-alt1': '/animations/exercises/19-incline-db-press.mp4',
+  'ex-e1-alt2': '/animations/exercises/19-incline-db-press.mp4',
+  // 20 - Curl Martillo con Mancuernas
+  'ex-e2-main': '/animations/exercises/20-hammer-curl.mp4',
+  'ex-e2-alt1': '/animations/exercises/20-hammer-curl.mp4',
+  'ex-e2-alt2': '/animations/exercises/20-hammer-curl.mp4',
+  // 21 - Kettlebell Swings
+  'ex-e3-main': '/animations/exercises/21-kettlebell-swing.mp4',
+  'ex-e3-alt1': '/animations/exercises/21-kettlebell-swing.mp4',
+  'ex-e3-alt2': '/animations/exercises/21-kettlebell-swing.mp4'
+}
+
+export function getLocalExerciseVideoUrl(variantId: string): string {
+  return LOCAL_EXERCISE_VIDEOS[variantId] || '/animations/exercises/01-goblet-squat.mp4'
+}
+
 export const INITIAL_DEVICE_CONFIG: DeviceConfig = {
   onboardingCompleted: false,
   primaryProfileId: 'user_1',
@@ -172,7 +285,7 @@ export const INITIAL_MESOCYCLE: MesocyclePlan = {
           restSeconds: 30,
           syncMode: 'shared',
           defaultSetsCount: 3,
-          defaultTargetReps: '12-15 + Dropset',
+          defaultTargetReps: '12-15',
           notes:
             'Superserie A1 + Dropset en la 3ra serie. Define el cuádriceps y en modo individual permite enfocar abducción de glúteo.',
           primaryExercise: {
@@ -432,7 +545,7 @@ export const INITIAL_MESOCYCLE: MesocyclePlan = {
           restSeconds: 75,
           syncMode: 'shared',
           defaultSetsCount: 3,
-          defaultTargetReps: '12 + Dropset',
+          defaultTargetReps: '12',
           notes:
             'Superserie B2 + Dropset en la última serie: baja el peso un 20% sin descanso para firmeza total en la parte posterior del brazo.',
           primaryExercise: {
@@ -572,7 +685,7 @@ export const INITIAL_MESOCYCLE: MesocyclePlan = {
           restSeconds: 30,
           syncMode: 'shared',
           defaultSetsCount: 3,
-          defaultTargetReps: '12 + Dropset',
+          defaultTargetReps: '12',
           notes:
             'Superserie C1: Aislamiento directo de isquiosurales con Dropset en la última serie.',
           primaryExercise: {
@@ -798,7 +911,7 @@ export const INITIAL_MESOCYCLE: MesocyclePlan = {
           restSeconds: 75,
           syncMode: 'shared',
           defaultSetsCount: 3,
-          defaultTargetReps: '10-12 (Última al Fallo 🔥)',
+          defaultTargetReps: '10-12',
           notes:
             'Superserie D2 + Serie final Al Fallo técnico: saca todas las repeticiones limpias posibles sin balancear la espalda.',
           primaryExercise: {
@@ -972,7 +1085,7 @@ export const INITIAL_MESOCYCLE: MesocyclePlan = {
           restSeconds: 60,
           syncMode: 'shared',
           defaultSetsCount: 3,
-          defaultTargetReps: '15 + Dropset / Fallo 🔥',
+          defaultTargetReps: '15',
           notes: 'Cierre metabólico compartido de cadena posterior y abdomen.',
           primaryExercise: {
             id: 'ex-e3-main',

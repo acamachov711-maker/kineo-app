@@ -1,7 +1,7 @@
 {
-  "name": "kineo-gym-tracker-v1.5.1",
+  "name": "kineo-gym-tracker-v1.6",
   "private": true,
-  "version": "1.5.1",
+  "version": "1.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

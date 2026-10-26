@@ -6,7 +6,8 @@ import {
   ArrowRight,
   Sparkles,
   Smartphone,
-  Wifi
+  Wifi,
+  Check
 } from 'lucide-react'
 import {
   DeviceConfig,
@@ -14,8 +15,8 @@ import {
   UserProfile,
   WeightUnit
 } from '../types'
-import { parseInputToKg } from '../utils/fitnessMath'
-import { GOAL_OPTIONS } from '../data/initialData'
+import { parseInputToKg, sanitizeDecimalInput } from '../utils/fitnessMath'
+import { GOAL_OPTIONS, ASCENT_COLOR_PALETTE } from '../data/initialData'
 import { generateCoupleRoomCode, normalizeRoomCode } from '../services/syncService'
 
 interface OnboardingWizardProps {
@@ -38,19 +39,35 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   const [coupleMode, setCoupleMode] = useState<boolean>(true)
   const [syncRoomCode, setSyncRoomCode] = useState<string>(() => generateCoupleRoomCode())
 
-  const [ownerName, setOwnerName] = useState<string>('')
-  const [ownerGender, setOwnerGender] = useState<GenderType>('male')
-  const [ownerGoal, setOwnerGoal] = useState<string>(GOAL_OPTIONS[0])
-  const [ownerAge, setOwnerAge] = useState<string>('')
+  const [ownerName, setOwnerName] = useState<string>(initialProfiles.user_1.name || '')
+  const [ownerGender, setOwnerGender] = useState<GenderType>(initialProfiles.user_1.gender || 'male')
+  const [ownerGoal, setOwnerGoal] = useState<string>(initialProfiles.user_1.goal || GOAL_OPTIONS[0])
+  const [ownerColor, setOwnerColor] = useState<string>(initialProfiles.user_1.accentColor || '#FF5500')
+  const [ownerAge, setOwnerAge] = useState<string>(
+    initialProfiles.user_1.age ? String(initialProfiles.user_1.age) : ''
+  )
   const [ownerWeight, setOwnerWeight] = useState<string>('')
-  const [ownerHeight, setOwnerHeight] = useState<string>('')
+  const [ownerHeight, setOwnerHeight] = useState<string>(
+    initialProfiles.user_1.heightCm ? String(initialProfiles.user_1.heightCm) : ''
+  )
 
-  const [partnerName, setPartnerName] = useState<string>('')
-  const [partnerGender, setPartnerGender] = useState<GenderType>('female')
-  const [partnerGoal, setPartnerGoal] = useState<string>(GOAL_OPTIONS[1])
-  const [partnerAge, setPartnerAge] = useState<string>('')
+  const [partnerName, setPartnerName] = useState<string>(initialProfiles.user_2.name || '')
+  const [partnerGender, setPartnerGender] = useState<GenderType>(
+    initialProfiles.user_2.gender || 'female'
+  )
+  const [partnerGoal, setPartnerGoal] = useState<string>(
+    initialProfiles.user_2.goal || GOAL_OPTIONS[1]
+  )
+  const [partnerColor, setPartnerColor] = useState<string>(
+    initialProfiles.user_2.accentColor || '#8B5CF6'
+  )
+  const [partnerAge, setPartnerAge] = useState<string>(
+    initialProfiles.user_2.age ? String(initialProfiles.user_2.age) : ''
+  )
   const [partnerWeight, setPartnerWeight] = useState<string>('')
-  const [partnerHeight, setPartnerHeight] = useState<string>('')
+  const [partnerHeight, setPartnerHeight] = useState<string>(
+    initialProfiles.user_2.heightCm ? String(initialProfiles.user_2.heightCm) : ''
+  )
 
   const [unit, setUnit] = useState<WeightUnit>(initialUnit)
 
@@ -63,9 +80,6 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
       ? parseInputToKg(parseFloat(partnerWeight), unit)
       : undefined
 
-    const ownerColor = '#FF5500'
-    const partnerColor = '#8B5CF6'
-
     const updatedProfiles: Record<'user_1' | 'user_2', UserProfile> = {
       user_1: {
         ...initialProfiles.user_1,
@@ -75,8 +89,8 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         isDeviceOwner: true,
         goal: ownerGoal,
         age: ownerAge ? parseInt(ownerAge, 10) : undefined,
-        bodyWeightKg: ownerWeightKg,
-        heightCm: ownerHeight ? parseFloat(ownerHeight) : undefined,
+        bodyWeightKg: ownerWeightKg ?? initialProfiles.user_1.bodyWeightKg,
+        heightCm: ownerHeight ? parseFloat(ownerHeight) : initialProfiles.user_1.heightCm,
         accentColor: ownerColor,
         badgeColor: 'theme-soft-bg theme-text border theme-border'
       },
@@ -88,8 +102,8 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         isDeviceOwner: false,
         goal: partnerGoal,
         age: partnerAge ? parseInt(partnerAge, 10) : undefined,
-        bodyWeightKg: partnerWeightKg,
-        heightCm: partnerHeight ? parseFloat(partnerHeight) : undefined,
+        bodyWeightKg: partnerWeightKg ?? initialProfiles.user_2.bodyWeightKg,
+        heightCm: partnerHeight ? parseFloat(partnerHeight) : initialProfiles.user_2.heightCm,
         accentColor: partnerColor,
         badgeColor: 'theme-soft-bg theme-text border theme-border'
       }
@@ -111,13 +125,11 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         <div className="flex items-center justify-between border-b border-[#2A2533] pb-4">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-[10px] bg-[#0B090E] border border-[#2A2533] flex items-center justify-center">
-              <div className="font-display text-2xl text-white">
-                K
-              </div>
+              <div className="font-display text-2xl text-white">K</div>
             </div>
             <div>
               <span className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] theme-text">
-                Configuración Inicial • Kineo v1.5.1
+                Configuración Inicial • Kineo v1.6
               </span>
               <h1 className="font-display text-2xl text-white">
                 Personaliza tu Entrenamiento
@@ -197,7 +209,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             </div>
 
             <div>
-              <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">Tu Género</label>
+              <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
+                Tu Género
+              </label>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { id: 'male' as GenderType, label: '♂ Hombre' },
@@ -217,6 +231,37 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     {g.label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* V1.6-10: Catálogo de 8 Colores Kineo Ascent para el Titular */}
+            <div>
+              <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
+                Color de Acento de tu Perfil
+              </label>
+              <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 bg-[#0B090E] p-2.5 rounded-[10px] border border-[#2A2533]">
+                {ASCENT_COLOR_PALETTE.map((c) => {
+                  const selected = ownerColor.toUpperCase() === c.hex.toUpperCase()
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setOwnerColor(c.hex)}
+                      title={c.name}
+                      className={`h-9 rounded-lg border flex items-center justify-center transition-all ${
+                        selected ? 'border-white scale-105 shadow-lg' : 'border-[#2A2533] opacity-80 hover:opacity-100'
+                      }`}
+                      style={{ backgroundColor: c.hex }}
+                    >
+                      {selected && (
+                        <Check
+                          className="w-4 h-4 stroke-[3]"
+                          style={{ color: c.fgHex }}
+                        />
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
@@ -266,7 +311,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     inputMode="decimal"
                     placeholder="Ej. 78"
                     value={ownerWeight}
-                    onChange={(e) => setOwnerWeight(e.target.value.replace(/[^0-9.]/g, ''))}
+                    onChange={(e) => setOwnerWeight(sanitizeDecimalInput(e.target.value))}
                     className="clean-input font-mono text-xs text-white"
                   />
                 </div>
@@ -288,6 +333,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
 
             <div className="pt-1 flex justify-end">
               <button
+                type="button"
                 onClick={() => setStep(coupleMode ? 2 : 3)}
                 className="solar-btn theme-bg px-5 py-3 rounded-md text-base flex items-center gap-2"
               >
@@ -368,6 +414,37 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 </div>
               </div>
 
+              {/* V1.6-10: Catálogo de 8 Colores Kineo Ascent para la Pareja */}
+              <div>
+                <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
+                  Color de Acento de tu Pareja
+                </label>
+                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 bg-[#0B090E] p-2.5 rounded-[10px] border border-[#2A2533]">
+                  {ASCENT_COLOR_PALETTE.map((c) => {
+                    const selected = partnerColor.toUpperCase() === c.hex.toUpperCase()
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setPartnerColor(c.hex)}
+                        title={c.name}
+                        className={`h-9 rounded-lg border flex items-center justify-center transition-all ${
+                          selected ? 'border-white scale-105 shadow-lg' : 'border-[#2A2533] opacity-80 hover:opacity-100'
+                        }`}
+                        style={{ backgroundColor: c.hex }}
+                      >
+                        {selected && (
+                          <Check
+                            className="w-4 h-4 stroke-[3]"
+                            style={{ color: c.fgHex }}
+                          />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
               <div>
                 <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
                   Objetivo de tu Pareja
@@ -388,12 +465,14 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
 
             <div className="flex items-center justify-between pt-2">
               <button
+                type="button"
                 onClick={() => setStep(1)}
                 className="px-4 py-2.5 rounded-md bg-[#0B090E] text-[#A09BA8] border border-[#2A2533] font-mono text-[10px] font-bold uppercase"
               >
                 ← Atrás
               </button>
               <button
+                type="button"
                 onClick={() => setStep(3)}
                 className="solar-btn theme-bg px-5 py-3 rounded-md text-base flex items-center gap-2"
               >
@@ -446,17 +525,19 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
 
             <div className="flex items-center justify-between pt-2">
               <button
+                type="button"
                 onClick={() => setStep(coupleMode ? 2 : 1)}
                 className="px-4 py-2.5 rounded-md bg-[#0B090E] text-[#A09BA8] border border-[#2A2533] font-mono text-[10px] font-bold uppercase"
               >
                 ← Atrás
               </button>
               <button
+                type="button"
                 onClick={handleFinish}
                 className="solar-btn theme-bg px-6 py-3 rounded-md text-base flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
-                Entrar a Kineo v1.5.1
+                Entrar a Kineo v1.6
               </button>
             </div>
           </div>

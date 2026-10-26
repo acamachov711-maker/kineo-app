@@ -9,7 +9,8 @@ import {
   INITIAL_MESOCYCLE,
   INITIAL_PROFILES,
   INITIAL_HISTORY,
-  INITIAL_DEVICE_CONFIG
+  INITIAL_DEVICE_CONFIG,
+  ASCENT_COLOR_PALETTE
 } from '../data/initialData'
 
 const KEYS = {
@@ -35,25 +36,32 @@ export function saveDeviceConfig(config: DeviceConfig): void {
   localStorage.setItem(KEYS.DEVICE_CONFIG, JSON.stringify(config))
 }
 
-// Kineo Ascent: el color de perfil depende del id, nunca del género ni de datos heredados.
 const ASCENT_COLORS = { user_1: '#FF5500', user_2: '#8B5CF6' } as const
 const ASCENT_BADGE_CLASS = 'theme-soft-bg theme-text theme-border'
+const VALID_ASCENT_HEX = new Set(ASCENT_COLOR_PALETTE.map((c) => c.hex.toUpperCase()))
 
 export function loadProfiles(): Record<'user_1' | 'user_2', UserProfile> {
   try {
     const raw = localStorage.getItem(KEYS.PROFILES)
     if (!raw) return INITIAL_PROFILES
     const parsed = JSON.parse(raw) as Record<'user_1' | 'user_2', UserProfile>
-    // T1-02: migra colores antiguos (#10B981, #EC4899, #6366F1) sin tocar nombres, historial ni claves.
+    const color1 =
+      parsed.user_1?.accentColor && VALID_ASCENT_HEX.has(parsed.user_1.accentColor.toUpperCase())
+        ? parsed.user_1.accentColor
+        : ASCENT_COLORS.user_1
+    const color2 =
+      parsed.user_2?.accentColor && VALID_ASCENT_HEX.has(parsed.user_2.accentColor.toUpperCase())
+        ? parsed.user_2.accentColor
+        : ASCENT_COLORS.user_2
     return {
       user_1: {
         ...parsed.user_1,
-        accentColor: ASCENT_COLORS.user_1,
+        accentColor: color1,
         badgeColor: ASCENT_BADGE_CLASS
       },
       user_2: {
         ...parsed.user_2,
-        accentColor: ASCENT_COLORS.user_2,
+        accentColor: color2,
         badgeColor: ASCENT_BADGE_CLASS
       }
     }

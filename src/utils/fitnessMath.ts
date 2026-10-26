@@ -7,11 +7,14 @@ import {
 const KG_TO_LB = 2.20462262185
 
 export function kgToLb(kg: number): number {
-  return Math.round(kg * KG_TO_LB * 2) / 2
+  if (kg <= 0) return 0
+  return Math.round(kg * KG_TO_LB * 10) / 10
 }
 
 export function lbToKg(lb: number): number {
-  return Math.round((lb / KG_TO_LB) * 2) / 2
+  if (lb <= 0) return 0
+  // V1.6-01: Conserva 4 decimales internos sin redondear forzosamente a 0.5 kg
+  return Math.round((lb / KG_TO_LB) * 10000) / 10000
 }
 
 export function roundGymWeight(value: number, unit: WeightUnit): number {
@@ -30,6 +33,7 @@ export function formatDualWeight(weightKg: number, primaryUnit: WeightUnit): str
 }
 
 export function displayWeightValue(weightKg: number, unit: WeightUnit): number {
+  if (weightKg <= 0) return 0
   if (unit === 'kg') {
     return Math.round(weightKg * 10) / 10
   }
@@ -41,6 +45,15 @@ export function parseInputToKg(inputValue: number, unit: WeightUnit): number {
   return unit === 'kg' ? inputValue : lbToKg(inputValue)
 }
 
+export function sanitizeDecimalInput(raw: string): string {
+  const normalized = raw.replace(/,/g, '.').replace(/[^0-9.]/g, '')
+  const parts = normalized.split('.')
+  if (parts.length <= 2) {
+    return normalized
+  }
+  return `${parts[0]}.${parts.slice(1).join('')}`
+}
+
 export function calculateSafe1RM(weightKg: number, performedReps: number, rir: number): number {
   if (weightKg <= 0 || performedReps <= 0) return 0
   const effectiveReps = Math.min(35, performedReps + Math.max(0, rir))
@@ -49,14 +62,82 @@ export function calculateSafe1RM(weightKg: number, performedReps: number, rir: n
   const brzycki =
     effectiveReps < 36 ? weightKg * (36 / (37 - effectiveReps)) : epley
   const avg = (epley + brzycki) / 2
-  return Math.round(avg * 2) / 2
+  return Math.round(avg * 10) / 10
 }
 
 /**
- * Devuelve una guía directa y sin ambigüedad sobre cómo cargar el peso en el gimnasio:
- * - En Barra (Hip Thrust, Press Banca, Peso Muerto Barra): indica cuánto poner de cada lado.
- * - En Prensa 45° / Sentadilla Hack: indica cuánto poner en discos de cada lado.
- * - En Mancuernas: aclara que el peso indicado es por CADA mancuerna (en cada mano).
+ * V1.6-04: Compensación automática de repeticiones cuando el usuario cambia el peso
+ * respecto a su 1RM calibrado, manteniendo la misma proximidad al fallo (RIR).
+ * Acotado entre 4 y 25 repeticiones por seguridad articular.
+ */
+export function calculateCompensatedReps(
+  oneRmKg: number,
+  newWeightKg: number,
+  targetRir: number = 2
+): number {
+  if (oneRmKg <= 0 || newWeightKg <= 0) return 10
+  if (newWeightKg >= oneRmKg * 0.96) return 4
+  const epleyEffectiveReps = 30 * (oneRmKg / newWeightKg - 1)
+  const brzyckiEffectiveReps = 37 - (36 * newWeightKg) / oneRmKg
+  const avgEffectiveReps = (epleyEffectiveReps + brzyckiEffectiveReps) / 2
+  const compensated = Math.round(avgEffectiveReps - Math.max(0, targetRir))
+  return Math.max(4, Math.min(25, compensated))
+}
+
+export type ExerciseLoadCategory =
+  | 'dual_dumbbell'
+  | 'single_implement'
+  | 'bilateral_plates'
+  | 'stack_or_body'
+
+/**
+ * V1.6-03: Clasifica cualquier ejercicio del catálogo según cómo se carga el peso en la vida real:
+ * - 'dual_dumbbell': 2 mancuernas independientes (1 en cada mano)
+ * - 'single_implement': 1 sola mancuerna/kettlebell sujetada con ambas manos (Goblet, Copa, Puente, Swing)
+ * - 'bilateral_plates': discos cargados a cada lado (Barra, Prensa 45°, Sentadilla Hack, Multipower)
+ * - 'stack_or_body': polea, máquina de placas con pin o peso corporal
+ */
+export function getExerciseLoadCategory(
+  equipment: string,
+  exerciseName: string
+): ExerciseLoadCategory {
+  const nameLower = exerciseName.toLowerCase()
+
+  if (equipment === 'Kettlebell') {
+    return 'single_implement'
+  }
+
+  if (equipment === 'Mancuernas') {
+    if (
+      nameLower.includes('goblet') ||
+      nameLower.includes('copa') ||
+      nameLower.includes('puente') ||
+      nameLower.includes('francés') ||
+      nameLower.includes('frances')
+    ) {
+      return 'single_implement'
+    }
+    return 'dual_dumbbell'
+  }
+
+  if (
+    equipment === 'Barra' ||
+    nameLower.includes('prensa') ||
+    nameLower.includes('hack') ||
+    nameLower.includes('multipower') ||
+    nameLower.includes('barra')
+  ) {
+    return 'bilateral_plates'
+  }
+
+  return 'stack_or_body'
+}
+
+/**
+ * Devuelve una guía directa y sin ambigüedad sobre cómo cargar el peso en el gimnasio (V1.6-03):
+ * - En Doble Mancuerna: indica que el peso mostrado es por CADA mano y muestra la suma total de ambas.
+ * - En Mancuerna / Kettlebell única: aclara que es 1 sola pesa total.
+ * - En Barra / Prensa 45° / Hack: indica cuánto poner de cada lado y el total.
  * - En Poleas / Placas: indica que es el pin directo en la placa.
  */
 export function getLoadInstruction(
@@ -66,42 +147,39 @@ export function getLoadInstruction(
   unit: WeightUnit
 ): string {
   if (weightKg <= 0) return ''
-  const shownTotal = displayWeightValue(weightKg, unit)
-  const halfShown = Math.round((shownTotal / 2) * 10) / 10
-  const nameLower = exerciseName.toLowerCase()
+  const shown = displayWeightValue(weightKg, unit)
+  const halfShown = Math.round((shown / 2) * 10) / 10
+  const doubleShown = Math.round(shown * 2 * 10) / 10
+  const category = getExerciseLoadCategory(equipment, exerciseName)
 
-  if (equipment === 'Mancuernas') {
-    if (nameLower.includes('goblet') || nameLower.includes('copa') || nameLower.includes('puente')) {
-      return `1 mancuerna de ${shownTotal} ${unit}`
+  if (category === 'single_implement') {
+    if (equipment === 'Kettlebell') {
+      return `1 Pesa Rusa única: ${shown} ${unit} (total)`
     }
-    return `${shownTotal} ${unit} en CADA mano`
+    return `1 Mancuerna única: ${shown} ${unit} (total)`
   }
 
-  if (equipment === 'Barra') {
-    const barWeight = unit === 'kg' ? 20 : 45
-    if (shownTotal > barWeight) {
-      const perSideWithBar = Math.round(((shownTotal - barWeight) / 2) * 10) / 10
-      return `Pon ${halfShown} ${unit}/lado (o ${perSideWithBar} ${unit}/lado + barra ${barWeight}${unit})`
-    }
-    return `Pon ${halfShown} ${unit} de cada lado`
+  if (category === 'dual_dumbbell') {
+    return `${shown} ${unit} c/mano (Total par: ${doubleShown} ${unit})`
   }
 
-  if (
-    equipment === 'Máquina' &&
-    (nameLower.includes('prensa') || nameLower.includes('hack'))
-  ) {
-    return `Discos: ${halfShown} ${unit} de cada lado (Total ${shownTotal} ${unit})`
+  if (category === 'bilateral_plates') {
+    if (equipment === 'Barra') {
+      const barWeight = unit === 'kg' ? 20 : 45
+      if (shown > barWeight) {
+        const perSideWithBar = Math.round(((shown - barWeight) / 2) * 10) / 10
+        return `${halfShown} ${unit}/lado (o ${perSideWithBar} ${unit}/lado + barra ${barWeight}${unit})`
+      }
+      return `Carga: ${halfShown} ${unit}/lado (Total ${shown} ${unit})`
+    }
+    return `Discos: ${halfShown} ${unit}/lado (Total ${shown} ${unit})`
   }
 
   if (equipment === 'Polea' || equipment === 'Máquina') {
-    return `Pin directo: ${shownTotal} ${unit}`
+    return `Pin en placa: ${shown} ${unit}`
   }
 
-  if (equipment === 'Kettlebell') {
-    return `1 Pesa Rusa de ${shownTotal} ${unit}`
-  }
-
-  return `${shownTotal} ${unit}`
+  return `${shown} ${unit}`
 }
 
 export interface IdealWeightZones {
@@ -124,7 +202,7 @@ export function getIdealWeightZones(oneRepMaxKg: number): IdealWeightZones {
       pyramidDescKg: [0, 0, 0, 0]
     }
   }
-  const roundKg = (pct: number) => Math.max(2.5, Math.round((oneRepMaxKg * pct) / 1.25) * 1.25)
+  const roundKg = (pct: number) => Math.max(1.25, Math.round((oneRepMaxKg * pct) / 1.25) * 1.25)
   return {
     oneRepMaxKg: Math.round(oneRepMaxKg * 10) / 10,
     strengthKg: roundKg(0.82),
@@ -179,8 +257,8 @@ export function generateDropSubSets(topWeightKg: number): {
   completed: boolean
 }[] {
   const base = topWeightKg > 0 ? topWeightKg : 20
-  const drop1 = Math.max(2.5, Math.round((base * 0.8) / 1.25) * 1.25)
-  const drop2 = Math.max(2.5, Math.round((drop1 * 0.8) / 1.25) * 1.25)
+  const drop1 = Math.max(1.25, Math.round((base * 0.8) / 1.25) * 1.25)
+  const drop2 = Math.max(1.25, Math.round((drop1 * 0.8) / 1.25) * 1.25)
   return [
     {
       id: `drop-1-${Date.now()}`,

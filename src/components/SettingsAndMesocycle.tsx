@@ -21,11 +21,12 @@ import {
   UserProfile,
   WeightUnit
 } from '../types'
-import { INITIAL_MESOCYCLE, GOAL_OPTIONS } from '../data/initialData'
+import { INITIAL_MESOCYCLE, GOAL_OPTIONS, ASCENT_COLOR_PALETTE } from '../data/initialData'
 import {
   calculateBMI,
   displayWeightValue,
-  parseInputToKg
+  parseInputToKg,
+  sanitizeDecimalInput
 } from '../utils/fitnessMath'
 import { generateCoupleRoomCode, normalizeRoomCode } from '../services/syncService'
 import { IdealWeightCalculator } from './IdealWeightCalculator'
@@ -93,6 +94,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
   const [goal1, setGoal1] = useState(
     GOAL_OPTIONS.includes(profiles.user_1.goal) ? profiles.user_1.goal : GOAL_OPTIONS[0]
   )
+  const [color1, setColor1] = useState(profiles.user_1.accentColor || '#FF5500')
   const [age1, setAge1] = useState(profiles.user_1.age ? String(profiles.user_1.age) : '')
   const [weight1, setWeight1] = useState(
     profiles.user_1.bodyWeightKg
@@ -108,6 +110,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
   const [goal2, setGoal2] = useState(
     GOAL_OPTIONS.includes(profiles.user_2.goal) ? profiles.user_2.goal : GOAL_OPTIONS[1]
   )
+  const [color2, setColor2] = useState(profiles.user_2.accentColor || '#8B5CF6')
   const [age2, setAge2] = useState(profiles.user_2.age ? String(profiles.user_2.age) : '')
   const [weight2, setWeight2] = useState(
     profiles.user_2.bodyWeightKg
@@ -132,7 +135,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
           ? parseInputToKg(parseFloat(weight1), weightUnit)
           : undefined,
         heightCm: height1 ? parseFloat(height1) : undefined,
-        accentColor: '#FF5500'
+        accentColor: color1
       },
       user_2: {
         ...profiles.user_2,
@@ -144,7 +147,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
           ? parseInputToKg(parseFloat(weight2), weightUnit)
           : undefined,
         heightCm: height2 ? parseFloat(height2) : undefined,
-        accentColor: '#8B5CF6'
+        accentColor: color2
       }
     })
     setSavedProfilesMsg(true)
@@ -180,6 +183,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
       {/* Segmented Sub-navigation inside Ajustes */}
       <div className="grid grid-cols-3 gap-2 bg-[#14111A] border border-[#2A2533] p-1.5 rounded-[10px]">
         <button
+          type="button"
           onClick={() => setSubTab('profiles')}
           className={`py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all ${
             subTab === 'profiles'
@@ -192,6 +196,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
         </button>
 
         <button
+          type="button"
           onClick={() => setSubTab('ideal_weight')}
           className={`py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all ${
             subTab === 'ideal_weight'
@@ -204,6 +209,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
         </button>
 
         <button
+          type="button"
           onClick={() => setSubTab('guide')}
           className={`py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all ${
             subTab === 'guide'
@@ -212,7 +218,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
           }`}
         >
           <BookOpen className="w-4 h-4" />
-          Guía
+          Guía & Cardio
         </button>
       </div>
 
@@ -227,6 +233,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={onClearSampleHistory}
                 className="px-3.5 py-2 rounded-md bg-[#0B090E] border border-[#2A2533] text-[#A09BA8] font-mono text-[10px] font-bold uppercase flex items-center gap-1.5"
               >
@@ -293,7 +300,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
 
           {/* LIVE SYNC ROOM CARD (Only visible when coupleModeEnabled) */}
           {deviceConfig.coupleModeEnabled && (
-            <div className="rounded-2xl bg-[#14111A] border border-[#2A2533] rounded-[10px] p-4 space-y-3">
+            <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Wifi className="w-5 h-5 text-[#10B981]" />
@@ -364,7 +371,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
 
           {/* Device Primary Owner Switcher */}
           {deviceConfig.coupleModeEnabled && (
-            <div className="rounded-2xl bg-[#14111A] border border-[#2A2533] rounded-[10px] p-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-start gap-2.5">
                 <Smartphone className="w-5 h-5 theme-text shrink-0 mt-0.5" />
                 <div>
@@ -382,6 +389,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
 
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={handleSwapDeviceOwner}
                   className="px-3 py-2 rounded-md bg-[#0B090E] hover:bg-[#1C1826] font-mono text-[10px] font-bold uppercase theme-text border border-[#2A2533] flex items-center gap-1.5"
                 >
@@ -389,6 +397,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                   Cambiar Titular
                 </button>
                 <button
+                  type="button"
                   onClick={onReopenOnboarding}
                   className="px-3 py-2 rounded-md bg-[#0B090E] hover:bg-[#1C1826] font-mono text-[10px] font-bold uppercase text-[#A09BA8] border border-[#2A2533]"
                 >
@@ -415,7 +424,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                 <div className="flex items-center justify-between">
                   <span
                     className="text-xs font-bold"
-                    style={{ color: profiles.user_1.accentColor }}
+                    style={{ color: color1 }}
                   >
                     Perfil 1 {deviceConfig.primaryProfileId === 'user_1' ? '(Principal)' : ''}
                   </span>
@@ -428,7 +437,9 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">Nombre</label>
+                    <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                      Nombre
+                    </label>
                     <input
                       type="text"
                       value={name1}
@@ -437,7 +448,9 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">Género</label>
+                    <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                      Género
+                    </label>
                     <select
                       value={gender1}
                       onChange={(e) => setGender1(e.target.value as GenderType)}
@@ -450,8 +463,36 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                   </div>
                 </div>
 
+                {/* V1.6-10: Selector de 8 colores para Perfil 1 */}
                 <div>
-                  <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">Objetivo</label>
+                  <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                    Color Kineo Ascent
+                  </label>
+                  <div className="grid grid-cols-8 gap-1.5 bg-[#14111A] p-1.5 rounded-lg border border-[#2A2533]">
+                    {ASCENT_COLOR_PALETTE.map((c) => {
+                      const selected = color1.toUpperCase() === c.hex.toUpperCase()
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setColor1(c.hex)}
+                          title={c.name}
+                          className={`h-7 rounded-md border flex items-center justify-center transition-all ${
+                            selected ? 'border-white scale-105' : 'border-transparent opacity-75 hover:opacity-100'
+                          }`}
+                          style={{ backgroundColor: c.hex }}
+                        >
+                          {selected && <Check className="w-3.5 h-3.5 stroke-[3]" style={{ color: c.fgHex }} />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                    Objetivo
+                  </label>
                   <select
                     value={goal1}
                     onChange={(e) => setGoal1(e.target.value)}
@@ -488,7 +529,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                       inputMode="decimal"
                       placeholder={`Ej. ${weightUnit === 'kg' ? '78' : '172'}`}
                       value={weight1}
-                      onChange={(e) => setWeight1(e.target.value.replace(/[^0-9.]/g, ''))}
+                      onChange={(e) => setWeight1(sanitizeDecimalInput(e.target.value))}
                       className="clean-input font-mono text-xs text-white"
                     />
                   </div>
@@ -514,7 +555,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                   <div className="flex items-center justify-between">
                     <span
                       className="text-xs font-bold"
-                      style={{ color: profiles.user_2.accentColor }}
+                      style={{ color: color2 }}
                     >
                       Perfil 2 {deviceConfig.primaryProfileId === 'user_2' ? '(Principal)' : ''}
                     </span>
@@ -527,7 +568,9 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">Nombre</label>
+                      <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                        Nombre
+                      </label>
                       <input
                         type="text"
                         value={name2}
@@ -536,7 +579,9 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">Género</label>
+                      <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                        Género
+                      </label>
                       <select
                         value={gender2}
                         onChange={(e) => setGender2(e.target.value as GenderType)}
@@ -549,8 +594,36 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                     </div>
                   </div>
 
+                  {/* V1.6-10: Selector de 8 colores para Perfil 2 */}
                   <div>
-                    <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">Objetivo</label>
+                    <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                      Color Kineo Ascent
+                    </label>
+                    <div className="grid grid-cols-8 gap-1.5 bg-[#14111A] p-1.5 rounded-lg border border-[#2A2533]">
+                      {ASCENT_COLOR_PALETTE.map((c) => {
+                        const selected = color2.toUpperCase() === c.hex.toUpperCase()
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => setColor2(c.hex)}
+                            title={c.name}
+                            className={`h-7 rounded-md border flex items-center justify-center transition-all ${
+                              selected ? 'border-white scale-105' : 'border-transparent opacity-75 hover:opacity-100'
+                            }`}
+                            style={{ backgroundColor: c.hex }}
+                          >
+                            {selected && <Check className="w-3.5 h-3.5 stroke-[3]" style={{ color: c.fgHex }} />}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] block mb-1">
+                      Objetivo
+                    </label>
                     <select
                       value={goal2}
                       onChange={(e) => setGoal2(e.target.value)}
@@ -587,7 +660,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                         inputMode="decimal"
                         placeholder={`Ej. ${weightUnit === 'kg' ? '60' : '132'}`}
                         value={weight2}
-                        onChange={(e) => setWeight2(e.target.value.replace(/[^0-9.]/g, ''))}
+                        onChange={(e) => setWeight2(sanitizeDecimalInput(e.target.value))}
                         className="clean-input font-mono text-xs text-white"
                       />
                     </div>
@@ -611,6 +684,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
 
             <div className="flex items-center gap-3">
               <button
+                type="button"
                 onClick={handleSaveProfiles}
                 className="solar-btn theme-bg px-4 py-2 rounded-md text-sm flex items-center gap-1.5"
               >
@@ -641,6 +715,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
               {[1, 2, 3, 4, 5, 6].map((wk) => (
                 <button
                   key={wk}
+                  type="button"
                   onClick={() => onUpdateMesocycle({ ...mesocycle, currentWeek: wk })}
                   className={`py-2 rounded-xl text-xs font-bold border transition-all ${
                     mesocycle.currentWeek === wk
@@ -661,8 +736,11 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
             )}
 
             <div className="pt-2 border-t border-[#2A2533] flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase text-[#A09BA8]">Restaurar ejercicios base:</span>
+              <span className="font-mono text-[10px] uppercase text-[#A09BA8]">
+                Restaurar ejercicios base:
+              </span>
               <button
+                type="button"
                 onClick={() => {
                   onUpdateMesocycle(INITIAL_MESOCYCLE)
                   onResetMesocycle()
@@ -677,7 +755,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
         </div>
       )}
 
-      {/* SUB-TAB 2: IDEAL WEIGHT CALCULATOR (Without ExerciseAnimationViewer) */}
+      {/* SUB-TAB 2: IDEAL WEIGHT CALCULATOR */}
       {subTab === 'ideal_weight' && (
         <IdealWeightCalculator
           mesocycle={mesocycle}
@@ -691,7 +769,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
         />
       )}
 
-      {/* SUB-TAB 3: GYM GUIDE */}
+      {/* SUB-TAB 3: GYM GUIDE & CARDIO */}
       {subTab === 'guide' && (
         <FitnessGuide highlightedTopicId={highlightedGlossaryId} />
       )}
