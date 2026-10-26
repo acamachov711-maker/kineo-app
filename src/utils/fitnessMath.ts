@@ -8,7 +8,7 @@ const KG_TO_LB = 2.20462262185
 
 export function kgToLb(kg: number): number {
   if (kg <= 0) return 0
-  return Math.round(kg * KG_TO_LB * 10) / 10
+  return Math.round(kg * KG_TO_LB * 100) / 100
 }
 
 export function lbToKg(lb: number): number {
@@ -24,7 +24,7 @@ export function roundGymWeight(value: number, unit: WeightUnit): number {
 }
 
 export function formatDualWeight(weightKg: number, primaryUnit: WeightUnit): string {
-  const cleanKg = Math.round(weightKg * 10) / 10
+  const cleanKg = Math.round(weightKg * 100) / 100
   const cleanLb = kgToLb(weightKg)
   if (primaryUnit === 'kg') {
     return `${cleanKg} kg (${cleanLb} lb)`
@@ -35,7 +35,7 @@ export function formatDualWeight(weightKg: number, primaryUnit: WeightUnit): str
 export function displayWeightValue(weightKg: number, unit: WeightUnit): number {
   if (weightKg <= 0) return 0
   if (unit === 'kg') {
-    return Math.round(weightKg * 10) / 10
+    return Math.round(weightKg * 100) / 100
   }
   return kgToLb(weightKg)
 }

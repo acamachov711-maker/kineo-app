@@ -153,21 +153,25 @@ export function App() {
 
   const triggerKineoTransition = useCallback(
     (preferredType: TransitionType, subtitle: string) => {
-      let chosenType: TransitionType = preferredType
-      // V1.6-08: Prohibido mostrar 2 transiciones iguales consecutivas
+      let chosenVideoType: TransitionType = preferredType
+      // V1.6-08: Prohibido mostrar 2 videos iguales consecutivos, pero conservando siempre el título/badge real del logro
       if (lastPlayedTransitionRef.current === preferredType) {
         if (preferredType === 'station_complete') {
-          chosenType = 'overload_dropset'
+          chosenVideoType = 'overload_dropset'
         } else if (preferredType === 'overload_dropset') {
-          chosenType = 'station_complete'
+          chosenVideoType = 'station_complete'
         } else if (preferredType === 'new_record_pr') {
-          chosenType = 'overload_dropset'
+          chosenVideoType = 'overload_dropset'
+        } else if (preferredType === 'session_complete_duo') {
+          chosenVideoType = 'station_complete'
         }
       }
-      lastPlayedTransitionRef.current = chosenType
-      const base = TRANSITION_CATALOG[chosenType]
+      lastPlayedTransitionRef.current = chosenVideoType
+      const semanticMeta = TRANSITION_CATALOG[preferredType]
+      const videoMeta = TRANSITION_CATALOG[chosenVideoType]
       setActiveTransition({
-        ...base,
+        ...semanticMeta,
+        videoUrl: videoMeta.videoUrl,
         subtitle
       })
     },
@@ -461,6 +465,35 @@ export function App() {
       }
     }
     setProfiles(updatedProfiles)
+
+    const slot = currentSession.slots.find((s) => s.slotId === slotId)
+    if (!slot) return
+
+    setSlotsState((prev) => {
+      const current = prev[slotId]
+      if (!current) return prev
+      const targetPids: ('user_1' | 'user_2')[] = applyToBoth
+        ? ['user_1', 'user_2']
+        : [profileId]
+      const nextSetsByProfile = { ...current.setsByProfile }
+
+      targetPids.forEach((pid) => {
+        nextSetsByProfile[pid] = buildInitialSetsForSlot(
+          slot,
+          updatedProfiles[pid],
+          current.syncMode,
+          current.techniqueByProfile[pid]
+        )
+      })
+
+      return {
+        ...prev,
+        [slotId]: {
+          ...current,
+          setsByProfile: nextSetsByProfile
+        }
+      }
+    })
   }
 
   const handleChangeTechnique = (
@@ -775,6 +808,7 @@ export function App() {
 
   const handleFinishWorkoutSession = () => {
     const newEntries: WorkoutHistoryEntry[] = []
+    let sessionPrCount = 0
     const profilesToSave: ('user_1' | 'user_2')[] = deviceConfig.coupleModeEnabled
       ? ['user_1', 'user_2']
       : [deviceConfig.primaryProfileId]
@@ -824,6 +858,23 @@ export function App() {
         })
 
         if (doneSets.length > 0) {
+          const estimated1RmToday = calculateSafe1RM(exMaxWeight, exBestReps || 8, 1)
+          const prevHistoryWeights = history
+            .filter((h) => h.profileId === pid)
+            .flatMap((h) => h.exercises)
+            .filter((ex) => ex.variantId === activeVar.id)
+            .map((ex) => ex.maxWeightKg)
+          const prevBestWeight =
+            prevHistoryWeights.length > 0 ? Math.max(...prevHistoryWeights) : 0
+          const calibrated1Rm = prof.estimated1RMByVariant[activeVar.id] || 0
+
+          if (
+            (prevBestWeight > 0 && exMaxWeight > prevBestWeight + 0.2) ||
+            (calibrated1Rm > 0 && estimated1RmToday > calibrated1Rm + 1.0)
+          ) {
+            sessionPrCount += 1
+          }
+
           completedExercises.push({
             slotId: slot.slotId,
             variantId: activeVar.id,
@@ -832,7 +883,7 @@ export function App() {
             equipment: activeVar.equipment,
             technique: st.techniqueByProfile[pid],
             maxWeightKg: exMaxWeight,
-            estimated1RmKg: calculateSafe1RM(exMaxWeight, exBestReps || 8, 1),
+            estimated1RmKg: estimated1RmToday,
             totalVolumeKg: Math.round(exVolume),
             bestSetReps: exBestReps,
             sets: doneSets
@@ -864,10 +915,15 @@ export function App() {
 
     setHistory((prev) => [...prev, ...newEntries])
 
-    // V1.6-08: Disparar animación de Cierre de Sesión Juntos (04-session-complete-duo.mp4)
+    // V1.6-08: Disparar animación de Cierre de Sesión Juntos (04-session-complete-duo.mp4) con mención de PRs si aplica
+    const prBadgeSuffix =
+      sessionPrCount > 0
+        ? ` • 🏆 ¡${sessionPrCount} ${sessionPrCount === 1 ? 'nuevo PR registrado' : 'nuevos PRs registrados'} hoy!`
+        : ' • ¡Día sumado a la racha!'
+
     triggerKineoTransition(
       'session_complete_duo',
-      `Sesión ${currentSession.code} guardada en el historial • ¡Día sumado a la racha!`
+      `Sesión ${currentSession.code} guardada en el historial${prBadgeSuffix}`
     )
 
     const coreOrder = ['session-a', 'session-b', 'session-c', 'session-d']

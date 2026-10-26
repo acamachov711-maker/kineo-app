@@ -123,6 +123,40 @@ export const LOCAL_EXERCISE_VIDEOS: Record<string, string> = {
   'ex-e3-alt2': '/animations/exercises/21-kettlebell-swing.mp4'
 }
 
+export const DIRECT_VIDEO_VARIANT_IDS = new Set<string>([
+  'ex-a1-alt1',
+  'ex-c2-alt2',
+  'ex-a1-main',
+  'ex-a2-main',
+  'ex-a3-main',
+  'ex-a3-partner-alt1',
+  'ex-a3-partner',
+  'ex-c4-alt1',
+  'ex-e2-partner-alt2',
+  'ex-a4-main',
+  'ex-b1-main',
+  'ex-b2-main',
+  'ex-b3-main',
+  'ex-b4-main',
+  'ex-c1-main',
+  'ex-c2-main',
+  'ex-a2-alt2',
+  'ex-c3-main',
+  'ex-c4-main',
+  'ex-e2-partner',
+  'ex-d1-main',
+  'ex-d2-main',
+  'ex-d3-main',
+  'ex-d4-main',
+  'ex-e1-main',
+  'ex-e2-main',
+  'ex-e3-main'
+])
+
+export function hasDirectExerciseVideo(variantId: string): boolean {
+  return DIRECT_VIDEO_VARIANT_IDS.has(variantId)
+}
+
 export function getLocalExerciseVideoUrl(variantId: string): string {
   return LOCAL_EXERCISE_VIDEOS[variantId] || '/animations/exercises/01-goblet-squat.mp4'
 }

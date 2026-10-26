@@ -78,7 +78,21 @@ export function loadMesocycle(): MesocyclePlan {
   try {
     const raw = localStorage.getItem(KEYS.MESOCYCLE)
     if (!raw) return INITIAL_MESOCYCLE
-    return JSON.parse(raw)
+    const parsed = JSON.parse(raw) as MesocyclePlan
+    // V1.6-05: Sanitizar sufijos "+ Dropset" o "(Última al Fallo)" heredados en localStorage
+    return {
+      ...parsed,
+      sessions: parsed.sessions.map((sess) => ({
+        ...sess,
+        slots: sess.slots.map((slot) => ({
+          ...slot,
+          defaultTargetReps: slot.defaultTargetReps
+            .replace(/\s*\+\s*Dropset.*$/i, '')
+            .replace(/\s*\(Última al Fallo.*\)$/i, '')
+            .trim()
+        }))
+      }))
+    }
   } catch {
     return INITIAL_MESOCYCLE
   }

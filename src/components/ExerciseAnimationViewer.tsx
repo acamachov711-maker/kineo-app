@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Play, Pause, Activity } from 'lucide-react'
 import { ExerciseVariant } from '../types'
-import { getLocalExerciseVideoUrl } from '../data/initialData'
+import { getLocalExerciseVideoUrl, hasDirectExerciseVideo } from '../data/initialData'
 
 interface ExerciseAnimationViewerProps {
   variant: ExerciseVariant
@@ -18,6 +18,7 @@ export const ExerciseAnimationViewer: React.FC<ExerciseAnimationViewerProps> = (
   const [videoError, setVideoError] = useState<boolean>(false)
 
   const videoUrl = variant.localVideoUrl || getLocalExerciseVideoUrl(variant.id)
+  const isReferenceDemo = !variant.localVideoUrl && !hasDirectExerciseVideo(variant.id)
 
   useEffect(() => {
     setVideoError(false)
@@ -83,6 +84,12 @@ export const ExerciseAnimationViewer: React.FC<ExerciseAnimationViewerProps> = (
         <Activity className="w-3 h-3 theme-text" />
         <span className="text-[#E2DFEA]">{variant.muscleGroup}</span>
       </div>
+
+      {isReferenceDemo && (
+        <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded bg-[#0B090E]/85 backdrop-blur-sm border border-[#2A2533] font-mono text-[9px] text-[#A09BA8] pointer-events-none">
+          Demo de referencia del grupo muscular
+        </div>
+      )}
 
       {/* Subtle Tempo & Play/Pause bottom bar */}
       <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">

@@ -30,8 +30,7 @@
   border-radius: 9999px;
 }
 
-:root,
-[data-profile='owner'] {
+:root {
   --bg: #0B090E;
   --surface: #14111A;
   --border: #2A2533;
@@ -41,11 +40,6 @@
   --theme-fg: #0B090E;
   --font-display: 'Barlow Condensed', 'Kineo Industrial', Impact, 'Arial Narrow', sans-serif;
   --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-}
-:root[data-profile='partner'],
-[data-profile='partner'] {
-  --theme: #8B5CF6;
-  --theme-fg: #FFFFFF;
 }
 html, body { background-color: #0B090E; color: #FFFFFF; }
 .font-display, .display {

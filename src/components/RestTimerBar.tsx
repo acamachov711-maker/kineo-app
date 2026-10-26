@@ -26,6 +26,9 @@ function playGymBellAlarm() {
       window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
     const ctx = new AudioCtx()
+    if (ctx.state === 'suspended') {
+      void ctx.resume().catch(() => {})
+    }
 
     const strikeTimes = [0, 0.52, 1.04]
     strikeTimes.forEach((offset, idx) => {
@@ -56,6 +59,10 @@ function playGymBellAlarm() {
       osc1.stop(startTime + duration)
       osc2.stop(startTime + duration)
     })
+
+    window.setTimeout(() => {
+      void ctx.close().catch(() => {})
+    }, 2200)
   } catch {
     // Ignore audio context restriction
   }
@@ -120,7 +127,7 @@ export const RestTimerBar: React.FC<RestTimerBarProps> = ({
               {isFinished ? '¡LISTO!' : formatted}
             </span>
 
-            <p className="font-mono text-[11px] text-[#E2DFEA] truncate flex-1 min-w-0">
+            <p className="font-mono text-[11px] leading-tight text-[#E2DFEA] line-clamp-2 flex-1 min-w-0">
               {label || 'Recupera el aliento para la siguiente serie'}
             </p>
           </div>

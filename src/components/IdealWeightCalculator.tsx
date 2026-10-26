@@ -16,6 +16,7 @@ import {
   getExerciseLoadCategory,
   getLoadInstruction
 } from '../utils/fitnessMath'
+import { ASCENT_COLOR_PALETTE } from '../data/initialData'
 
 interface IdealWeightCalculatorProps {
   mesocycle: MesocyclePlan
@@ -133,10 +134,24 @@ export const IdealWeightCalculator: React.FC<IdealWeightCalculatorProps> = ({
     setTimeout(() => setSavedBanner(false), 3500)
   }
 
+  const activeProfile = profiles[targetProfileId]
+  const activeHex =
+    activeProfile?.accentColor || (targetProfileId === 'user_2' ? '#8B5CF6' : '#FF5500')
+  const matchedColor = ASCENT_COLOR_PALETTE.find(
+    (c) => c.hex.toUpperCase() === activeHex.toUpperCase()
+  )
+  const activeFgHex = matchedColor ? matchedColor.fgHex : '#0B090E'
+
   return (
     <div
       className="space-y-4"
       data-profile={targetProfileId === 'user_2' ? 'partner' : 'owner'}
+      style={
+        {
+          '--theme': activeHex,
+          '--theme-fg': activeFgHex
+        } as React.CSSProperties
+      }
     >
       <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4">
         <div className="flex items-start gap-3">

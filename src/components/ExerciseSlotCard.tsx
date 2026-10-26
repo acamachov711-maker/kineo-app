@@ -136,7 +136,7 @@ interface DecimalWeightInputProps {
   weightUnit: WeightUnit
   placeholder?: string
   className?: string
-  onCommitWeightKg: (newWeightKg: number) => void
+  onCommitWeightKg: (newWeightKg: number, isFinalCommit?: boolean) => void
 }
 
 /**
@@ -164,18 +164,18 @@ const DecimalWeightInput: React.FC<DecimalWeightInputProps> = ({
   const commitValue = (rawStr: string) => {
     const cleaned = sanitizeDecimalInput(rawStr)
     if (!cleaned || cleaned === '.') {
-      onCommitWeightKg(0)
+      onCommitWeightKg(0, true)
       setDraft('')
       return
     }
     const parsed = parseFloat(cleaned)
     if (isNaN(parsed) || parsed <= 0) {
-      onCommitWeightKg(0)
+      onCommitWeightKg(0, true)
       setDraft('')
       return
     }
     const kgVal = parseInputToKg(parsed, weightUnit)
-    onCommitWeightKg(kgVal)
+    onCommitWeightKg(kgVal, true)
     const formatted = displayWeightValue(kgVal, weightUnit)
     setDraft(formatted > 0 ? String(formatted) : '')
   }
@@ -193,14 +193,14 @@ const DecimalWeightInput: React.FC<DecimalWeightInputProps> = ({
         const cleaned = sanitizeDecimalInput(e.target.value)
         setDraft(cleaned)
         if (cleaned === '') {
-          onCommitWeightKg(0)
+          onCommitWeightKg(0, false)
           return
         }
         // Si no termina en punto, podemos actualizar el estado en vivo sin reescribir el texto draft
         if (!cleaned.endsWith('.')) {
           const parsed = parseFloat(cleaned)
           if (!isNaN(parsed) && parsed >= 0) {
-            onCommitWeightKg(parseInputToKg(parsed, weightUnit))
+            onCommitWeightKg(parseInputToKg(parsed, weightUnit), false)
           }
         }
       }}
@@ -999,27 +999,28 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                         weightKg={s.weightKg}
                         weightUnit={weightUnit}
                         placeholder="0"
-                        onCommitWeightKg={(newWeightKg) => {
+                        onCommitWeightKg={(newWeightKg, isFinalCommit) => {
                           // V1.6-04: Compensación automática de repeticiones si hay 1RM calibrado
-                          if (oneRmKg > 0 && newWeightKg > 0 && Math.abs(newWeightKg - s.weightKg) > 0.05) {
+                          if (oneRmKg > 0 && newWeightKg > 0) {
                             const compensatedReps = calculateCompensatedReps(
                               oneRmKg,
                               newWeightKg,
                               isLastSet ? 1 : 2
                             )
-                            const prevWeight = s.weightKg
+                            const baselineWeightKg =
+                              Math.round(oneRmKg * (isLastSet ? 0.775 : 0.75) * 10) / 10
                             const direction: 'up' | 'down' | null =
-                              prevWeight > 0
-                                ? newWeightKg < prevWeight
-                                  ? 'up'
-                                  : newWeightKg > prevWeight
-                                  ? 'down'
-                                  : null
+                              newWeightKg < baselineWeightKg - 0.25
+                                ? 'up'
+                                : newWeightKg > baselineWeightKg + 0.25
+                                ? 'down'
                                 : null
                             onUpdateSet(pid, slot.slotId, idx, {
                               weightKg: newWeightKg,
                               targetReps: String(compensatedReps),
-                              actualReps: compensatedReps,
+                              ...(isFinalCommit && !s.completed
+                                ? { actualReps: compensatedReps }
+                                : {}),
                               compensatedDirection: direction
                             })
                           } else {
