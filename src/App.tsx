@@ -24,7 +24,8 @@ import {
   SyncMode,
   UserProfile,
   WeightUnit,
-  WorkoutHistoryEntry
+  WorkoutHistoryEntry,
+  WorkoutSessionTemplate
 } from './types'
 import {
   loadDeviceConfig,
@@ -37,18 +38,26 @@ import {
   saveHistory,
   loadWeightUnit,
   saveWeightUnit,
-  loadActiveSessionId,
-  saveActiveSessionId
+  saveActiveSessionId,
+  persistCompanionRemoval
 } from './services/storageService'
-import {
-  liveSyncManager,
-  SlotLiveState
-} from './services/syncService'
+import { useWorkoutSession } from './hooks/useWorkoutSession'
+import { removeCompanionData } from './utils/companionData'
+import { getDraftLiveStats, getDraftJournal } from './utils/workoutJournal'
+import { applySharedRoomProfile } from './services/sharedRoomProfile'
+import type { SharedRoomProfile } from './services/sharedRoomProfile'
+import { targetKey } from './services/seriesSync'
+import { getProfileExerciseOptions, hasRecordedSets, hasRecordedSlot, recalibratePendingSets, getCompletedSetStats } from './utils/workoutState'
+import { StorageNotice } from './components/StorageNotice'
+import { SeriesConflictReview } from './components/SeriesConflictReview'
+import { PublicRoomPanel } from './components/PublicRoomPanel'
+import { roomIndicator } from './utils/roomIndicator'
+import { usePublicRoom } from './hooks/usePublicRoom'
 import {
   buildPyramidSets,
   generateDropSubSets,
   getIdealWeightZones,
-  calculateSafe1RM
+  getLocalDateKey
 } from './utils/fitnessMath'
 import { ASCENT_COLOR_PALETTE } from './data/initialData'
 import { OnboardingWizard } from './components/OnboardingWizard'
@@ -66,8 +75,6 @@ import {
 
 // Strictly 3 Bottom Tabs: 'workout' | 'progress' | 'settings'
 type ActiveTab = 'workout' | 'progress' | 'settings'
-
-type SessionSlotsState = Record<string, SlotLiveState>
 
 function buildInitialSetsForSlot(
   slot: ExerciseSlot,
@@ -106,37 +113,60 @@ function buildInitialSetsForSlot(
 
 export function App() {
   const [deviceConfig, setDeviceConfig] = useState<DeviceConfig>(() => loadDeviceConfig())
+  const deviceConfigRef = useRef(deviceConfig)
+  deviceConfigRef.current = deviceConfig
   const [activeTab, setActiveTab] = useState<ActiveTab>('workout')
   const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>('profiles')
+  const [profileRevision, setProfileRevision] = useState(0)
+  const [profileRemovalMessage, setProfileRemovalMessage] = useState('')
+  const [onboardingError, setOnboardingError] = useState('')
 
   // Controls whether the user is in the Pre-Workout Lobby or Active Session
-  const [isWorkoutStarted, setIsWorkoutStarted] = useState<boolean>(false)
-
-  // Exclusive Accordion State: null = all exercises collapsed; string = only that slotId expanded
-  const [expandedSlotId, setExpandedSlotId] = useState<string | null>(null)
-
   const [profiles, setProfiles] = useState<Record<'user_1' | 'user_2', UserProfile>>(() =>
     loadProfiles()
   )
   const [mesocycle, setMesocycle] = useState<MesocyclePlan>(() => loadMesocycle())
   const [history, setHistory] = useState<WorkoutHistoryEntry[]>(() => loadHistory())
+  const historyRef = useRef(history)
+  historyRef.current = history
   const [weightUnit, setWeightUnit] = useState<WeightUnit>(() => loadWeightUnit())
-  const [activeSessionId, setActiveSessionId] = useState<string>(() => loadActiveSessionId())
+  const {
+    workoutId, activeSessionId, setActiveSessionId, slotsState, setSlotsState,
+    activeProfileId, setActiveProfileId, expandedSlotId, setExpandedSlotId,
+    isWorkoutStarted, setIsWorkoutStarted, restSecondsLeft, restTotalSeconds,
+    restIsRunning, restLabel, startRestTimer, toggleRestPause, adjustRestSeconds,
+    resetRestTimer, skipRestTimer, getWorkoutDuration, completeWorkout,
+    resetWorkouts, hasRecordedWorkouts, pendingOperations, journalError, workspace, replaceWorkspace, conflicts, resolveConflict,
+    readWorkspace, commitWorkspace, createRoomStore, initializeOnboarding
+  } = useWorkoutSession(mesocycle.sessions, profiles, deviceConfig.primaryProfileId)
+  const companionId = deviceConfig.primaryProfileId === 'user_1' ? 'user_2' : 'user_1'
+  const hasCompanionData = history.some((entry) => entry.profileId === companionId && !entry.isSampleData) ||
+    Object.values(workspace.drafts).some((draft) => Object.values(draft.slotsState).some((slot) => hasRecordedSets(slot.setsByProfile[companionId])) ||
+      getDraftJournal(draft)?.operations.some((operation) => operation.target.profileId === companionId)) ||
+    (workspace.archivedJournals || []).some((journal) => journal.operations.some((operation) => operation.target.profileId === companionId))
+  const peerProfiles = (peer: SharedRoomProfile, session: WorkoutSessionTemplate) => ({ ...profiles,
+    [companionId]: applySharedRoomProfile(profiles[companionId], peer, session, !!hasCompanionData) })
+  const publicRoom = usePublicRoom({ workspace, sessions: mesocycle.sessions, profiles, readWorkspace, commitWorkspace, createRoomStore,
+    readyForInvitation: deviceConfig.onboardingCompleted && deviceConfig.coupleModeEnabled, ownerProfileId: deviceConfig.primaryProfileId,
+    hasCompanionData: !!hasCompanionData, previewPeer: (peer, session) => { peerProfiles(peer, session) },
+    importPeer: (peer, session) => { const next = peerProfiles(peer, session); if (!saveProfiles(next, false)) return false; setProfiles(next); return true },
+    history, readHistory: () => historyRef.current,
+    persistHistory: (next) => { if (!saveHistory(next, false)) return false; historyRef.current = next; setHistory(next); return true },
+    markCompleted: (date, sessionCode) => {
+      const next = { ...deviceConfigRef.current, lastCompletedWorkoutDate: date, lastCompletedSessionCode: sessionCode }
+      if (!saveDeviceConfig(next, false)) return false
+      deviceConfigRef.current = next; setDeviceConfig(next); return true
+    } })
 
-  const [activeProfileId, setActiveProfileId] = useState<'user_1' | 'user_2'>(
-    deviceConfig.primaryProfileId
-  )
+  useEffect(() => {
+    if (publicRoom.invitation && deviceConfig.onboardingCompleted && !deviceConfig.coupleModeEnabled) {
+      setDeviceConfig((previous) => ({ ...previous, coupleModeEnabled: true }))
+    }
+  }, [publicRoom.invitation, deviceConfig.onboardingCompleted, deviceConfig.coupleModeEnabled])
 
-  const [syncStatus, setSyncStatus] = useState<'disconnected' | 'connecting' | 'connected'>(
-    'disconnected'
-  )
-  const isApplyingRemoteRef = useRef<boolean>(false)
-  const lastRemoteTimestampRef = useRef<number>(0)
-
-  const [restSecondsLeft, setRestSecondsLeft] = useState<number>(0)
-  const [restTotalSeconds, setRestTotalSeconds] = useState<number>(0)
-  const [restIsRunning, setRestIsRunning] = useState<boolean>(false)
-  const [restLabel, setRestLabel] = useState<string>('')
+  useEffect(() => {
+    if (!workspace.room && (publicRoom.invitation || publicRoom.pendingCode)) setActiveTab('settings')
+  }, [workspace.room, publicRoom.invitation, publicRoom.pendingCode])
 
   const [calculatorPreselect, setCalculatorPreselect] = useState<{
     profileId: 'user_1' | 'user_2'
@@ -146,6 +176,19 @@ export function App() {
 
   const [highlightedGlossaryId, setHighlightedGlossaryId] = useState<string | null>(null)
   const [finishBanner, setFinishBanner] = useState<string | null>(null)
+  const pendingReviewEdits = useRef(new Set<string>())
+  const [pendingReviewCount, setPendingReviewCount] = useState(0)
+  const onReviewPendingEdit = (slotId: string, key: string, pending: boolean) => {
+    const id = `${slotId}:${key}`
+    if (pending) pendingReviewEdits.current.add(id)
+    else pendingReviewEdits.current.delete(id)
+    setPendingReviewCount(pendingReviewEdits.current.size)
+  }
+  useEffect(() => {
+    if (workspace.room?.closure?.phase === 'committed') setFinishBanner(null)
+  }, [workspace.room?.closure?.phase])
+  const conflictedSetKeys = new Set(conflicts.map((entry) => targetKey(entry.target)))
+  const hasSlotConflict = (slotId: string) => conflicts.some((entry) => entry.target.slotId === slotId)
 
   // V1.6-08: Motor de Transiciones Animadas y regla anti-repetición consecutiva
   const [activeTransition, setActiveTransition] = useState<TransitionEventPayload | null>(null)
@@ -181,44 +224,6 @@ export function App() {
   const currentSession =
     mesocycle.sessions.find((s) => s.id === activeSessionId) || mesocycle.sessions[0]
 
-  const buildSessionState = useCallback(
-    (
-      sessionSlots: ExerciseSlot[],
-      profMap: Record<'user_1' | 'user_2', UserProfile>
-    ): SessionSlotsState => {
-      const next: SessionSlotsState = {}
-      sessionSlots.forEach((slot) => {
-        next[slot.slotId] = {
-          syncMode: slot.syncMode,
-          techniqueByProfile: {
-            user_1: slot.defaultTechnique,
-            user_2: slot.defaultTechnique
-          },
-          setsByProfile: {
-            user_1: buildInitialSetsForSlot(
-              slot,
-              profMap.user_1,
-              slot.syncMode,
-              slot.defaultTechnique
-            ),
-            user_2: buildInitialSetsForSlot(
-              slot,
-              profMap.user_2,
-              slot.syncMode,
-              slot.defaultTechnique
-            )
-          }
-        }
-      })
-      return next
-    },
-    []
-  )
-
-  const [slotsState, setSlotsState] = useState<SessionSlotsState>(() =>
-    buildSessionState(currentSession.slots, profiles)
-  )
-
   // Keep activeProfileId synced when switching to Solo Mode
   useEffect(() => {
     if (!deviceConfig.coupleModeEnabled) {
@@ -244,12 +249,6 @@ export function App() {
   }, [activeProfileId, profiles])
 
   useEffect(() => {
-    if (isApplyingRemoteRef.current) return
-    setSlotsState(buildSessionState(currentSession.slots, profiles))
-    setExpandedSlotId(null)
-  }, [activeSessionId, currentSession.slots, buildSessionState])
-
-  useEffect(() => {
     saveDeviceConfig(deviceConfig)
   }, [deviceConfig])
 
@@ -273,138 +272,14 @@ export function App() {
     saveActiveSessionId(activeSessionId)
   }, [activeSessionId])
 
-  // LIVE REAL-TIME SYNC SUBSCRIPTION
-  useEffect(() => {
-    if (!deviceConfig.coupleModeEnabled || !deviceConfig.syncRoomCode) {
-      liveSyncManager.disconnect()
-      return
-    }
-
-    liveSyncManager.connectRoom(
-      deviceConfig.syncRoomCode,
-      (remotePayload) => {
-        if (remotePayload.updatedAt <= lastRemoteTimestampRef.current) return
-        lastRemoteTimestampRef.current = remotePayload.updatedAt
-        isApplyingRemoteRef.current = true
-
-        if (remotePayload.activeSessionId) {
-          setActiveSessionId(remotePayload.activeSessionId)
-        }
-        setIsWorkoutStarted(Boolean(remotePayload.isWorkoutStarted))
-
-        if (remotePayload.slotsState && Object.keys(remotePayload.slotsState).length > 0) {
-          setSlotsState(remotePayload.slotsState)
-        }
-
-        if (remotePayload.profiles) {
-          setProfiles((prev) => ({
-            user_1: {
-              ...prev.user_1,
-              ...remotePayload.profiles.user_1,
-              accentColor: remotePayload.profiles.user_1.accentColor || prev.user_1.accentColor || '#FF5500',
-              isDeviceOwner: prev.user_1.isDeviceOwner
-            },
-            user_2: {
-              ...prev.user_2,
-              ...remotePayload.profiles.user_2,
-              accentColor: remotePayload.profiles.user_2.accentColor || prev.user_2.accentColor || '#8B5CF6',
-              isDeviceOwner: prev.user_2.isDeviceOwner
-            }
-          }))
-        }
-
-        if (Array.isArray(remotePayload.history)) {
-          setHistory((prev) => {
-            const byId = new Map<string, WorkoutHistoryEntry>()
-            prev.forEach((h) => byId.set(h.id, h))
-            remotePayload.history.forEach((h) => byId.set(h.id, h))
-            return Array.from(byId.values())
-          })
-        }
-
-        if (remotePayload.lastCompletedWorkoutDate) {
-          setDeviceConfig((prev) => ({
-            ...prev,
-            lastCompletedWorkoutDate: remotePayload.lastCompletedWorkoutDate,
-            lastCompletedSessionCode: remotePayload.lastCompletedSessionCode
-          }))
-        }
-
-        setTimeout(() => {
-          isApplyingRemoteRef.current = false
-        }, 120)
-      },
-      (status) => {
-        setSyncStatus(status)
-      }
-    )
-
-    return () => {
-      liveSyncManager.disconnect()
-    }
-  }, [deviceConfig.coupleModeEnabled, deviceConfig.syncRoomCode])
-
-  // Broadcast local changes to partner phone in real time
-  useEffect(() => {
-    if (
-      isApplyingRemoteRef.current ||
-      !deviceConfig.coupleModeEnabled ||
-      !deviceConfig.syncRoomCode ||
-      syncStatus !== 'connected'
-    ) {
-      return
-    }
-
-    const timer = setTimeout(() => {
-      liveSyncManager.broadcastState({
-        activeSessionId,
-        isWorkoutStarted,
-        lastCompletedWorkoutDate: deviceConfig.lastCompletedWorkoutDate,
-        lastCompletedSessionCode: deviceConfig.lastCompletedSessionCode,
-        slotsState,
-        profiles,
-        history
-      })
-    }, 150)
-
-    return () => clearTimeout(timer)
-  }, [
-    activeSessionId,
-    isWorkoutStarted,
-    deviceConfig.lastCompletedWorkoutDate,
-    deviceConfig.lastCompletedSessionCode,
-    deviceConfig.coupleModeEnabled,
-    deviceConfig.syncRoomCode,
-    syncStatus,
-    slotsState,
-    profiles,
-    history
-  ])
-
-  useEffect(() => {
-    if (!restIsRunning || restSecondsLeft <= 0) return
-    const timer = setInterval(() => {
-      setRestSecondsLeft((prev) => {
-        if (prev <= 1) {
-          setRestIsRunning(false)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [restIsRunning, restSecondsLeft])
-
-  const startRestTimer = (seconds: number, label: string) => {
-    setRestTotalSeconds(seconds)
-    setRestSecondsLeft(seconds)
-    setRestLabel(label)
-    setRestIsRunning(true)
-  }
-
   const handleToggleSyncMode = (slotId: string) => {
+    if (hasSlotConflict(slotId)) { setFinishBanner('Revisa las series contradictorias antes de cambiar el modo de este ejercicio.'); return }
     const slot = currentSession.slots.find((s) => s.slotId === slotId)
     if (!slot) return
+    if (slotsState[slotId] && hasRecordedSlot(slotsState[slotId])) {
+      setFinishBanner('No cambiamos el modo de un ejercicio con series registradas. Desmarca las series si necesitas corregirlo.')
+      return
+    }
     setSlotsState((prev) => {
       const current = prev[slotId]
       if (!current) return prev
@@ -439,6 +314,12 @@ export function App() {
     variantId: string,
     applyToBoth: boolean
   ) => {
+    if (hasSlotConflict(slotId)) { setFinishBanner('Revisa las series contradictorias antes de cambiar la variante de este ejercicio.'); return }
+    const current = slotsState[slotId]
+    if (current && (applyToBoth ? hasRecordedSlot(current) : hasRecordedSets(current.setsByProfile[profileId]))) {
+      setFinishBanner('La variante tiene series registradas. Desmárcalas antes de cambiar de ejercicio para no reasignar tus resultados.')
+      return
+    }
     const updatedProfiles = { ...profiles }
     if (applyToBoth) {
       updatedProfiles.user_1 = {
@@ -501,8 +382,13 @@ export function App() {
     slotId: string,
     technique: SetTechnique
   ) => {
+    if (hasSlotConflict(slotId)) { setFinishBanner('Revisa las series contradictorias antes de cambiar la técnica de este ejercicio.'); return }
     const slot = currentSession.slots.find((s) => s.slotId === slotId)
     if (!slot) return
+    if (hasRecordedSets(slotsState[slotId]?.setsByProfile[profileId] || [])) {
+      setFinishBanner('La técnica de un ejercicio con series registradas se conserva. Puedes cambiarla en una sesión nueva.')
+      return
+    }
     setSlotsState((prev) => {
       const current = prev[slotId]
       if (!current) return prev
@@ -567,7 +453,7 @@ export function App() {
     const currentSlotState = slotsState[slotId]
 
     // Detect if this update completes the final set of the exercise for this user (V1.6-08)
-    if (slot && currentSlotState && updated.completed === true) {
+    if (!(workspace.room?.closure && workspace.room.workoutId === workoutId) && slot && currentSlotState && updated.completed === true) {
       const currentSets = currentSlotState.setsByProfile[profileId]
       const wasAlreadyAllDone =
         currentSets.length > 0 && currentSets.every((stItem) => stItem.completed)
@@ -579,32 +465,17 @@ export function App() {
 
       if (!wasAlreadyAllDone && isNowAllDone) {
         const prof = profiles[profileId]
-        const options =
-          currentSlotState.syncMode === 'individual' &&
-          prof.gender === 'female' &&
-          slot.femaleFocusedPrimary
-            ? [
-                slot.femaleFocusedPrimary,
-                ...(slot.femaleFocusedAlternatives || slot.alternatives)
-              ]
-            : [slot.primaryExercise, ...slot.alternatives]
+        const options = getProfileExerciseOptions(slot, prof, currentSlotState.syncMode)
         const activeVarId = prof.activeVariantBySlot[slotId] || options[0].id
         const activeVar = options.find((o) => o.id === activeVarId) || options[0]
         const tech = currentSlotState.techniqueByProfile[profileId]
 
         // Check if user achieved a New Personal Record (PR) compared to history or calibrated 1RM
-        const maxWeightToday = Math.max(...nextSetsPreview.map((s) => s.weightKg), 0)
-        const bestSet = nextSetsPreview.reduce(
-          (best, cur) => (cur.weightKg >= best.weightKg ? cur : best),
-          nextSetsPreview[0]
-        )
-        const todayEstimated1Rm = calculateSafe1RM(
-          bestSet.weightKg,
-          bestSet.actualReps || 8,
-          1
-        )
+        const recordedStats = getCompletedSetStats(nextSetsPreview)
+        const maxWeightToday = recordedStats.maxWeightKg
+        const todayEstimated1Rm = recordedStats.estimated1RmKg
         const previousHistoryWeights = history
-          .filter((h) => h.profileId === profileId)
+          .filter((h) => h.profileId === profileId && !h.isSampleData && h.id !== `${workoutId}-${profileId}`)
           .flatMap((h) => h.exercises)
           .filter((ex) => ex.variantId === activeVarId)
           .map((ex) => ex.maxWeightKg)
@@ -668,7 +539,7 @@ export function App() {
       const last = currentSets[currentSets.length - 1]
 
       // Al añadir una serie nueva, el Dropset o Fallo pasa a la nueva última serie (V1.6-05 / V1.6-09)
-      const cleanedPrevSets = currentSets.map((s) => ({
+      const cleanedPrevSets = currentSets.map((s) => hasRecordedSets([s]) ? s : ({
         ...s,
         isFailure: false,
         drops: undefined
@@ -707,6 +578,11 @@ export function App() {
     slotId: string,
     setIndex: number
   ) => {
+    const entry = slotsState[slotId]?.setsByProfile[profileId][setIndex]
+    if (entry && hasRecordedSets([entry])) {
+      setFinishBanner('No se elimina una serie registrada ni sus bajadas de peso. Corrige sus valores si es necesario.')
+      return
+    }
     setSlotsState((prev) => {
       const current = prev[slotId]
       if (!current) return prev
@@ -716,6 +592,7 @@ export function App() {
 
       const filtered = currentSets.filter((_, idx) => idx !== setIndex)
       const renumbered = filtered.map((s, idx) => {
+        if (hasRecordedSets([s])) return { ...s, setNumber: idx + 1 }
         const isLast = idx === filtered.length - 1
         return {
           ...s,
@@ -764,23 +641,12 @@ export function App() {
     setProfiles(nextProfiles)
 
     if (slotId && slotsState[slotId]) {
-      const zones = getIdealWeightZones(oneRmKg)
       setSlotsState((prev) => {
         const current = prev[slotId]
         if (!current) return prev
         const tech = current.techniqueByProfile[profileId]
         const currentSets = current.setsByProfile[profileId]
-        const nextSets =
-          tech === 'pyramid_asc' || tech === 'pyramid_desc'
-            ? buildPyramidSets(tech, oneRmKg, currentSets)
-            : currentSets.map((s, idx) => ({
-                ...s,
-                weightKg: zones.hypertrophyKg,
-                drops:
-                  tech === 'dropset' && idx === currentSets.length - 1
-                    ? generateDropSubSets(zones.hypertrophyKg)
-                    : s.drops
-              }))
+        const nextSets = recalibratePendingSets(currentSets, oneRmKg, tech)
         return {
           ...prev,
           [slotId]: {
@@ -803,15 +669,21 @@ export function App() {
     }
   }
 
-  const todayIso = new Date().toISOString().slice(0, 10)
+  const todayIso = getLocalDateKey()
   const isCompletedToday = deviceConfig.lastCompletedWorkoutDate === todayIso
 
   const handleFinishWorkoutSession = () => {
+    if (conflicts.length) { setFinishBanner('Hay series pendientes de revisión. Confirma sus datos antes de guardarlas definitivamente en el historial.'); return }
+    const recordedDate = getLocalDateKey()
     const newEntries: WorkoutHistoryEntry[] = []
     let sessionPrCount = 0
-    const profilesToSave: ('user_1' | 'user_2')[] = deviceConfig.coupleModeEnabled
-      ? ['user_1', 'user_2']
-      : [deviceConfig.primaryProfileId]
+    const profilesToSave: ('user_1' | 'user_2')[] = ['user_1', 'user_2']
+
+    if (Object.values(slotsState).some((slot) => profilesToSave.some((pid) =>
+      slot.setsByProfile[pid].some((entry) => !entry.completed && entry.drops?.some((drop) => drop.completed))))) {
+      setFinishBanner('Hay bajadas de peso registradas cuya serie principal sigue pendiente. Revisa y completa esa serie antes de finalizar; no descartaremos sus datos.')
+      return
+    }
 
     profilesToSave.forEach((pid) => {
       let totalVolKg = 0
@@ -822,45 +694,22 @@ export function App() {
         const st = slotsState[slot.slotId]
         if (!st) return
         const prof = profiles[pid]
-        const options =
-          st.syncMode === 'individual' && prof.gender === 'female' && slot.femaleFocusedPrimary
-            ? [
-                slot.femaleFocusedPrimary,
-                ...(slot.femaleFocusedAlternatives || slot.alternatives)
-              ]
-            : [slot.primaryExercise, ...slot.alternatives]
+        const options = getProfileExerciseOptions(slot, prof, st.syncMode)
         const savedId = prof.activeVariantBySlot[slot.slotId]
         const activeVar = options.find((o) => o.id === savedId) || options[0]
 
-        let exVolume = 0
-        let exMaxWeight = 0
-        let exBestReps = 0
-        const doneSets: SetEntry[] = []
-
-        st.setsByProfile[pid].forEach((s) => {
-          if (s.completed) {
-            completedCount += 1
-            const vol = s.weightKg * s.actualReps
-            totalVolKg += vol
-            exVolume += vol
-            if (s.weightKg >= exMaxWeight) {
-              exMaxWeight = s.weightKg
-              exBestReps = s.actualReps
-            }
-            ;(s.drops || []).forEach((d) => {
-              if (d.completed) {
-                totalVolKg += d.weightKg * d.reps
-                exVolume += d.weightKg * d.reps
-              }
-            })
-            doneSets.push(s)
-          }
-        })
+        const stats = getCompletedSetStats(st.setsByProfile[pid])
+        const doneSets = stats.completed
+        const exVolume = stats.totalVolumeKg
+        const exMaxWeight = stats.maxWeightKg
+        const exBestReps = stats.bestSetReps
+        completedCount += doneSets.length
+        totalVolKg += exVolume
 
         if (doneSets.length > 0) {
-          const estimated1RmToday = calculateSafe1RM(exMaxWeight, exBestReps || 8, 1)
+          const estimated1RmToday = stats.estimated1RmKg
           const prevHistoryWeights = history
-            .filter((h) => h.profileId === pid)
+            .filter((h) => h.profileId === pid && !h.isSampleData && h.id !== `${workoutId}-${pid}`)
             .flatMap((h) => h.exercises)
             .filter((ex) => ex.variantId === activeVar.id)
             .map((ex) => ex.maxWeightKg)
@@ -884,7 +733,7 @@ export function App() {
             technique: st.techniqueByProfile[pid],
             maxWeightKg: exMaxWeight,
             estimated1RmKg: estimated1RmToday,
-            totalVolumeKg: Math.round(exVolume),
+            totalVolumeKg: Number(exVolume.toFixed(2)),
             bestSetReps: exBestReps,
             sets: doneSets
           })
@@ -893,15 +742,16 @@ export function App() {
 
       if (completedCount > 0) {
         newEntries.push({
-          id: `hist-${Date.now()}-${pid}`,
-          date: todayIso,
+          id: `${workoutId}-${pid}`,
+          date: recordedDate,
           sessionId: currentSession.id,
           sessionCode: currentSession.code,
           sessionTitle: currentSession.title,
           profileId: pid,
-          totalVolumeKg: Math.round(totalVolKg),
+          totalVolumeKg: Number(totalVolKg.toFixed(2)),
           completedSets: completedCount,
-          durationMinutes: currentSession.estimatedMinutes,
+          durationMinutes: getWorkoutDuration(),
+          durationSource: 'measured',
           exercises: completedExercises
         })
       }
@@ -913,7 +763,20 @@ export function App() {
       return
     }
 
-    setHistory((prev) => [...prev, ...newEntries])
+    if (workspace.room?.workoutId === workoutId) {
+      void publicRoom.requestClosure(recordedDate, getWorkoutDuration()).then((error) => {
+        if (!error) setFinishBanner('Entrenamiento terminado en este teléfono. El cierre queda pendiente de la confirmación de tu pareja.')
+      })
+      return
+    }
+
+    const entryIds = new Set(newEntries.map((entry) => entry.id))
+    const nextHistory = [...history.filter((entry) => !entryIds.has(entry.id)), ...newEntries]
+    setHistory(nextHistory)
+    if (!saveHistory(nextHistory)) {
+      setFinishBanner('No se pudo guardar el historial en este dispositivo. Conservamos la sesión abierta: exporta una copia o libera espacio y vuelve a finalizar.')
+      return
+    }
 
     // V1.6-08: Disparar animación de Cierre de Sesión Juntos (04-session-complete-duo.mp4) con mención de PRs si aplica
     const prBadgeSuffix =
@@ -933,29 +796,26 @@ export function App() {
 
     setDeviceConfig((prev) => ({
       ...prev,
-      lastCompletedWorkoutDate: todayIso,
+      lastCompletedWorkoutDate: recordedDate,
       lastCompletedSessionCode: currentSession.code
     }))
-    setActiveSessionId(nextSessionId)
-    setIsWorkoutStarted(false)
-    setExpandedSlotId(null)
+    completeWorkout(nextSessionId)
   }
 
   if (!deviceConfig.onboardingCompleted) {
     return (
-      <OnboardingWizard
+      <><StorageNotice />{onboardingError && <p role="alert" className="p-3 text-amber-300">{onboardingError}</p>}<OnboardingWizard
         initialProfiles={profiles}
         initialUnit={weightUnit}
         onComplete={(updatedProfiles, updatedConfig, chosenUnit) => {
+          const error = initializeOnboarding(updatedProfiles, updatedConfig.primaryProfileId)
+          if (error) { setOnboardingError(error); return }
+          setOnboardingError('')
           setProfiles(updatedProfiles)
           setDeviceConfig(updatedConfig)
           setWeightUnit(chosenUnit)
-          setActiveProfileId(updatedConfig.primaryProfileId)
-          setSlotsState(buildSessionState(currentSession.slots, updatedProfiles))
-          setIsWorkoutStarted(false)
-          setExpandedSlotId(null)
         }}
-      />
+      /></>
     )
   }
 
@@ -963,26 +823,15 @@ export function App() {
   const secondaryPid: 'user_1' | 'user_2' = primaryPid === 'user_1' ? 'user_2' : 'user_1'
 
   const getLiveStats = (pid: 'user_1' | 'user_2') => {
-    let completed = 0
-    let total = 0
-    let volumeKg = 0
-    currentSession.slots.forEach((slot) => {
-      const st = slotsState[slot.slotId]
-      if (!st) return
-      st.setsByProfile[pid].forEach((s) => {
-        total += 1
-        if (s.completed) {
-          completed += 1
-          volumeKg += s.weightKg * s.actualReps
-        }
-      })
-    })
-    return { completed, total, volumeKg }
+    return getDraftLiveStats(workspace.drafts[activeSessionId], pid, currentSession.slots.map((slot) => slot.slotId))
   }
 
   const statsPrimary = getLiveStats(primaryPid)
   const statsSecondary = getLiveStats(secondaryPid)
   const hasSampleData = history.some((h) => h.isSampleData)
+  const showRoomIndicator = deviceConfig.coupleModeEnabled || !!workspace.room || !!publicRoom.pendingCode || !!publicRoom.invitation
+  const roomStatus = roomIndicator(!!workspace.room, publicRoom.enabled, publicRoom.transport, publicRoom.pairing,
+    !!publicRoom.pendingCode || !!publicRoom.invitation)
 
   return (
     <div className="min-h-screen bg-[#0B090E] text-white flex flex-col">
@@ -1019,6 +868,14 @@ export function App() {
           </div>
 
           <div className="flex items-center gap-2">
+            {showRoomIndicator && <>
+              <button type="button" data-od-id="room-connection-indicator" onClick={() => setActiveTab('settings')}
+                aria-label={`${roomStatus.label}. Abrir ajustes de sala`} title={roomStatus.label}
+                className="min-h-11 min-w-11 flex items-center justify-center rounded-lg border border-[#2A2533] bg-[#14111A]">
+                <span aria-hidden="true" className={`w-3 h-3 rounded-full ${roomStatus.tone === 'connected' ? 'bg-[#10B981]' : roomStatus.tone === 'waiting' ? 'bg-amber-400' : 'bg-[#A09BA8]'}`} />
+              </button>
+              <span className="sr-only" role="status" aria-live="polite">{roomStatus.label}</span>
+            </>}
             {deviceConfig.coupleModeEnabled && (
               <div className="flex items-center bg-[#14111A] border border-[#2A2533] rounded-lg p-0.5">
                 <button
@@ -1054,11 +911,61 @@ export function App() {
       </header>
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 pt-3">
+        <StorageNotice />
+        {journalError && <p role="alert" className="p-3 mb-3 rounded-md border border-amber-400 bg-[#14111A] text-sm text-amber-200">{journalError}</p>}
+        {finishBanner && <div role="status" className="p-3 mb-3 rounded-md bg-amber-500/20 border border-amber-400 text-amber-200 text-xs text-center">{finishBanner}</div>}
+        <SeriesConflictReview conflicts={conflicts} profiles={profiles} activeProfileId={activeProfileId}
+          deviceId={workspace.deviceId!} weightUnit={weightUnit}
+          slotNames={Object.fromEntries(currentSession.slots.flatMap((slot) => (['user_1', 'user_2'] as const).map((profileId) => {
+            const profile = profiles[profileId]
+            const options = getProfileExerciseOptions(slot, profile, slotsState[slot.slotId]?.syncMode || slot.syncMode)
+            const variant = options.find((item) => item.id === profile.activeVariantBySlot[slot.slotId]) || options[0]
+            return [`${slot.slotId}-${profileId}`, variant.name]
+          })))}
+          onSelectProfile={setActiveProfileId} onResolve={resolveConflict} />
         {/* TAB 1: ENTRENAR */}
         {activeTab === 'workout' && (
           <div className="space-y-4 pb-44">
             {/* STATE A: COMPLETED TODAY -> WAIT UNTIL TOMORROW */}
-            {isCompletedToday && !isWorkoutStarted ? (
+            {workspace.room?.closure && workspace.room.workoutId === workoutId ? (
+              <div className="space-y-3" data-od-id="closure-exercise-review">
+                <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 space-y-2">
+                  <h2 className="font-display text-2xl text-white">Revisar sesión {currentSession.code}</h2>
+                  <p className="text-sm text-[#E2DFEA]">Selecciona un perfil arriba y abre cada ejercicio para revisar sus series.</p>
+                  {workspace.room.closure.phase === 'requested' && workspace.room.closure.initiator !== workspace.deviceId
+                    ? <p className="text-xs text-[#A09BA8]">Puedes corregir pesos, repeticiones y series. Confirma cada edición y espera a que se sincronice antes de confirmar el cierre.</p>
+                    : <p className="text-xs text-[#A09BA8]">{workspace.room.closure.phase === 'requested' ? 'Tu pareja puede corregir las series mientras revisa el cierre.' : 'Esta revisión ya no admite cambios.'}</p>}
+                </div>
+                <div className="space-y-2.5">
+                  {currentSession.slots.map((slot) => {
+                    const st = slotsState[slot.slotId]
+                    if (!st) return null
+                    const editable = workspace.room!.closure!.phase === 'requested' && workspace.room!.closure!.initiator !== workspace.deviceId
+                    return <ExerciseSlotCard key={slot.slotId} slot={slot} isExpanded={expandedSlotId === slot.slotId}
+                      onToggleExpand={() => setExpandedSlotId((prev) => prev === slot.slotId ? null : slot.slotId)}
+                      profiles={profiles} primaryProfileId={primaryPid} activeProfileId={activeProfileId}
+                      coupleModeEnabled={deviceConfig.coupleModeEnabled} weightUnit={weightUnit} history={history}
+                      syncMode={st.syncMode} techniqueByProfile={st.techniqueByProfile} setsByProfile={st.setsByProfile}
+                      conflictedSetKeys={conflictedSetKeys} reviewMode reviewReadOnly={!editable} onPendingEditsChange={onReviewPendingEdit}
+                      onToggleSyncMode={handleToggleSyncMode} onSelectVariant={handleSelectVariant} onChangeTechnique={handleChangeTechnique}
+                      onUpdateSet={handleUpdateSet} onAddSet={handleAddSet} onDeleteSet={handleDeleteSet}
+                      onSaveQuickStrengthTest={handleSaveIdealWeight} onOpenCalculatorForVariant={() => {}} onOpenGlossaryTopic={() => {}} />
+                  })}
+                </div>
+                {workspace.room.closure.phase === 'requested' && workspace.room.closure.initiator !== workspace.deviceId && <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 space-y-3">
+                  <p role="status" className="text-sm text-[#E2DFEA]">{pendingReviewCount ? 'Confirma o cancela las ediciones pendientes.' : publicRoom.closureReadiness === 'ready' ? 'Revisa ambos perfiles y confirma cuando los datos sean correctos.' : publicRoom.closureReadiness === 'conflict' ? 'Resuelve las series en revisión antes de confirmar.' : 'Esperando a que ambos teléfonos sincronicen los cambios.'}</p>
+                  <button data-od-id="room-confirm-closure" type="button" disabled={pendingReviewCount > 0 || publicRoom.closureReadiness !== 'ready'}
+                    onClick={() => { if (!pendingReviewEdits.current.size) void publicRoom.confirmClosure() }}
+                    className="solar-btn theme-bg min-h-11 px-4 py-2 rounded-lg text-base disabled:opacity-40">Confirmar mis resultados</button>
+                </div>}
+                <details className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 text-sm">
+                  <summary className="cursor-pointer min-h-11">Ir a otra rutina</summary>
+                  <div className="flex flex-wrap gap-2">{mesocycle.sessions.filter((session) => session.id !== activeSessionId).map((session) => <button
+                    key={session.id} type="button" onClick={() => setActiveSessionId(session.id)}
+                    className="min-h-11 px-3 rounded-lg border theme-border theme-text">Sesión {session.code}</button>)}</div>
+                </details>
+              </div>
+            ) : isCompletedToday && !isWorkoutStarted ? (
               <div className="space-y-4">
                 <StreakBanner
                   profiles={profiles}
@@ -1266,6 +1173,7 @@ export function App() {
                         syncMode={st.syncMode}
                         techniqueByProfile={st.techniqueByProfile}
                         setsByProfile={st.setsByProfile}
+                        conflictedSetKeys={conflictedSetKeys}
                         onToggleSyncMode={handleToggleSyncMode}
                         onSelectVariant={handleSelectVariant}
                         onChangeTechnique={handleChangeTechnique}
@@ -1301,7 +1209,8 @@ export function App() {
                   <button
                     type="button"
                     onClick={handleFinishWorkoutSession}
-                    className="solar-btn theme-bg w-full sm:w-auto px-5 py-2.5 rounded-[9px] text-lg flex items-center justify-center gap-2 shrink-0"
+                    disabled={conflicts.length > 0}
+                    className="solar-btn theme-bg w-full sm:w-auto px-5 py-2.5 rounded-[9px] text-lg flex items-center justify-center gap-2 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     Finalizar y Guardar Sesión {currentSession.code}
@@ -1309,11 +1218,6 @@ export function App() {
                   </button>
                 </div>
 
-                {finishBanner && (
-                  <div className="p-3 rounded-md bg-amber-500/20 border border-amber-400 text-amber-200 text-xs font-bold text-center">
-                    {finishBanner}
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -1331,32 +1235,69 @@ export function App() {
 
         {/* TAB 3: AJUSTES */}
         {activeTab === 'settings' && (
+          <>
+          {(deviceConfig.coupleModeEnabled || workspace.room || publicRoom.pendingCode || publicRoom.invitation) && <PublicRoomPanel connection={publicRoom} sessions={mesocycle.sessions}
+          selectedSessionId={activeSessionId} selectSession={setActiveSessionId} profiles={profiles} workspace={workspace} weightUnit={weightUnit}
+          onReviewClosure={() => {
+            const sessionId = Object.values(workspace.drafts).find((draft) => draft.id === workspace.room?.workoutId)?.sessionId
+            if (sessionId) { setActiveSessionId(sessionId); setActiveTab('workout') }
+          }} />}
           <SettingsAndMesocycle
+            key={profileRevision}
             profiles={profiles}
             deviceConfig={deviceConfig}
             mesocycle={mesocycle}
             weightUnit={weightUnit}
             activeProfileId={activeProfileId}
             onSelectActiveProfile={setActiveProfileId}
-            syncStatus={syncStatus}
+            pendingOperations={pendingOperations}
             initialSubTab={settingsSubTab}
             calculatorPreselect={calculatorPreselect}
             highlightedGlossaryId={highlightedGlossaryId}
             hasSampleData={hasSampleData}
             onUpdateProfiles={setProfiles}
+            profileRemovalMessage={profileRemovalMessage}
+            onDeleteCompanionData={() => {
+              const cleaned = removeCompanionData({ config: deviceConfig, profiles, history, workspace })
+              const result = persistCompanionRemoval(cleaned)
+              if (!result.applied) {
+                setProfileRemovalMessage('No se ha aplicado el borrado porque hay datos locales inaccesibles o incompatibles. Revisa el aviso de almacenamiento y exporta una copia antes de continuar.')
+                return
+              }
+              setProfiles(cleaned.profiles)
+              setHistory(cleaned.history)
+              setDeviceConfig(cleaned.config)
+              replaceWorkspace(cleaned.workspace)
+              setCalculatorPreselect(null)
+              setActiveTransition(null)
+              setFinishBanner(null)
+              setProfileRevision((previous) => previous + 1)
+              setProfileRemovalMessage(result.persisted
+                ? 'Datos del compañero eliminados de este móvil. Tus registros se conservan. Las copias exportadas y otros teléfonos no se han modificado.'
+                : 'El borrado no se ha completado en el almacenamiento. La vista ya no muestra los datos del compañero, pero podrían reaparecer al recargar. Reintenta el guardado desde el aviso de almacenamiento antes de cerrar.')
+            }}
             onUpdateDeviceConfig={setDeviceConfig}
-            onUpdateMesocycle={setMesocycle}
+            onUpdateMesocycle={(updated) => {
+              if (updated.sessions !== mesocycle.sessions && hasRecordedWorkouts) {
+                setFinishBanner('Finaliza las sesiones con series registradas antes de restaurar la rutina.')
+                return
+              }
+              setMesocycle(updated)
+            }}
             onSaveIdealWeight={handleSaveIdealWeight}
             onClearSampleHistory={() =>
               setHistory((prev) => prev.filter((x) => !x.isSampleData))
             }
-            onResetMesocycle={() =>
-              setSlotsState(buildSessionState(currentSession.slots, profiles))
-            }
-            onReopenOnboarding={() =>
+            onResetMesocycle={() => { if (!hasRecordedWorkouts) resetWorkouts() }}
+            onReopenOnboarding={() => {
+              if (hasRecordedWorkouts) {
+                setFinishBanner('Finaliza las sesiones con series registradas antes de reiniciar la configuración.')
+                return
+              }
               setDeviceConfig({ ...deviceConfig, onboardingCompleted: false })
-            }
+            }}
           />
+          </>
         )}
       </main>
 
@@ -1365,20 +1306,10 @@ export function App() {
         totalSeconds={restTotalSeconds}
         isRunning={restIsRunning}
         label={restLabel}
-        onTogglePause={() => setRestIsRunning((r) => !r)}
-        onAdjustSeconds={(delta) => {
-          setRestSecondsLeft((prev) => Math.max(0, prev + delta))
-          setRestTotalSeconds((prev) => Math.max(15, prev + delta))
-        }}
-        onReset={() => {
-          setRestSecondsLeft(restTotalSeconds)
-          setRestIsRunning(true)
-        }}
-        onSkip={() => {
-          setRestIsRunning(false)
-          setRestSecondsLeft(0)
-          setRestTotalSeconds(0)
-        }}
+        onTogglePause={toggleRestPause}
+        onAdjustSeconds={adjustRestSeconds}
+        onReset={resetRestTimer}
+        onSkip={skipRestTimer}
       />
 
       {/* Strictly 3 Bottom Navigation Tabs */}

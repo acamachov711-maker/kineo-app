@@ -11,7 +11,7 @@ on:
       version:
         description: 'Versión (ej. 1.6.0). Debe coincidir con build.gradle'
         required: true
-        default: '1.6.0'
+        default: '1.7.10'
 
 permissions:
   contents: write
@@ -94,8 +94,9 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: "Kineo v${{ steps.ver.outputs.version }}"
           body: |
-            Kineo v${{ steps.ver.outputs.version }} (APK Android firmado con kineo-shared.keystore).
-            Instalar encima de la versión anterior conserva tu historial y perfiles.
+            Kineo v${{ steps.ver.outputs.version }}: entrenamiento individual y en pareja, guardado local y salas de prueba.
+            Las salas usan un broker público sin privacidad ni contraseña validada; utiliza datos ficticios.
+            La prueba de contradicciones entre dos teléfonos y el acceso privado quedan pendientes para v1.8.
           files: Kineo-v${{ steps.ver.outputs.version }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

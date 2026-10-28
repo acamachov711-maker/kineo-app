@@ -1,17 +1,8 @@
-import {
-  MesocyclePlan,
-  UserProfile,
-  WorkoutHistoryEntry,
-  WeightUnit,
-  DeviceConfig
-} from '../types'
-import {
-  INITIAL_MESOCYCLE,
-  INITIAL_PROFILES,
-  INITIAL_HISTORY,
-  INITIAL_DEVICE_CONFIG,
-  ASCENT_COLOR_PALETTE
-} from '../data/initialData'
+import type { MesocyclePlan, UserProfile, WorkoutHistoryEntry, WeightUnit, DeviceConfig } from '../types'
+import { INITIAL_MESOCYCLE, INITIAL_PROFILES, INITIAL_HISTORY, INITIAL_DEVICE_CONFIG, ASCENT_COLOR_PALETTE } from '../data/initialData'
+import { isDeviceConfig, isProfiles, isMesocycle, isHistory, isWorkoutWorkspace } from '../utils/dataValidation'
+import type { WorkoutWorkspace } from '../utils/workoutState'
+import type { LocalProfileData } from '../utils/companionData'
 
 const KEYS = {
   DEVICE_CONFIG: 'kineo_device_config_v1_4',
@@ -19,124 +10,156 @@ const KEYS = {
   MESOCYCLE: 'kineo_mesocycle_v1_4',
   HISTORY: 'kineo_history_v1_4',
   UNIT: 'kineo_weight_unit_v1_4',
-  ACTIVE_SESSION_ID: 'kineo_active_session_id_v1_4'
+  ACTIVE_SESSION_ID: 'kineo_active_session_id_v1_4',
+  WORKOUT_WORKSPACE: 'kineo_workout_workspace_v1_7'
+}
+
+type StorageIssue = { key: string; kind: 'read' | 'write' | 'invalid' }
+const listeners = new Set<() => void>()
+const issues = new Map<string, StorageIssue>()
+const blockedKeys = new Set<string>()
+const pendingWrites = new Map<string, string>()
+const originalValues = new Map<string, string>()
+let snapshot: StorageIssue[] = []
+
+function updateIssue(key: string, kind?: StorageIssue['kind']) {
+  if (issues.get(key)?.kind === kind && (kind !== undefined || !issues.has(key))) return
+  if (kind) issues.set(key, { key, kind })
+  else issues.delete(key)
+  snapshot = Array.from(issues.values())
+  queueMicrotask(() => listeners.forEach((listener) => listener()))
+}
+
+export const subscribeStorage = (listener: () => void) => {
+  listeners.add(listener)
+  return () => { listeners.delete(listener) }
+}
+export const getStorageIssues = () => snapshot
+
+function readValue(key: string): string | null {
+  try {
+    const value = localStorage.getItem(key)
+    if (value !== null) originalValues.set(key, value)
+    return value
+  } catch {
+    blockedKeys.add(key)
+    updateIssue(key, 'read')
+    return null
+  }
+}
+
+function loadValue<Value>(key: string, fallback: Value, validate: (value: unknown) => value is Value): Value {
+  const raw = readValue(key)
+  if (raw === null) return JSON.parse(JSON.stringify(fallback)) as Value
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    if (!validate(parsed)) throw new Error('invalid')
+    return parsed
+  } catch {
+    blockedKeys.add(key)
+    updateIssue(key, 'invalid')
+    return JSON.parse(JSON.stringify(fallback)) as Value
+  }
+}
+
+function writeValue(key: string, value: string, queueOnFailure = true): boolean {
+  if (queueOnFailure) pendingWrites.set(key, value)
+  if (blockedKeys.has(key)) return false
+  try {
+    localStorage.setItem(key, value)
+    originalValues.set(key, value)
+    pendingWrites.delete(key)
+    updateIssue(key)
+    return true
+  } catch {
+    updateIssue(key, 'write')
+    return false
+  }
+}
+
+export function retryStorageWrites(): boolean {
+  let success = true
+  for (const [key, value] of pendingWrites) {
+    if (!writeValue(key, value)) success = false
+  }
+  return success && issues.size === 0
+}
+
+export function exportLocalData(): string {
+  const stored: Record<string, string | null> = {}
+  for (const key of Object.values(KEYS)) {
+    stored[key] = readValue(key) ?? originalValues.get(key) ?? null
+  }
+  return JSON.stringify({ format: 'kineo-backup', version: 1, exportedAt: new Date().toISOString(), stored, pending: Object.fromEntries(pendingWrites) }, null, 2)
 }
 
 export function loadDeviceConfig(): DeviceConfig {
-  try {
-    const raw = localStorage.getItem(KEYS.DEVICE_CONFIG)
-    if (!raw) return INITIAL_DEVICE_CONFIG
-    return JSON.parse(raw)
-  } catch {
-    return INITIAL_DEVICE_CONFIG
-  }
+  return loadValue(KEYS.DEVICE_CONFIG, INITIAL_DEVICE_CONFIG, isDeviceConfig)
 }
-
-export function saveDeviceConfig(config: DeviceConfig): void {
-  localStorage.setItem(KEYS.DEVICE_CONFIG, JSON.stringify(config))
+export function saveDeviceConfig(config: DeviceConfig, queueOnFailure = true): boolean {
+  return writeValue(KEYS.DEVICE_CONFIG, JSON.stringify(config), queueOnFailure)
 }
-
-const ASCENT_COLORS = { user_1: '#FF5500', user_2: '#8B5CF6' } as const
-const ASCENT_BADGE_CLASS = 'theme-soft-bg theme-text theme-border'
-const VALID_ASCENT_HEX = new Set(ASCENT_COLOR_PALETTE.map((c) => c.hex.toUpperCase()))
 
 export function loadProfiles(): Record<'user_1' | 'user_2', UserProfile> {
-  try {
-    const raw = localStorage.getItem(KEYS.PROFILES)
-    if (!raw) return INITIAL_PROFILES
-    const parsed = JSON.parse(raw) as Record<'user_1' | 'user_2', UserProfile>
-    const color1 =
-      parsed.user_1?.accentColor && VALID_ASCENT_HEX.has(parsed.user_1.accentColor.toUpperCase())
-        ? parsed.user_1.accentColor
-        : ASCENT_COLORS.user_1
-    const color2 =
-      parsed.user_2?.accentColor && VALID_ASCENT_HEX.has(parsed.user_2.accentColor.toUpperCase())
-        ? parsed.user_2.accentColor
-        : ASCENT_COLORS.user_2
-    return {
-      user_1: {
-        ...parsed.user_1,
-        accentColor: color1,
-        badgeColor: ASCENT_BADGE_CLASS
-      },
-      user_2: {
-        ...parsed.user_2,
-        accentColor: color2,
-        badgeColor: ASCENT_BADGE_CLASS
-      }
+  const parsed = loadValue(KEYS.PROFILES, INITIAL_PROFILES, isProfiles)
+  const colors = new Set(ASCENT_COLOR_PALETTE.map((color) => color.hex.toUpperCase()))
+  for (const profileId of ['user_1', 'user_2'] as const) {
+    const profile = parsed[profileId]
+    if (!colors.has(profile.accentColor.toUpperCase())) {
+      profile.accentColor = profileId === 'user_1' ? '#FF5500' : '#8B5CF6'
     }
-  } catch {
-    return INITIAL_PROFILES
+    profile.badgeColor = 'theme-soft-bg theme-text theme-border'
   }
+  return parsed
 }
-
-export function saveProfiles(profiles: Record<'user_1' | 'user_2', UserProfile>): void {
-  localStorage.setItem(KEYS.PROFILES, JSON.stringify(profiles))
+export function saveProfiles(profiles: Record<'user_1' | 'user_2', UserProfile>, queueOnFailure = true): boolean {
+  return writeValue(KEYS.PROFILES, JSON.stringify(profiles), queueOnFailure)
 }
 
 export function loadMesocycle(): MesocyclePlan {
-  try {
-    const raw = localStorage.getItem(KEYS.MESOCYCLE)
-    if (!raw) return INITIAL_MESOCYCLE
-    const parsed = JSON.parse(raw) as MesocyclePlan
-    // V1.6-05: Sanitizar sufijos "+ Dropset" o "(Última al Fallo)" heredados en localStorage
-    return {
-      ...parsed,
-      sessions: parsed.sessions.map((sess) => ({
-        ...sess,
-        slots: sess.slots.map((slot) => ({
-          ...slot,
-          defaultTargetReps: slot.defaultTargetReps
-            .replace(/\s*\+\s*Dropset.*$/i, '')
-            .replace(/\s*\(Última al Fallo.*\)$/i, '')
-            .trim()
-        }))
-      }))
-    }
-  } catch {
-    return INITIAL_MESOCYCLE
-  }
+  const parsed = loadValue(KEYS.MESOCYCLE, INITIAL_MESOCYCLE, isMesocycle)
+  return { ...parsed, sessions: parsed.sessions.map((session) => ({ ...session, slots: session.slots.map((slot) => ({
+    ...slot,
+    defaultTargetReps: slot.defaultTargetReps.replace(/\s*\+\s*Dropset.*$/i, '').replace(/\s*\(Última al Fallo.*\)$/i, '').trim()
+  })) })) }
 }
-
-export function saveMesocycle(mesocycle: MesocyclePlan): void {
-  localStorage.setItem(KEYS.MESOCYCLE, JSON.stringify(mesocycle))
+export function saveMesocycle(mesocycle: MesocyclePlan): boolean {
+  return writeValue(KEYS.MESOCYCLE, JSON.stringify(mesocycle))
 }
-
 export function loadHistory(): WorkoutHistoryEntry[] {
-  try {
-    const raw = localStorage.getItem(KEYS.HISTORY)
-    if (!raw) return INITIAL_HISTORY
-    return JSON.parse(raw)
-  } catch {
-    return INITIAL_HISTORY
-  }
+  return loadValue(KEYS.HISTORY, INITIAL_HISTORY, isHistory)
 }
-
-export function saveHistory(history: WorkoutHistoryEntry[]): void {
-  localStorage.setItem(KEYS.HISTORY, JSON.stringify(history))
+export function saveHistory(history: WorkoutHistoryEntry[], queueOnFailure = true): boolean {
+  return writeValue(KEYS.HISTORY, JSON.stringify(history), queueOnFailure)
 }
-
 export function loadWeightUnit(): WeightUnit {
-  try {
-    const raw = localStorage.getItem(KEYS.UNIT)
-    return raw === 'lb' ? 'lb' : 'kg'
-  } catch {
-    return 'kg'
-  }
+  return readValue(KEYS.UNIT) === 'lb' ? 'lb' : 'kg'
 }
-
-export function saveWeightUnit(unit: WeightUnit): void {
-  localStorage.setItem(KEYS.UNIT, unit)
+export function saveWeightUnit(unit: WeightUnit): boolean {
+  return writeValue(KEYS.UNIT, unit)
 }
-
 export function loadActiveSessionId(): string {
-  try {
-    return localStorage.getItem(KEYS.ACTIVE_SESSION_ID) || 'session-a'
-  } catch {
-    return 'session-a'
+  return readValue(KEYS.ACTIVE_SESSION_ID) || 'session-a'
+}
+export function saveActiveSessionId(sessionId: string): boolean {
+  return writeValue(KEYS.ACTIVE_SESSION_ID, sessionId)
+}
+export function loadWorkoutWorkspace(): WorkoutWorkspace {
+  return loadValue(KEYS.WORKOUT_WORKSPACE, { version: 1, activeSessionId: loadActiveSessionId(), drafts: {} }, isWorkoutWorkspace)
+}
+export function saveWorkoutWorkspace(workspace: WorkoutWorkspace, queueOnFailure = true): boolean {
+  if (!isWorkoutWorkspace(workspace)) {
+    updateIssue(KEYS.WORKOUT_WORKSPACE, 'invalid')
+    return false
   }
+  return writeValue(KEYS.WORKOUT_WORKSPACE, JSON.stringify(workspace), queueOnFailure)
 }
 
-export function saveActiveSessionId(sessionId: string): void {
-  localStorage.setItem(KEYS.ACTIVE_SESSION_ID, sessionId)
+export function persistCompanionRemoval(data: LocalProfileData): { applied: boolean; persisted: boolean } {
+  const keys = [KEYS.PROFILES, KEYS.HISTORY, KEYS.DEVICE_CONFIG, KEYS.WORKOUT_WORKSPACE]
+  if (keys.some((key) => blockedKeys.has(key)) || !isProfiles(data.profiles) || !isHistory(data.history) ||
+    !isDeviceConfig(data.config) || !isWorkoutWorkspace(data.workspace)) return { applied: false, persisted: false }
+  const results = [saveProfiles(data.profiles), saveHistory(data.history),
+    saveDeviceConfig(data.config), saveWorkoutWorkspace(data.workspace)]
+  return { applied: true, persisted: results.every(Boolean) }
 }

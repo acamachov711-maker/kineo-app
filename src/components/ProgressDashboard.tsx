@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { getVolumeChartData } from '../utils/workoutState'
 import {
   ResponsiveContainer,
   AreaChart,
@@ -63,31 +64,19 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
   const [selectedProfile, setSelectedProfile] = useState<'user_1' | 'user_2' | 'both'>('both')
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null)
 
-  const user1History = history.filter((h) => h.profileId === 'user_1')
-  const user2History = history.filter((h) => h.profileId === 'user_2')
+  const realHistory = history.filter((entry) => !entry.isSampleData)
+  const user1History = realHistory.filter((h) => h.profileId === 'user_1')
+  const user2History = realHistory.filter((h) => h.profileId === 'user_2')
 
   const totalVolumeUser1 = user1History.reduce((acc, item) => acc + item.totalVolumeKg, 0)
   const totalVolumeUser2 = user2History.reduce((acc, item) => acc + item.totalVolumeKg, 0)
 
-  const datesSet = Array.from(new Set(history.map((h) => h.date))).sort()
-  const volumeChartData = datesSet.map((dateStr) => {
-    const u1 = user1History
-      .filter((h) => h.date === dateStr)
-      .reduce((sum, x) => sum + displayWeightValue(x.totalVolumeKg, weightUnit), 0)
-    const u2 = user2History
-      .filter((h) => h.date === dateStr)
-      .reduce((sum, x) => sum + displayWeightValue(x.totalVolumeKg, weightUnit), 0)
-    return {
-      date: dateStr.slice(5),
-      [profiles.user_1.name]: user1History.some((h) => h.date === dateStr) ? Math.round(u1) : null,
-      [profiles.user_2.name]: user2History.some((h) => h.date === dateStr) ? Math.round(u2) : null
-    }
-  })
+  const volumeChartData = getVolumeChartData(realHistory, (weight) => displayWeightValue(weight, weightUnit))
 
   // Build unique list of performed exercises (without repeating per workout session)
   const uniqueExercisesMap = new Map<string, UniqueExerciseStat>()
 
-  history.forEach((entry) => {
+  realHistory.forEach((entry) => {
     entry.exercises.forEach((ex) => {
       const existing = uniqueExercisesMap.get(ex.variantId) || {
         variantId: ex.variantId,
@@ -132,16 +121,21 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
       allVars.forEach((v) => {
         const rm1 = profiles.user_1.estimated1RMByVariant[v.id] || 0
         const rm2 = profiles.user_2.estimated1RMByVariant[v.id] || 0
+        const existing = uniqueExercisesMap.get(v.id)
+        if (existing) {
+          if (existing.timesPerformedU1 === 0) existing.best1RmKgU1 = rm1
+          if (existing.timesPerformedU2 === 0) existing.best1RmKgU2 = rm2
+        }
         if ((rm1 > 0 || rm2 > 0) && !uniqueExercisesMap.has(v.id)) {
           uniqueExercisesMap.set(v.id, {
             variantId: v.id,
             variantName: v.name,
             muscleGroup: v.muscleGroup,
             equipment: v.equipment,
-            timesPerformedU1: rm1 > 0 ? 1 : 0,
-            timesPerformedU2: rm2 > 0 ? 1 : 0,
-            bestWeightKgU1: Math.round(rm1 * 0.75),
-            bestWeightKgU2: Math.round(rm2 * 0.75),
+            timesPerformedU1: 0,
+            timesPerformedU2: 0,
+            bestWeightKgU1: 0,
+            bestWeightKgU2: 0,
             best1RmKgU1: rm1,
             best1RmKgU2: rm2,
             totalVolumeKgU1: 0,
@@ -307,7 +301,8 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                   <Area
                     connectNulls
                     type="monotone"
-                    dataKey={profiles.user_1.name}
+                    dataKey="user_1"
+                    name={profiles.user_1.name}
                     stroke={profiles.user_1.accentColor}
                     strokeWidth={2.5}
                     fillOpacity={1}
@@ -318,7 +313,8 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                   <Area
                     connectNulls
                     type="monotone"
-                    dataKey={profiles.user_2.name}
+                    dataKey="user_2"
+                    name={profiles.user_2.name}
                     stroke={profiles.user_2.accentColor}
                     strokeWidth={2.5}
                     fillOpacity={1}
@@ -383,11 +379,11 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                   <div>
                     <span className="font-mono text-[10px] text-[#A09BA8] block">Mejor Peso</span>
                     <strong className="text-white">
-                      {formatDualWeight(activeDetailExercise.bestWeightKgU1, weightUnit)}
+                      {activeDetailExercise.timesPerformedU1 ? formatDualWeight(activeDetailExercise.bestWeightKgU1, weightUnit) : 'Sin registro'}
                     </strong>
                   </div>
                   <div>
-                    <span className="font-mono text-[10px] text-[#A09BA8] block">1RM Est.</span>
+                    <span className="font-mono text-[10px] text-[#A09BA8] block">{activeDetailExercise.timesPerformedU1 ? '1RM Est.' : '1RM calibrado'}</span>
                     <strong className="theme-text">
                       {displayWeightValue(activeDetailExercise.best1RmKgU1, weightUnit)}{' '}
                       {weightUnit}
@@ -413,11 +409,11 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                   <div>
                     <span className="font-mono text-[10px] text-[#A09BA8] block">Mejor Peso</span>
                     <strong className="text-white">
-                      {formatDualWeight(activeDetailExercise.bestWeightKgU2, weightUnit)}
+                      {activeDetailExercise.timesPerformedU2 ? formatDualWeight(activeDetailExercise.bestWeightKgU2, weightUnit) : 'Sin registro'}
                     </strong>
                   </div>
                   <div>
-                    <span className="font-mono text-[10px] text-[#A09BA8] block">1RM Est.</span>
+                    <span className="font-mono text-[10px] text-[#A09BA8] block">{activeDetailExercise.timesPerformedU2 ? '1RM Est.' : '1RM calibrado'}</span>
                     <strong className="theme-text">
                       {displayWeightValue(activeDetailExercise.best1RmKgU2, weightUnit)}{' '}
                       {weightUnit}

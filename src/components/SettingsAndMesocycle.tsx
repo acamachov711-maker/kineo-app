@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Users,
   User,
@@ -28,9 +28,9 @@ import {
   parseInputToKg,
   sanitizeDecimalInput
 } from '../utils/fitnessMath'
-import { generateCoupleRoomCode, normalizeRoomCode } from '../services/syncService'
 import { IdealWeightCalculator } from './IdealWeightCalculator'
 import { FitnessGuide } from './FitnessGuide'
+import { BackupButton } from './StorageNotice'
 
 export type SettingsSubTab = 'profiles' | 'ideal_weight' | 'guide'
 
@@ -41,7 +41,7 @@ interface SettingsHubProps {
   weightUnit: WeightUnit
   activeProfileId?: 'user_1' | 'user_2'
   onSelectActiveProfile?: (profileId: 'user_1' | 'user_2') => void
-  syncStatus?: 'disconnected' | 'connecting' | 'connected'
+  pendingOperations?: number
   initialSubTab?: SettingsSubTab
   calculatorPreselect?: {
     profileId: 'user_1' | 'user_2'
@@ -62,6 +62,8 @@ interface SettingsHubProps {
   onClearSampleHistory: () => void
   onResetMesocycle: () => void
   onReopenOnboarding: () => void
+  onDeleteCompanionData?: () => void
+  profileRemovalMessage?: string
 }
 
 export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
@@ -71,7 +73,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
   weightUnit,
   activeProfileId,
   onSelectActiveProfile,
-  syncStatus = 'disconnected',
+  pendingOperations = 0,
   initialSubTab = 'profiles',
   calculatorPreselect,
   highlightedGlossaryId,
@@ -82,12 +84,11 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
   onSaveIdealWeight,
   onClearSampleHistory,
   onResetMesocycle,
-  onReopenOnboarding
+  onReopenOnboarding,
+  onDeleteCompanionData,
+  profileRemovalMessage = ''
 }) => {
   const [subTab, setSubTab] = useState<SettingsSubTab>(initialSubTab)
-
-  const [roomCodeInput, setRoomCodeInput] = useState<string>(deviceConfig.syncRoomCode || '')
-  const [roomSavedMsg, setRoomSavedMsg] = useState<boolean>(false)
 
   const [name1, setName1] = useState(profiles.user_1.name)
   const [gender1, setGender1] = useState<GenderType>(profiles.user_1.gender)
@@ -122,6 +123,19 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
   )
 
   const [savedProfilesMsg, setSavedProfilesMsg] = useState(false)
+  const [confirmRemoval, setConfirmRemoval] = useState(false)
+  const [removalName, setRemovalName] = useState('')
+  const confirmationInput = useRef<HTMLInputElement>(null)
+  const removalButton = useRef<HTMLButtonElement>(null)
+  const removalStatus = useRef<HTMLParagraphElement>(null)
+  const companionId = deviceConfig.primaryProfileId === 'user_1' ? 'user_2' : 'user_1'
+  const companionName = profiles[companionId].name
+  useEffect(() => {
+    if (confirmRemoval) confirmationInput.current?.focus()
+  }, [confirmRemoval])
+  useEffect(() => {
+    if (profileRemovalMessage) removalStatus.current?.focus()
+  }, [profileRemovalMessage])
 
   const handleSaveProfiles = () => {
     onUpdateProfiles({
@@ -161,18 +175,6 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
       ...deviceConfig,
       primaryProfileId: nextPrimary
     })
-  }
-
-  const handleSaveRoomCode = (codeToSave: string) => {
-    const cleaned = normalizeRoomCode(codeToSave)
-    setRoomCodeInput(cleaned)
-    onUpdateDeviceConfig({
-      ...deviceConfig,
-      coupleModeEnabled: true,
-      syncRoomCode: cleaned || undefined
-    })
-    setRoomSavedMsg(true)
-    setTimeout(() => setRoomSavedMsg(false), 3000)
   }
 
   const bmi1 = calculateBMI(profiles.user_1.bodyWeightKg, profiles.user_1.heightCm)
@@ -225,6 +227,11 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
       {/* SUB-TAB 1: MODE (SOLO VS COUPLE), LIVE SYNC & PROFILES */}
       {subTab === 'profiles' && (
         <div className="space-y-4">
+          <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4">
+            <h3 className="font-semibold text-sm mb-2">Copia de seguridad local</h3>
+            <p className="text-xs text-[#A09BA8] mb-3">Incluye perfiles, historial y sesiones en curso. Contiene datos personales: guárdala en un lugar privado. La restauración desde archivo todavía no está disponible.</p>
+            <BackupButton />
+          </div>
           {hasSampleData && (
             <div className="rounded-[10px] bg-[#14111A] border theme-border p-4 flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -277,8 +284,7 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                 onClick={() =>
                   onUpdateDeviceConfig({
                     ...deviceConfig,
-                    coupleModeEnabled: true,
-                    syncRoomCode: deviceConfig.syncRoomCode || generateCoupleRoomCode()
+                    coupleModeEnabled: true
                   })
                 }
                 className={`p-3 rounded-xl border text-left transition-all ${
@@ -289,10 +295,10 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
               >
                 <div className="flex items-center gap-2 font-extrabold text-xs sm:text-sm">
                   <Users className="w-4 h-4 theme-text" />
-                  En Pareja (Sync)
+                  En pareja
                 </div>
                 <p className="text-[11px] opacity-80 mt-0.5">
-                  Alterna entre ambos y sincroniza 2 teléfonos en vivo.
+                  Alterna entre ambos perfiles en este móvil.
                 </p>
               </button>
             </div>
@@ -306,66 +312,24 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
                   <Wifi className="w-5 h-5 text-[#10B981]" />
                   <div>
                     <h2 className="text-sm font-bold text-white">
-                      Sesión Compartida en Vivo (2 Teléfonos)
+                      Registro compartido en este móvil
                     </h2>
                     <p className="font-mono text-[10px] text-[#A09BA8]">
-                      Escriban el mismo código en ambos teléfonos para actualizar pesos y series en
-                      tiempo real.
+                      Podéis registrar ambos perfiles sin conexión. Los controles de sala permiten iniciar una conexión pública de pruebas.
                     </p>
                   </div>
                 </div>
                 <span
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${
-                    syncStatus === 'connected'
-                      ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40'
-                      : syncStatus === 'connecting'
-                      ? 'bg-[#0B090E] theme-text border-[#2A2533]'
-                      : 'bg-[#0B090E] text-[#A09BA8] border-[#2A2533]'
-                  }`}
+                  className="px-2.5 py-1 rounded-full text-[11px] font-bold border bg-[#0B090E] text-[#A09BA8] border-[#2A2533]"
                 >
-                  {syncStatus === 'connected'
-                    ? '🟢 Conectado en Vivo'
-                    : syncStatus === 'connecting'
-                    ? '🟡 Conectando...'
-                    : '⚪ Sin Sala Activa'}
+                  Sala opcional
                 </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="text"
-                  value={roomCodeInput}
-                  onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
-                  placeholder="Ej. KINEO-4829"
-                  className="flex-1 bg-[#0B090E] border border-[#2A2533] theme-focus rounded-md px-3.5 py-2 text-sm font-black tracking-widest text-white uppercase outline-none font-mono"
-                />
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleSaveRoomCode(roomCodeInput)}
-                    className="solar-btn theme-bg px-4 py-2 rounded-md text-sm"
-                  >
-                    Conectar Sala
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newCode = generateCoupleRoomCode()
-                      handleSaveRoomCode(newCode)
-                    }}
-                    className="px-3 py-2 rounded-md bg-[#0B090E] hover:bg-[#1C1826] font-mono text-[10px] font-bold uppercase text-[#A09BA8] border border-[#2A2533]"
-                  >
-                    Crear Nuevo Código
-                  </button>
-                </div>
-              </div>
-
-              {roomSavedMsg && (
-                <p className="font-mono text-[10px] uppercase text-[#10B981] font-semibold">
-                  ✓ Sala sincronizada: comparte el código <strong>{roomCodeInput}</strong> con tu
-                  pareja.
-                </p>
-              )}
+              <p role="status" className="text-xs text-[#A09BA8]">
+                {pendingOperations} cambios pendientes en los diarios locales. Consulta el estado de conexión y los recibos en el panel de sala.
+              </p>
+              <p className="text-xs text-[#A09BA8]">Crear o solicitar una sala abre una conexión al broker público. Utiliza datos ficticios: no hay privacidad ni contraseña validada. No se requieren cuentas personales y no se cambia la rutina automáticamente.</p>
             </div>
           )}
 
@@ -698,6 +662,29 @@ export const SettingsAndMesocycle: React.FC<SettingsHubProps> = ({
               )}
             </div>
           </div>
+
+          {onDeleteCompanionData && (
+            <section data-od-id="companion-data-removal" className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 space-y-3">
+              <h2 className="font-display text-xl text-white">Datos del compañero en este móvil</h2>
+              <p className="text-sm text-[#A09BA8] break-words">Tu perfil principal es {profiles[deviceConfig.primaryProfileId].name}. Se eliminarán únicamente los datos guardados de {companionName}: información personal, calibraciones, historial, series y cola local. Se desactivará el modo en pareja y se limpiará el código de sala guardado.</p>
+              <p className="text-sm text-[#A09BA8]">Tus resultados se conservan. Este borrado no modifica otros teléfonos ni copias ya exportadas. Puedes descargar una copia antes de continuar.</p>
+              <BackupButton />
+              {!confirmRemoval ? (
+                <button ref={removalButton} type="button" data-od-id="delete-companion-data" onClick={() => setConfirmRemoval(true)} className="min-h-[44px] px-4 py-2 rounded-md border border-[#A09BA8] text-white hover:bg-[#2A2533]">Eliminar datos de mi compañero</button>
+              ) : (
+                <div role="group" aria-labelledby="companion-removal-title" className="space-y-3">
+                  <h3 id="companion-removal-title" className="text-white">Confirma el borrado local de {companionName}</h3>
+                  <label className="block text-sm text-[#A09BA8]" htmlFor="companion-removal-name">Escribe el nombre exacto del compañero: {companionName}</label>
+                  <input ref={confirmationInput} id="companion-removal-name" data-od-id="companion-removal-name" value={removalName} onChange={(event) => setRemovalName(event.target.value)} autoComplete="off" className="w-full min-h-[44px] bg-[#0B090E] border border-[#A09BA8] rounded-md px-3 text-white" />
+                  <div className="flex flex-wrap gap-3">
+                    <button type="button" data-od-id="confirm-companion-removal" disabled={removalName !== companionName} onClick={() => { if (removalName === companionName) onDeleteCompanionData() }} className="min-h-[44px] px-4 py-2 rounded-md border border-[#A09BA8] text-white disabled:opacity-40">Confirmar borrado</button>
+                    <button type="button" onClick={() => { setConfirmRemoval(false); setRemovalName(''); setTimeout(() => removalButton.current?.focus(), 0) }} className="min-h-[44px] px-4 py-2 text-white">Cancelar</button>
+                  </div>
+                </div>
+              )}
+              <p role="status" aria-live="polite" tabIndex={-1} ref={removalStatus} className="text-sm text-[#A09BA8]">{profileRemovalMessage}</p>
+            </section>
+          )}
 
           {/* Mesocycle Control (6-8 Weeks) */}
           <div className="rounded-[10px] bg-[#14111A] border border-[#2A2533] p-4 space-y-3">

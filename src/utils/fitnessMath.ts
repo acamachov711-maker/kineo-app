@@ -6,6 +6,10 @@ import {
 
 const KG_TO_LB = 2.20462262185
 
+export function getLocalDateKey(date: Date = new Date()): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
 export function kgToLb(kg: number): number {
   if (kg <= 0) return 0
   return Math.round(kg * KG_TO_LB * 100) / 100
@@ -228,6 +232,9 @@ export function buildPyramidSets(
   return Array.from({ length: count }, (_, idx) => {
     const stepIdx = Math.min(idx, 3)
     const existing = currentSets[idx]
+    if (existing && (existing.completed || existing.drops?.some((drop) => drop.completed))) {
+      return existing
+    }
     const weightKg =
       baseOneRmKg > 0
         ? direction === 'pyramid_asc'
@@ -238,6 +245,7 @@ export function buildPyramidSets(
     const actualReps = direction === 'pyramid_asc' ? ascActual[stepIdx] : descActual[stepIdx]
 
     return {
+      id: existing?.id,
       setNumber: idx + 1,
       targetReps,
       weightKg,
@@ -293,15 +301,15 @@ export interface StreakMetrics {
 
 export function calculateProfileStreak(
   history: WorkoutHistoryEntry[],
-  profileId: 'user_1' | 'user_2'
+  profileId: 'user_1' | 'user_2',
+  now: Date = new Date()
 ): StreakMetrics {
-  const userEntries = history.filter((h) => h.profileId === profileId)
+  const today = getLocalDateKey(now)
+  const userEntries = history.filter((entry) =>
+    entry.profileId === profileId && !entry.isSampleData && entry.date <= today
+  )
   const uniqueDates = Array.from(new Set(userEntries.map((h) => h.date))).sort()
-
-  const referenceDate =
-    uniqueDates.length > 0
-      ? new Date(uniqueDates[uniqueDates.length - 1] + 'T12:00:00')
-      : new Date()
+  const referenceDate = new Date(now)
   const dayOfWeek = (referenceDate.getDay() + 6) % 7
   const monday = new Date(referenceDate)
   monday.setDate(referenceDate.getDate() - dayOfWeek)
@@ -312,7 +320,7 @@ export function calculateProfileStreak(
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday)
     d.setDate(monday.getDate() + i)
-    const iso = d.toISOString().slice(0, 10)
+    const iso = getLocalDateKey(d)
     if (uniqueDates.includes(iso)) {
       weekDaysCompleted[i] = true
       weeklySessionsDone += 1
@@ -325,11 +333,19 @@ export function calculateProfileStreak(
     const dow = (dt.getDay() + 6) % 7
     const mon = new Date(dt)
     mon.setDate(dt.getDate() - dow)
-    const key = mon.toISOString().slice(0, 10)
+    const key = getLocalDateKey(mon)
     weeksMap.set(key, (weeksMap.get(key) || 0) + 1)
   })
 
-  const activeWeekStreak = uniqueDates.length === 0 ? 0 : Math.max(1, weeksMap.size)
+  let activeWeekStreak = 0
+  const streakMonday = new Date(monday)
+  if (!weeksMap.has(getLocalDateKey(streakMonday))) {
+    streakMonday.setDate(streakMonday.getDate() - 7)
+  }
+  while (weeksMap.has(getLocalDateKey(streakMonday))) {
+    activeWeekStreak += 1
+    streakMonday.setDate(streakMonday.getDate() - 7)
+  }
 
   return {
     weeklySessionsDone,
@@ -357,11 +373,11 @@ export function getExerciseWeightHistory(
 ): ExerciseWeightPoint[] {
   const byDate = new Map<string, ExerciseWeightPoint>()
 
-  history.forEach((entry) => {
+  history.filter((entry) => !entry.isSampleData).forEach((entry) => {
     entry.exercises.forEach((ex) => {
       if (ex.variantId !== variantId) return
       const existing = byDate.get(entry.date) || {
-        date: entry.date.slice(5),
+        date: entry.date,
         user1Weight: null,
         user2Weight: null,
         user1OneRm: 0,

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>KINEO v1.7 · diagnóstico de pruebas</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#0b090e;color:#f6f4f8;font:16px/1.6 system-ui,sans-serif}main{max-width:760px;margin:auto;padding:36px 20px}h1{font-size:clamp(26px,6vw,38px);line-height:1.2}h2{font-size:20px}p{color:#c3bdcb}.tag{color:#c6a4ff;letter-spacing:.12em;font-size:12px;font-weight:700}.notice{border:1px solid #78622c;background:#211b0e;border-radius:12px;padding:16px;color:#ffe1a0}.controls{display:flex;flex-wrap:wrap;gap:12px;margin:24px 0}button,a{min-height:46px;padding:12px 16px;border-radius:9px;border:1px solid #51415f;background:#201929;color:#fff;font:inherit;text-decoration:none;cursor:pointer}button:disabled{opacity:.45;cursor:default}:focus-visible{outline:3px solid #c6a4ff;outline-offset:3px}textarea{width:100%;min-height:340px;background:#131017;color:#e4dceb;border:1px solid #51415f;border-radius:10px;padding:16px;font:13px/1.6 monospace;resize:vertical}.small{font-size:13px}#status{font-weight:600;color:#ffe1a0;overflow-wrap:anywhere}code{overflow-wrap:anywhere}
+  </style>
+</head>
+<body>
+<main>
+  <span class="tag">KINEO / PILOTO DE SALAS</span>
+  <h1>Comprobar este teléfono</h1>
+  <p>Esta página comprueba requisitos locales. No crea salas, no conecta con MQTT ni lee perfiles, series, códigos o copias de seguridad.</p>
+  <div class="notice">Usa un sitio exclusivo de pruebas y datos ficticios. HTTPS permite las funciones del navegador; no convierte el broker público en una sala privada.</div>
+  <div class="controls">
+    <button id="check" type="button">Comprobar requisitos</button>
+    <button id="download" type="button" disabled>Descargar diagnóstico</button>
+    <a href="/">Abrir entrenamiento</a>
+  </div>
+  <p id="status" role="status" aria-live="polite">Pendiente de comprobación. No es una prueba superada.</p>
+  <h2>Resultado local</h2>
+  <label for="report">Puedes copiar el resultado o descargarlo para el registro de pruebas.</label>
+  <textarea id="report" readonly spellcheck="false" placeholder="Pulsa Comprobar requisitos."></textarea>
+  <p class="small">La comprobación escribe y retira una clave temporal propia para verificar el guardado. No modifica datos de KINEO ni borra cachés. Un guardado correcto ahora no garantiza espacio disponible en el futuro.</p>
+  <p class="small">«Red disponible» es solo una señal del navegador. No confirma acceso al broker ni entrega al otro teléfono. «Sin control del service worker» puede requerir abrir el entrenamiento en línea y recargarlo antes del ensayo sin conexión.</p>
+</main>
+<script>
+  const checkButton = document.getElementById('check')
+  const downloadButton = document.getElementById('download')
+  const reportField = document.getElementById('report')
+  const statusField = document.getElementById('status')
+  let lastReport = null
+
+  checkButton.addEventListener('click', async () => {
+    checkButton.disabled = true
+    downloadButton.disabled = true
+    statusField.textContent = 'Comprobando requisitos locales…'
+    const report = {
+      format: 'kineo-pilot-diagnostic', version: 1, checkedAt: new Date().toISOString(),
+      secureContext: globalThis.isSecureContext === true,
+      webCrypto: false, localStorage: false,
+      browserReportsOnline: navigator.onLine,
+      serviceWorkerSupported: 'serviceWorker' in navigator,
+      serviceWorkerControlsPage: Boolean(navigator.serviceWorker?.controller),
+      buildId: null, brokerConnectionTested: false, twoPhonesTested: false,
+      notes: []
+    }
+    try {
+      if (!globalThis.crypto?.subtle) throw new Error('Web Crypto no está disponible.')
+      await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode('kineo-pilot-check'))
+      report.webCrypto = true
+    } catch { report.notes.push('No funciona Web Crypto; revisa el origen HTTPS y el navegador.') }
+    const probeKey = `kineo_pilot_probe_${Date.now()}_${Math.random().toString(16).slice(2)}`
+    try {
+      localStorage.setItem(probeKey, 'ok')
+      report.localStorage = localStorage.getItem(probeKey) === 'ok'
+    } catch { report.notes.push('No se puede guardar localmente. No inicies el ensayo hasta resolverlo.') }
+    finally { try { localStorage.removeItem(probeKey) } catch {} }
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 5000)
+    try {
+      const response = await fetch('/kineo-pilot-build.json', { cache: 'no-store', signal: controller.signal })
+      if (!response.ok) throw new Error('Compilación no disponible.')
+      const build = await response.json()
+      if (build.format !== 'kineo-room-pilot' || !/^kineo-v1\.7-salas-[a-f0-9]{12}$/.test(build.buildId)) throw new Error('Identificación no válida.')
+      report.buildId = build.buildId
+    } catch { report.notes.push('No se pudo verificar la compilación del piloto. Revisa la publicación o vuelve a comprobar en línea.') }
+    finally { clearTimeout(timeout) }
+    report.readyForOnlinePilot = report.secureContext && report.webCrypto && report.localStorage && Boolean(report.buildId)
+    lastReport = report
+    reportField.value = JSON.stringify(report, null, 2)
+    statusField.textContent = report.readyForOnlinePilot
+      ? 'Requisitos locales disponibles. Falta probar la sala con el otro teléfono.'
+      : 'Hay requisitos pendientes. No equivale a un fallo de MQTT: revisa el diagnóstico.'
+    checkButton.disabled = false
+    downloadButton.disabled = false
+  })
+
+  downloadButton.addEventListener('click', () => {
+    if (!lastReport) return
+    try {
+      const url = URL.createObjectURL(new Blob([JSON.stringify(lastReport, null, 2)], { type: 'application/json' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `kineo-diagnostico-${Date.now()}.json`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch { statusField.textContent = 'No se pudo descargar. Puedes copiar el resultado del cuadro.' }
+  })
+</script>
+</body>
+</html>

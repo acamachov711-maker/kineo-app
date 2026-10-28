@@ -32,6 +32,7 @@ export interface DropSubSet {
 }
 
 export interface SetEntry {
+  id?: string
   setNumber: number
   targetReps: string
   weightKg: number
@@ -143,6 +144,7 @@ export interface WorkoutHistoryEntry {
   totalVolumeKg: number
   completedSets: number
   durationMinutes: number
+  durationSource?: 'measured' | 'legacy_estimate'
   isSampleData?: boolean
   exercises: CompletedExerciseRecord[]
 }

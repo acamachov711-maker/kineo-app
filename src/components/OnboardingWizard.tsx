@@ -6,7 +6,6 @@ import {
   ArrowRight,
   Sparkles,
   Smartphone,
-  Wifi,
   Check
 } from 'lucide-react'
 import {
@@ -17,7 +16,6 @@ import {
 } from '../types'
 import { parseInputToKg, sanitizeDecimalInput } from '../utils/fitnessMath'
 import { GOAL_OPTIONS, ASCENT_COLOR_PALETTE } from '../data/initialData'
-import { generateCoupleRoomCode, normalizeRoomCode } from '../services/syncService'
 
 interface OnboardingWizardProps {
   initialProfiles: Record<'user_1' | 'user_2', UserProfile>
@@ -34,10 +32,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   initialUnit = 'kg',
   onComplete
 }) => {
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [step, setStep] = useState<1 | 3>(1)
 
   const [coupleMode, setCoupleMode] = useState<boolean>(true)
-  const [syncRoomCode, setSyncRoomCode] = useState<string>(() => generateCoupleRoomCode())
 
   const [ownerName, setOwnerName] = useState<string>(initialProfiles.user_1.name || '')
   const [ownerGender, setOwnerGender] = useState<GenderType>(initialProfiles.user_1.gender || 'male')
@@ -51,34 +48,11 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
     initialProfiles.user_1.heightCm ? String(initialProfiles.user_1.heightCm) : ''
   )
 
-  const [partnerName, setPartnerName] = useState<string>(initialProfiles.user_2.name || '')
-  const [partnerGender, setPartnerGender] = useState<GenderType>(
-    initialProfiles.user_2.gender || 'female'
-  )
-  const [partnerGoal, setPartnerGoal] = useState<string>(
-    initialProfiles.user_2.goal || GOAL_OPTIONS[1]
-  )
-  const [partnerColor, setPartnerColor] = useState<string>(
-    initialProfiles.user_2.accentColor || '#8B5CF6'
-  )
-  const [partnerAge, setPartnerAge] = useState<string>(
-    initialProfiles.user_2.age ? String(initialProfiles.user_2.age) : ''
-  )
-  const [partnerWeight, setPartnerWeight] = useState<string>('')
-  const [partnerHeight, setPartnerHeight] = useState<string>(
-    initialProfiles.user_2.heightCm ? String(initialProfiles.user_2.heightCm) : ''
-  )
-
   const [unit, setUnit] = useState<WeightUnit>(initialUnit)
 
   const handleFinish = () => {
     const cleanOwnerName = ownerName.trim() || 'Titular'
-    const cleanPartnerName = partnerName.trim() || 'Pareja'
-
     const ownerWeightKg = ownerWeight ? parseInputToKg(parseFloat(ownerWeight), unit) : undefined
-    const partnerWeightKg = partnerWeight
-      ? parseInputToKg(parseFloat(partnerWeight), unit)
-      : undefined
 
     const updatedProfiles: Record<'user_1' | 'user_2', UserProfile> = {
       user_1: {
@@ -97,14 +71,10 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
       user_2: {
         ...initialProfiles.user_2,
         id: 'user_2',
-        name: cleanPartnerName,
-        gender: partnerGender,
+        name: initialProfiles.user_2.name.trim() || 'Pareja',
+        gender: initialProfiles.user_2.name.trim() ? initialProfiles.user_2.gender : 'other',
         isDeviceOwner: false,
-        goal: partnerGoal,
-        age: partnerAge ? parseInt(partnerAge, 10) : undefined,
-        bodyWeightKg: partnerWeightKg ?? initialProfiles.user_2.bodyWeightKg,
-        heightCm: partnerHeight ? parseFloat(partnerHeight) : initialProfiles.user_2.heightCm,
-        accentColor: partnerColor,
+        ...(!initialProfiles.user_2.name.trim() ? { goal: '', level: '', age: undefined, bodyWeightKg: undefined, heightCm: undefined } : {}),
         badgeColor: 'theme-soft-bg theme-text border theme-border'
       }
     }
@@ -113,7 +83,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
       onboardingCompleted: true,
       primaryProfileId: 'user_1',
       coupleModeEnabled: coupleMode,
-      syncRoomCode: coupleMode && syncRoomCode.trim() ? normalizeRoomCode(syncRoomCode) : undefined
+      syncRoomCode: undefined
     }
 
     onComplete(updatedProfiles, config, unit)
@@ -137,7 +107,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             </div>
           </div>
           <span className="font-mono text-[10px] font-bold px-2.5 py-1 rounded bg-[#0B090E] text-[#C7C3D1] border border-[#2A2533]">
-            Paso {step} de {coupleMode ? 3 : 2}
+            Paso {step === 3 ? 2 : 1} de 2
           </span>
         </div>
 
@@ -178,10 +148,10 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 >
                   <div className="flex items-center gap-2 font-extrabold text-xs sm:text-sm">
                     <Users className="w-4 h-4 theme-text" />
-                    En Pareja (Sync)
+                    En pareja
                   </div>
                   <p className="text-[11px] text-[#A09BA8] mt-1">
-                    Sincroniza 2 teléfonos en vivo o alterna perfiles.
+                    Configura tu perfil y añade a tu pareja al compartir una sala.
                   </p>
                 </button>
               </div>
@@ -190,8 +160,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="p-3 rounded-[10px] bg-[#14111A] border border-[#2A2533] flex items-start gap-2.5">
               <Smartphone className="w-4 h-4 theme-text shrink-0 mt-0.5" />
               <p className="text-xs text-[#C7C3D1] leading-snug">
-                <strong>Datos del dueño de este celular (#1):</strong> Si es el teléfono de tu
-                pareja, pon sus datos aquí para que ella aparezca primero.
+                <strong>Tu perfil:</strong> introduce tus datos. Tu pareja configurará los suyos en su propio teléfono.
               </p>
             </div>
 
@@ -334,145 +303,6 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="pt-1 flex justify-end">
               <button
                 type="button"
-                onClick={() => setStep(coupleMode ? 2 : 3)}
-                className="solar-btn theme-bg px-5 py-3 rounded-md text-base flex items-center gap-2"
-              >
-                Continuar
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 2: PARTNER & LIVE SYNC CODE (Only if coupleMode === true) */}
-        {step === 2 && coupleMode && (
-          <div className="space-y-4">
-            <div className="p-3.5 rounded-[10px] bg-[#14111A] border border-[#2A2533] space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] flex items-center gap-1.5">
-                  <Wifi className="w-4 h-4 text-[#10B981]" />
-                  Código de Sala en Vivo (Conecta los 2 Teléfonos)
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSyncRoomCode(generateCoupleRoomCode())}
-                  className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#0B090E] text-[#C7C3D1] border border-[#2A2533]"
-                >
-                  Generar otro
-                </button>
-              </div>
-              <input
-                type="text"
-                value={syncRoomCode}
-                onChange={(e) => setSyncRoomCode(e.target.value.toUpperCase())}
-                placeholder="Ej. KINEO-4829"
-                className="clean-input font-mono text-base font-black tracking-widest text-white uppercase"
-              />
-              <p className="text-[11px] text-[#A09BA8] leading-snug">
-                Pon este <strong>mismo código</strong> en ambos teléfonos para que lo que anote tu
-                pareja o tú se actualice en vivo en los dos celulares.
-              </p>
-            </div>
-
-            <div className="space-y-3 pt-1">
-              <div>
-                <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
-                  Nombre de tu Pareja
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej. Dani o Adolfo"
-                  value={partnerName}
-                  onChange={(e) => setPartnerName(e.target.value)}
-                  className="clean-input font-mono text-sm font-bold text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
-                  Género de tu Pareja
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 'female' as GenderType, label: '♀ Mujer' },
-                    { id: 'male' as GenderType, label: '♂ Hombre' },
-                    { id: 'other' as GenderType, label: '⚡ Otro' }
-                  ].map((g) => (
-                    <button
-                      key={g.id}
-                      type="button"
-                      onClick={() => setPartnerGender(g.id)}
-                      className={`p-2.5 rounded-md border font-mono text-[11px] font-bold uppercase transition-all ${
-                        partnerGender === g.id
-                          ? 'theme-soft-bg theme-border text-white'
-                          : 'bg-[#0B090E] border-[#2A2533] text-[#A09BA8]'
-                      }`}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* V1.6-10: Catálogo de 8 Colores Kineo Ascent para la Pareja */}
-              <div>
-                <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
-                  Color de Acento de tu Pareja
-                </label>
-                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 bg-[#0B090E] p-2.5 rounded-[10px] border border-[#2A2533]">
-                  {ASCENT_COLOR_PALETTE.map((c) => {
-                    const selected = partnerColor.toUpperCase() === c.hex.toUpperCase()
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setPartnerColor(c.hex)}
-                        title={c.name}
-                        className={`h-9 rounded-lg border flex items-center justify-center transition-all ${
-                          selected ? 'border-white scale-105 shadow-lg' : 'border-[#2A2533] opacity-80 hover:opacity-100'
-                        }`}
-                        style={{ backgroundColor: c.hex }}
-                      >
-                        {selected && (
-                          <Check
-                            className="w-4 h-4 stroke-[3]"
-                            style={{ color: c.fgHex }}
-                          />
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#A09BA8] mb-1.5">
-                  Objetivo de tu Pareja
-                </label>
-                <select
-                  value={partnerGoal}
-                  onChange={(e) => setPartnerGoal(e.target.value)}
-                  className="clean-input font-mono text-xs sm:text-sm font-semibold text-white"
-                >
-                  {GOAL_OPTIONS.map((goalOpt) => (
-                    <option key={goalOpt} value={goalOpt}>
-                      {goalOpt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="px-4 py-2.5 rounded-md bg-[#0B090E] text-[#A09BA8] border border-[#2A2533] font-mono text-[10px] font-bold uppercase"
-              >
-                ← Atrás
-              </button>
-              <button
-                type="button"
                 onClick={() => setStep(3)}
                 className="solar-btn theme-bg px-5 py-3 rounded-md text-base flex items-center gap-2"
               >
@@ -526,7 +356,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="flex items-center justify-between pt-2">
               <button
                 type="button"
-                onClick={() => setStep(coupleMode ? 2 : 1)}
+                onClick={() => setStep(1)}
                 className="px-4 py-2.5 rounded-md bg-[#0B090E] text-[#A09BA8] border border-[#2A2533] font-mono text-[10px] font-bold uppercase"
               >
                 ← Atrás

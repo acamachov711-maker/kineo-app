@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { targetKey } from '../services/seriesSync'
+import { getProfileExerciseOptions } from '../utils/workoutState'
 import {
   Shuffle,
   Users,
@@ -64,6 +66,10 @@ interface ExerciseSlotCardProps {
   syncMode: SyncMode
   techniqueByProfile: Record<'user_1' | 'user_2', SetTechnique>
   setsByProfile: Record<'user_1' | 'user_2', SetEntry[]>
+  conflictedSetKeys?: ReadonlySet<string>
+  reviewMode?: boolean
+  reviewReadOnly?: boolean
+  onPendingEditsChange?: (slotId: string, key: string, pending: boolean) => void
   onToggleSyncMode: (slotId: string) => void
   onSelectVariant: (
     profileId: 'user_1' | 'user_2',
@@ -131,91 +137,58 @@ const TECHNIQUE_LABELS: Record<SetTechnique, { label: string; badge: string; glo
     }
   }
 
-interface DecimalWeightInputProps {
-  weightKg: number
+interface ConfirmableNumberInputProps {
+  value: number
+  kind: 'weight' | 'reps'
   weightUnit: WeightUnit
+  label: string
   placeholder?: string
   className?: string
-  onCommitWeightKg: (newWeightKg: number, isFinalCommit?: boolean) => void
+  onConfirm: (value: number) => void
+  onPending: (pending: boolean) => void
 }
 
-/**
- * V1.6-01: Input con estado local draftWeight que permite vaciar el campo ("") y escribir
- * decimales con punto o coma (ej. 2.5, 12.5, 40) sin formatear bruscamente mientras el usuario teclea.
- */
-const DecimalWeightInput: React.FC<DecimalWeightInputProps> = ({
-  weightKg,
-  weightUnit,
-  placeholder = '0',
-  className = '',
-  onCommitWeightKg
+// El texto permanece en edición hasta que la persona confirme el valor.
+export const ConfirmableNumberInput: React.FC<ConfirmableNumberInputProps> = ({
+  value, kind, weightUnit, label, placeholder = '0', className = '', onConfirm, onPending
 }) => {
-  const shown = displayWeightValue(weightKg, weightUnit)
-  const [draft, setDraft] = useState<string>(() => (shown > 0 ? String(shown) : ''))
-  const isFocusedRef = useRef<boolean>(false)
-
-  useEffect(() => {
-    if (!isFocusedRef.current) {
-      const nextShown = displayWeightValue(weightKg, weightUnit)
-      setDraft(nextShown > 0 ? String(nextShown) : '')
-    }
-  }, [weightKg, weightUnit])
-
-  const commitValue = (rawStr: string) => {
-    const cleaned = sanitizeDecimalInput(rawStr)
-    if (!cleaned || cleaned === '.') {
-      onCommitWeightKg(0, true)
-      setDraft('')
-      return
-    }
-    const parsed = parseFloat(cleaned)
-    if (isNaN(parsed) || parsed <= 0) {
-      onCommitWeightKg(0, true)
-      setDraft('')
-      return
-    }
-    const kgVal = parseInputToKg(parsed, weightUnit)
-    onCommitWeightKg(kgVal, true)
-    const formatted = displayWeightValue(kgVal, weightUnit)
-    setDraft(formatted > 0 ? String(formatted) : '')
+  const shown = kind === 'weight' ? displayWeightValue(value, weightUnit) : value
+  const format = (number: number) => number > 0 ? String(number) : ''
+  const [draft, setDraft] = useState(() => format(shown))
+  const [base, setBase] = useState<number | null>(null)
+  const pendingRef = useRef(onPending)
+  pendingRef.current = onPending
+  const dirty = base !== null
+  const stale = dirty && value !== base
+  useEffect(() => { if (!dirty) setDraft(format(shown)) }, [shown, dirty])
+  useEffect(() => () => pendingRef.current(false), [])
+  const cancel = () => { setBase(null); setDraft(format(shown)); onPending(false) }
+  const confirm = () => {
+    if (stale) return
+    const parsed = kind === 'weight' ? parseFloat(sanitizeDecimalInput(draft)) : parseInt(draft, 10)
+    const number = Number.isFinite(parsed) && parsed > 0 ? parsed : 0
+    onConfirm(kind === 'weight' ? parseInputToKg(number, weightUnit) : number)
+    setBase(null)
+    onPending(false)
   }
-
-  return (
-    <input
-      type="text"
-      inputMode="decimal"
-      placeholder={placeholder}
-      value={draft}
-      onFocus={() => {
-        isFocusedRef.current = true
+  return <div className="min-w-0">
+    <input type="text" inputMode={kind === 'weight' ? 'decimal' : 'numeric'} aria-label={label} maxLength={9}
+      placeholder={placeholder} value={draft} className={className}
+      onChange={(event) => {
+        const next = kind === 'weight' ? sanitizeDecimalInput(event.target.value)
+          : event.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '')
+        if (!dirty) { setBase(value); onPending(true) }
+        setDraft(next)
       }}
-      onChange={(e) => {
-        const cleaned = sanitizeDecimalInput(e.target.value)
-        setDraft(cleaned)
-        if (cleaned === '') {
-          onCommitWeightKg(0, false)
-          return
-        }
-        // Si no termina en punto, podemos actualizar el estado en vivo sin reescribir el texto draft
-        if (!cleaned.endsWith('.')) {
-          const parsed = parseFloat(cleaned)
-          if (!isNaN(parsed) && parsed >= 0) {
-            onCommitWeightKg(parseInputToKg(parsed, weightUnit), false)
-          }
-        }
-      }}
-      onBlur={() => {
-        isFocusedRef.current = false
-        commitValue(draft)
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          e.currentTarget.blur()
-        }
-      }}
-      className={className}
-    />
-  )
+      onKeyDown={(event) => { if (event.key === 'Enter' && dirty && !stale) { event.preventDefault(); confirm() } }} />
+    {dirty && <div className="flex flex-wrap gap-1 mt-1">
+      <span className="w-full text-xs text-amber-200" role="status">{stale ? 'El valor cambió. Cancela y vuelve a editar.' : 'Sin confirmar; se descarta al salir.'}</span>
+      <button type="button" disabled={stale} onClick={confirm} aria-label={`Confirmar ${label}`}
+        className="min-h-11 px-2 rounded border theme-border theme-soft-bg theme-text text-xs font-semibold disabled:opacity-40">Confirmar</button>
+      <button type="button" onClick={cancel} aria-label={`Cancelar edición de ${label}`}
+        className="min-h-11 px-2 text-xs text-white/70">Cancelar</button>
+    </div>}
+  </div>
 }
 
 export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
@@ -230,6 +203,10 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
   syncMode,
   techniqueByProfile,
   setsByProfile,
+  conflictedSetKeys = new Set<string>(),
+  reviewMode = false,
+  reviewReadOnly = false,
+  onPendingEditsChange,
   onToggleSyncMode,
   onSelectVariant,
   onChangeTechnique,
@@ -244,6 +221,17 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
   const [showCoachTip, setShowCoachTip] = useState(false)
   const [showWeightChart, setShowWeightChart] = useState(false)
   const [longPressIdx, setLongPressIdx] = useState<number | null>(null)
+  const [pendingInputs, setPendingInputs] = useState<Record<string, boolean>>({})
+  const markPending = (key: string, pending: boolean) => {
+    onPendingEditsChange?.(slot.slotId, key, pending)
+    setPendingInputs((previous) => {
+    if (Boolean(previous[key]) === pending) return previous
+    const next = { ...previous }
+    if (pending) next[key] = true
+    else delete next[key]
+    return next
+    })
+  }
   const longPressTimerRef = useRef<number | null>(null)
 
   const [inlineTestOpenByProfile, setInlineTestOpenByProfile] = useState<
@@ -278,18 +266,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
   })
 
   const getOptionsForProfile = (profileId: 'user_1' | 'user_2'): ExerciseVariant[] => {
-    const prof = profiles[profileId]
-    if (
-      syncMode === 'individual' &&
-      prof.gender === 'female' &&
-      slot.femaleFocusedPrimary
-    ) {
-      return [
-        slot.femaleFocusedPrimary,
-        ...(slot.femaleFocusedAlternatives || slot.alternatives)
-      ]
-    }
-    return [slot.primaryExercise, ...slot.alternatives]
+    return getProfileExerciseOptions(slot, profiles[profileId], syncMode)
   }
 
   const getActiveVariantForProfile = (profileId: 'user_1' | 'user_2'): ExerciseVariant => {
@@ -303,7 +280,8 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
   const activeVariant = getActiveVariantForProfile(pid)
   const technique = techniqueByProfile[pid] || slot.defaultTechnique
   const sets = setsByProfile[pid] || []
-  const completedCount = sets.filter((s) => s.completed).length
+  const isConflicted = (entry: SetEntry, profileId = pid) => conflictedSetKeys.has(targetKey({ slotId: slot.slotId, profileId, setId: entry.id! }))
+  const completedCount = sets.filter((s) => s.completed && !isConflicted(s)).length
   const allSetsDone = sets.length > 0 && completedCount === sets.length
 
   const oneRmKg = profile.estimated1RMByVariant[activeVariant.id] || 0
@@ -336,7 +314,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
 
   const partnerId: 'user_1' | 'user_2' = pid === 'user_1' ? 'user_2' : 'user_1'
   const partnerSets = setsByProfile[partnerId] || []
-  const partnerDoneCount = partnerSets.filter((s) => s.completed).length
+  const partnerDoneCount = partnerSets.filter((s) => s.completed && !isConflicted(s, partnerId)).length
 
   const defaultSteps: [string, string, string] = activeVariant.stepByStep || [
     `Posición inicial: Ajusta el equipo (${activeVariant.equipment}) y estabiliza tu postura antes de mover el peso.`,
@@ -437,6 +415,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
       {/* EXPANDED CONTENT */}
       {isExpanded && (
         <div className="px-3.5 sm:px-4 pb-4 pt-2 border-t border-[#2A2533] space-y-2.5">
+          {!reviewMode && <>
           {/* 2. V1.6-13: ESCENARIO CUADRADO 1:1 (295px, 1.0x, Fusión Continua Sin Bordes) */}
           <ExerciseAnimationViewer
             variant={activeVariant}
@@ -923,6 +902,8 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
           </div>
 
           {/* 5. SETS TABLE FOR ACTIVE USER (V1.6-01, V1.6-03, V1.6-04, V1.6-05, V1.6-09) */}
+          </>}
+          {reviewMode && <p className="text-xs text-[#A09BA8]">{profile.name} · {TECHNIQUE_LABELS[technique].label}</p>}
           <div className="space-y-2">
             <div className="grid grid-cols-12 gap-1.5 font-mono text-[9px] uppercase tracking-[0.06em] text-[#A09BA8] px-1">
               <div className="col-span-2">Serie</div>
@@ -947,6 +928,8 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                 technique === 'pyramid_asc' || technique === 'pyramid_desc'
               const isLastSet = idx === sets.length - 1
               const canDeleteExtraSet = sets.length > 1 && idx >= slot.defaultSetsCount
+              const inputKey = `${pid}:${s.id || s.setNumber}:`
+              const hasPendingInputs = Object.keys(pendingInputs).some((key) => key.startsWith(inputKey))
 
               // V1.6-05: Etiquetar Dropset o Fallo ÚNICAMENTE en la última serie activa
               const cleanBaseTarget = s.targetReps
@@ -962,12 +945,13 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                   : `Meta: ${cleanBaseTarget} reps`
 
               return (
-                <div key={s.setNumber} className="space-y-1.5">
+                <fieldset key={s.id || s.setNumber} disabled={isConflicted(s) || reviewReadOnly} className="space-y-1.5 min-w-0">
+                  {isConflicted(s) && <legend className="text-xs text-amber-200 py-2">Serie {s.setNumber} en revisión · el valor visible aún no es definitivo</legend>}
                   <div
-                    onTouchStart={() => startLongPress(idx, canDeleteExtraSet)}
+                    onTouchStart={() => !isConflicted(s) && !reviewReadOnly && !hasPendingInputs && startLongPress(idx, canDeleteExtraSet)}
                     onTouchEnd={cancelLongPress}
                     onTouchMove={cancelLongPress}
-                    onMouseDown={() => startLongPress(idx, canDeleteExtraSet)}
+                    onMouseDown={() => !isConflicted(s) && !reviewReadOnly && !hasPendingInputs && startLongPress(idx, canDeleteExtraSet)}
                     onMouseUp={cancelLongPress}
                     onMouseLeave={cancelLongPress}
                     className={`grid grid-cols-12 gap-1.5 items-center p-2 rounded-xl border transition-all ${
@@ -995,11 +979,12 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                     </div>
 
                     <div className="col-span-5">
-                      <DecimalWeightInput
-                        weightKg={s.weightKg}
-                        weightUnit={weightUnit}
-                        placeholder="0"
-                        onCommitWeightKg={(newWeightKg, isFinalCommit) => {
+                      <ConfirmableNumberInput
+                        key={`${inputKey}weight`}
+                        value={s.weightKg} kind="weight" weightUnit={weightUnit}
+                        label={`peso de la serie ${s.setNumber} de ${profile.name}`}
+                        onPending={(pending) => markPending(`${inputKey}weight`, pending)}
+                        onConfirm={(newWeightKg) => {
                           // V1.6-04: Compensación automática de repeticiones si hay 1RM calibrado
                           if (oneRmKg > 0 && newWeightKg > 0) {
                             const compensatedReps = calculateCompensatedReps(
@@ -1018,9 +1003,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                             onUpdateSet(pid, slot.slotId, idx, {
                               weightKg: newWeightKg,
                               targetReps: String(compensatedReps),
-                              ...(isFinalCommit && !s.completed
-                                ? { actualReps: compensatedReps }
-                                : {}),
+                              ...(!s.completed ? { actualReps: compensatedReps } : {}),
                               compensatedDirection: direction
                             })
                           } else {
@@ -1035,18 +1018,12 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                     </div>
 
                     <div className="col-span-3">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        placeholder={cleanBaseTarget}
-                        value={s.actualReps > 0 ? String(s.actualReps) : ''}
-                        onChange={(e) => {
-                          const raw = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '')
-                          const reps = parseInt(raw, 10)
-                          onUpdateSet(pid, slot.slotId, idx, {
-                            actualReps: isNaN(reps) ? 0 : reps
-                          })
-                        }}
+                      <ConfirmableNumberInput
+                        key={`${inputKey}reps`}
+                        value={s.actualReps} kind="reps" weightUnit={weightUnit} placeholder={cleanBaseTarget}
+                        label={`repeticiones de la serie ${s.setNumber} de ${profile.name}`}
+                        onPending={(pending) => markPending(`${inputKey}reps`, pending)}
+                        onConfirm={(actualReps) => onUpdateSet(pid, slot.slotId, idx, { actualReps })}
                         className="clean-input theme-focus font-mono text-sm font-bold text-white outline-none"
                       />
                       <span
@@ -1068,6 +1045,7 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                       {canDeleteExtraSet && (
                         <button
                           type="button"
+                          disabled={hasPendingInputs}
                           onClick={() => onDeleteSet(pid, slot.slotId, idx)}
                           title="Eliminar serie extra"
                           className="p-1.5 rounded-lg bg-[#14111A] hover:bg-rose-500/20 text-[#A09BA8] hover:text-rose-400 border border-[#2A2533]"
@@ -1077,13 +1055,15 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                       )}
                       <button
                         type="button"
+                        disabled={hasPendingInputs}
+                        title={hasPendingInputs ? 'Confirma o cancela las ediciones antes de completar la serie' : undefined}
                         onClick={() => {
                           const nextCompleted = !s.completed
                           const finalReps =
                             s.actualReps > 0
                               ? s.actualReps
                               : parseInt(cleanBaseTarget, 10) || 10
-                          if (nextCompleted && isFirstTimeExercise && s.weightKg > 0) {
+                          if (!reviewMode && nextCompleted && isFirstTimeExercise && s.weightKg > 0) {
                             const auto1Rm = calculateSafe1RM(s.weightKg, finalReps, 2)
                             onSaveQuickStrengthTest(pid, activeVariant.id, auto1Rm, slot.slotId)
                           }
@@ -1092,13 +1072,16 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                             slot.slotId,
                             idx,
                             {
+                              ...(nextCompleted ? { weightKg: s.weightKg, rir: s.rir, drops: s.drops } : {}),
                               completed: nextCompleted,
                               actualReps: s.actualReps > 0 ? s.actualReps : finalReps
                             },
-                            nextCompleted ? slot.restSeconds : undefined,
+                            !reviewMode && nextCompleted ? slot.restSeconds : undefined,
                             `${profile.name} • ${activeVariant.name} (Serie ${s.setNumber})`
                           )
                         }}
+                        aria-label={`${s.completed ? 'Marcar pendiente' : 'Completar'} serie ${s.setNumber} de ${profile.name}`}
+                        aria-pressed={s.completed}
                         className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-center border transition-all ${
                           s.completed
                             ? 'bg-[#10B981] text-[#0B090E] border-[#10B981]'
@@ -1135,17 +1118,18 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                       {(s.drops || []).map((drop, dIdx) => (
                         <div
                           key={drop.id}
-                          className="flex items-center justify-between gap-2 bg-[#0B090E] border border-[#2A2533] rounded-md px-2.5 py-1.5 text-xs"
+                          className="flex flex-wrap items-center justify-between gap-2 bg-[#0B090E] border border-[#2A2533] rounded-md px-2.5 py-1.5 text-xs"
                         >
                           <span className="font-mono font-semibold theme-text">
                             ↳ Drop {dIdx + 1} ({dIdx === 0 ? '-20%' : '-35%'}):
                           </span>
-                          <div className="flex items-center gap-1">
-                            <DecimalWeightInput
-                              weightKg={drop.weightKg}
-                              weightUnit={weightUnit}
-                              placeholder="0"
-                              onCommitWeightKg={(newDropWeightKg) => {
+                          <div className="flex flex-wrap items-center gap-1 min-w-0">
+                            <ConfirmableNumberInput
+                              key={`${inputKey}drop:${drop.id}:weight`}
+                              value={drop.weightKg} kind="weight" weightUnit={weightUnit}
+                              label={`peso del drop ${dIdx + 1} de la serie ${s.setNumber} de ${profile.name}`}
+                              onPending={(pending) => markPending(`${inputKey}drop:${drop.id}:weight`, pending)}
+                              onConfirm={(newDropWeightKg) => {
                                 const nextDrops = [...(s.drops || [])]
                                 nextDrops[dIdx] = {
                                   ...drop,
@@ -1156,20 +1140,14 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                               className="w-16 bg-[#14111A] border border-[#2A2533] rounded px-1.5 py-0.5 text-white font-mono font-bold"
                             />
                             <span className="font-mono text-[#A09BA8]">{weightUnit} ×</span>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={drop.reps > 0 ? String(drop.reps) : ''}
-                              onChange={(e) => {
-                                const raw = e.target.value
-                                  .replace(/[^0-9]/g, '')
-                                  .replace(/^0+(?=\d)/, '')
-                                const reps = parseInt(raw, 10)
+                            <ConfirmableNumberInput
+                              key={`${inputKey}drop:${drop.id}:reps`}
+                              value={drop.reps} kind="reps" weightUnit={weightUnit}
+                              label={`repeticiones del drop ${dIdx + 1} de la serie ${s.setNumber} de ${profile.name}`}
+                              onPending={(pending) => markPending(`${inputKey}drop:${drop.id}:reps`, pending)}
+                              onConfirm={(reps) => {
                                 const nextDrops = [...(s.drops || [])]
-                                nextDrops[dIdx] = {
-                                  ...drop,
-                                  reps: isNaN(reps) ? 0 : reps
-                                }
+                                nextDrops[dIdx] = { ...drop, reps }
                                 onUpdateSet(pid, slot.slotId, idx, { drops: nextDrops })
                               }}
                               className="w-12 bg-[#14111A] border border-[#2A2533] rounded px-1.5 py-0.5 text-white font-mono font-bold"
@@ -1178,6 +1156,8 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                           </div>
                           <button
                             type="button"
+                            disabled={hasPendingInputs}
+                            aria-label={`${drop.completed ? 'Marcar pendiente' : 'Completar'} drop ${dIdx + 1} de la serie ${s.setNumber}`}
                             onClick={() => {
                               const nextDrops = [...(s.drops || [])]
                               nextDrops[dIdx] = { ...drop, completed: !drop.completed }
@@ -1195,20 +1175,20 @@ export const ExerciseSlotCard: React.FC<ExerciseSlotCardProps> = ({
                       ))}
                     </div>
                   )}
-                </div>
+                </fieldset>
               )
             })}
           </div>
 
           <div className="pt-1 flex flex-wrap items-center justify-between gap-2">
-            <button
+            {!reviewReadOnly && <button
               type="button"
               onClick={() => onAddSet(pid, slot.slotId)}
               className="font-mono text-[10px] uppercase text-[#A09BA8] hover:text-white flex items-center gap-1 py-1 px-2 rounded-md hover:bg-[#14111A] border border-transparent hover:border-[#2A2533]"
             >
               <Plus className="w-3.5 h-3.5" />
               Añadir serie extra
-            </button>
+            </button>}
             <span className="font-mono text-[10px] text-[#A09BA8]">
               {sets.length > slot.defaultSetsCount
                 ? 'Tip: mantén presionada una serie extra o toca 🗑️ para borrarla'
